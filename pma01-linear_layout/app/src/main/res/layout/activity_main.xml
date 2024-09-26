@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -15,22 +14,28 @@
         android:orientation="horizontal">
 
         <EditText
-            android:id="@+id/etName"
+            android:id="@+id/etAge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:autofillHints=""
             android:inputType="text"
-            android:hint="Name"
+            android:hint="@string/name_hint"
             android:textColor="@color/black"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="2dp"/>
 
         <EditText
             android:id="@+id/etSurname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:autofillHints=""
             android:inputType="text"
-            android:hint="Surname"
+            android:hint="@string/surname_hint"
             android:textColor="@color/black"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="2dp"/>
 
     </LinearLayout>
 
@@ -41,31 +46,87 @@
 
         <EditText
             android:id="@+id/etAddress"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:autofillHints=""
             android:inputType="text"
-            android:hint="Address"
+            android:hint="@string/address_hint"
             android:textColor="@color/black"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:layout_marginTop="2dp"/>
 
     </LinearLayout>
     
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:inputType="number"
+            android:hint="@string/age_hint"
+            android:textColor="@color/black"
+            android:layout_weight="3"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="2dp"/>
+
+        <Button
+            android:id="@+id/btnSend"
+            style="?android:attr/button"
+            android:backgroundTint="@color/magenta"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:minWidth="100dp"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_send"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/btnClear"
+            style="?android:attr/button"
+            android:backgroundTint="@color/red"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_width="wrap_content"
+            android:minWidth="100dp"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_clear"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:minWidth="100dp"
+        <TextView
+            android:id="@+id/twResult"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Confirm"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:minWidth="100dp"
-            android:layout_height="wrap_content"
-            android:text="Clear"/>
+            android:padding="10dp"
+            android:textSize="18sp"
+            android:hint="@string/output_hint"
+            android:minHeight="200dp"
+            android:background="@color/light_blue"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"/>
 
     </LinearLayout>
 
