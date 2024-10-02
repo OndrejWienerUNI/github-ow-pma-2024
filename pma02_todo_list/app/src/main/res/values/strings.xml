@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">To-Do List</string>
+    <string name="todo_list_title">TODO LIST</string>
+    <string name="hint_enter_task">Enter a new task</string>
+    <string name="btn_add_task">ADD</string>
+    <string name="btn_clear_input">CLEAR</string>
+    <string name="label_active_tasks">Active Tasks</string>
+    <string name="label_completed_tasks">Completed Tasks</string>
+    <string name="label_trash">Trash</string>
+    <string name="btn_purge_trash">PURGE</string>
+    <string name="todo_item_hint">Add task description here</string>
+    <string name="unchecked_checkbox_icon">Mark task as done</string>
+</resources>
