@@ -1,3 +1,24 @@
 <resources>
-    <string name="app_name">pma03_placing_an_order</string>
+    <!-- Main View -->
+    <string name="app_name">Canon RF Lens Selector</string>
+    <string name="select_lens">Select Your Canon RF Lens</string>
+    <string name="rf_24_105mm">RF 24–105mm\n€1,299</string>
+    <string name="rf_28_70mm">RF 28–70mm\n€3,869</string>
+    <string name="rf_100_400mm">RF 100–400mm\n€799</string>
+    <string name="rf_100_500mm">RF 100–500mm\n€3,149</string>
+    <string name="uv_filter">UV Filter</string>
+    <string name="nd_filter">ND Filter</string>
+    <string name="cpl_filter">CPL Filter</string>
+    <string name="lens_case">Lens Case</string>
+    <string name="extended_warranty">Extended Warranty</string>
+    <string name="place_order">Place Order</string>
+    <string name="order_summary">Order Summary:</string>
+    <string name="image_slider_description">Image Slider Item</string>
+
+    <!-- Dialog -->
+    <string name="order_submitted">Order Submitted!</string>
+    <string name="close">Close</string>
+    <string name="selected_items_hint">Your selected items will appear here.</string>
+    <string name="order_id_hint">Order ID:\n1234567890</string>
+    <string name="ok_button">OK</string>
 </resources>

@@ -1,5 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary and Secondary Colors -->
+    <color name="primary">#4CAF89</color> <!-- Green as primary -->
+    <color name="primary_dark">#21523E</color> <!-- Darker green -->
+    <color name="secondary">#000000</color> <!-- Black as secondary -->
+
+    <!-- Neutral and Grayscale Colors -->
+    <color name="white">#FFFFFF</color> <!-- White -->
+    <color name="black">#000000</color> <!-- White -->
+    <color name="light_gray">#D3D3D3</color> <!-- Light gray -->
+    <color name="dark_gray">#424242</color> <!-- Dark gray -->
+
+    <!-- Text Colors -->
+    <color name="text_primary">#212121</color> <!-- Text primary (dark gray, nearly black) -->
+    <color name="text_secondary">#757575</color> <!-- Text secondary (light gray) -->
+
+    <!-- Other Usual Colors -->
+    <color name="accent">#FF4081</color> <!-- Accent color -->
+    <color name="error">#B00020</color> <!-- Error color -->
 </resources>
