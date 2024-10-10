@@ -44,6 +44,23 @@ class MainActivity : AppCompatActivity() {
                 updateOrderSummary(binding)
             }
         }
+
+        viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                // Not needed right now
+            }
+
+            override fun onPageSelected(position: Int) {
+                radioButtons.forEachIndexed { index, radioButton ->
+                    radioButton.isChecked = index == position
+                }
+                updateOrderSummary(binding)
+            }
+
+            override fun onPageScrollStateChanged(state: Int) {
+                // Not needed right now
+            }
+        })
     }
 
     private fun setupCheckBoxes(binding: ActivityMainBinding) {
@@ -76,22 +93,22 @@ class MainActivity : AppCompatActivity() {
             selectedOptions.add(binding.cbWarranty.text.toString())
         }
 
-        val finalSummary = if (selectedOptions.isEmpty()) {
+        val orderSummary = if (selectedOptions.isEmpty()) {
             selectedLens
         } else {
             "$selectedLens, ${selectedOptions.joinToString(", ")}"
         }
 
         binding.tvOrderSummary.text = buildString {
-            append("Order Summary: ")
-            append(finalSummary)
+            append("Order Summary:  ")
+            append(orderSummary.replaceFirst(", ", ",\n"))
         }
     }
 
     private fun setupOrderButton(binding: ActivityMainBinding) {
         binding.btnPlaceOrder.setOnClickListener {
-            val orderSummary = binding.tvOrderSummary.text.removePrefix("Order Summary: ")
-            val dialog = OrderConfirmationDialog(this)
+            val orderSummary = binding.tvOrderSummary.text.removePrefix("Order Summary:  ")
+            val dialog = ConfirmationDialog(this)
             dialog.show(orderSummary.toString())
         }
     }
