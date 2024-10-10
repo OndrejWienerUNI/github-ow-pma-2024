@@ -1,18 +1,13 @@
 package com.example.pma03_placing_an_order
 
-import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.PagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.example.pma03_placing_an_order.databinding.ActivityMainBinding
-import com.example.pma03_placing_an_order.databinding.DialogOrderConfirmationBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRadioButtons(viewPager: ViewPager) {
-
         val radioButtons = listOf(
             binding.rbLens1,
             binding.rbLens2,
@@ -89,45 +83,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.tvOrderSummary.text = buildString {
-        append("Order Summary: ")
-        append(finalSummary)
+            append("Order Summary: ")
+            append(finalSummary)
         }
     }
 
     private fun setupOrderButton(binding: ActivityMainBinding) {
         binding.btnPlaceOrder.setOnClickListener {
-            showOrderConfirmationPopup()
+            val orderSummary = binding.tvOrderSummary.text.removePrefix("Order Summary: ")
+            val dialog = OrderConfirmationDialog(this)
+            dialog.show(orderSummary.toString())
         }
     }
-
-    private fun showOrderConfirmationPopup() {
-        val dialog = Dialog(this)
-
-        val dialogBinding = DialogOrderConfirmationBinding.inflate(layoutInflater)
-        dialog.setContentView(dialogBinding.root)
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        val width = (resources.displayMetrics.widthPixels * 0.95).toInt()
-        dialog.window?.setLayout(
-            width,
-            WindowManager.LayoutParams.WRAP_CONTENT
-        )
-
-        dialog.setCancelable(true)
-        dialog.setCanceledOnTouchOutside(true)
-
-        val currentTime = SimpleDateFormat("yyMMddHHmmss", Locale.getDefault()).format(Date())
-        val orderId = "Order ID:\n$currentTime"
-
-        dialogBinding.tvOrderSummary.text = binding.tvOrderSummary.text.removePrefix("Order Summary: ")
-        dialogBinding.tvOrderId.text = orderId
-
-        dialogBinding.btnClose.setOnClickListener { dialog.dismiss() }
-        dialogBinding.btnOk.setOnClickListener { dialog.dismiss() }
-
-        dialog.show()
-    }
-
 
     private fun setupViewPager(viewPager: ViewPager) {
         val images = listOf(
@@ -146,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun instantiateItem(container: ViewGroup, position: Int): Any {
                 val view = layoutInflater.inflate(R.layout.image_slider_item, container, false)
-                val imageView: ImageView = view.findViewById(R.id.imageView)
+                val imageView: ImageView = view.findViewById(R.id.image_view)
                 imageView.setImageResource(images[position])
 
                 container.addView(view)
