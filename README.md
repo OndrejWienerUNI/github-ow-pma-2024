@@ -1,2 +1,2 @@
 # github-ow-pma-2024
-Repo pro účely KIN/PMA 2024 – Ondřej Wiener
+A repo for submitting Android Studio projects to the PMA 2024 course.
