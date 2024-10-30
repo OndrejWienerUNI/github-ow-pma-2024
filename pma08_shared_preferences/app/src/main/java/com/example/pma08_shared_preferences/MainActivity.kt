@@ -2,6 +2,8 @@ package com.example.pma08_shared_preferences
 
 import android.content.Context
 import android.os.Bundle
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pma08_shared_preferences.databinding.ActivityMainBinding
@@ -12,8 +14,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -21,23 +21,21 @@ class MainActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("myPref", Context.MODE_PRIVATE)
         val editor = sharedPref.edit()
 
-        // Save data with an on-click listener
+        // Save data with custom toast on click
         binding.btnSave.setOnClickListener {
             val name = binding.etName.text.toString()
             val ageString = binding.etAge.text.toString().trim()
 
             if (ageString.isBlank()) {
-                Toast.makeText(this, "Hey, fill in the age!",
-                    Toast.LENGTH_SHORT).show()
+                showCustomToast("Hey, fill in the age!", R.drawable.ic_default_triangle)
             } else {
                 val age = ageString.toInt()
                 val isAdult = binding.cbAdult.isChecked
                 if ((age < 18 && isAdult) || (age >= 18 && !isAdult)) {
-                    Toast.makeText(this, "That doesn't add up, so I won't save anything.",
-                        Toast.LENGTH_SHORT).show()
+                    showCustomToast("That doesn't add up, so I won't save anything.",
+                        R.drawable.ic_default_triangle)
                 } else {
-                    Toast.makeText(this, "Alright, saving...",
-                        Toast.LENGTH_SHORT).show()
+                    showCustomToast("Alright, saving...", R.drawable.ic_default_triangle)
                     editor.apply {
                         putString("name", name)
                         putInt("age", age)
@@ -48,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // load data with an on-click listener
+        // Load data with custom toast on click
         binding.btnLoad.setOnClickListener {
             val name = sharedPref.getString("name", null)
             val age = sharedPref.getInt("age", 0)
@@ -57,7 +55,25 @@ class MainActivity : AppCompatActivity() {
             binding.etName.setText(name)
             binding.etAge.setText(age.toString())
             binding.cbAdult.isChecked = isAdult
-        }
 
+            showCustomToast("Data loaded successfully!", R.drawable.ic_default_triangle)
+        }
+    }
+
+    private fun showCustomToast(message: String, iconResId: Int) {
+        val inflater = layoutInflater
+        val layout = inflater.inflate(R.layout.custom_toast,
+            findViewById(R.id.custom_toast_container))
+
+        val toastIcon: ImageView = layout.findViewById(R.id.toast_icon)
+        val toastMessage: TextView = layout.findViewById(R.id.toast_message)
+
+        toastIcon.setImageResource(iconResId)
+        toastMessage.text = message
+
+        val toast = Toast(applicationContext)
+        toast.duration = Toast.LENGTH_SHORT
+        toast.view = layout
+        toast.show()
     }
 }
