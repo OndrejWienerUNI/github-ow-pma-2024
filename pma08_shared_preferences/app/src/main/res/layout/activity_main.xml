@@ -42,25 +42,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etAge" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSave"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/btn_save"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
+        android:text="@string/btn_save"
+        android:textSize="16sp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/black"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnLoad"
         app:layout_constraintTop_toBottomOf="@+id/cbAdult" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLoad"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:textColor="@color/white"
         android:text="@string/btn_load"
+        android:textSize="16sp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/black"
         app:layout_constraintStart_toEndOf="@+id/btnSave"
-        app:layout_constraintTop_toBottomOf="@+id/cbAdult" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnSave" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
