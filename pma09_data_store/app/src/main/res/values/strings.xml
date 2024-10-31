@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">pma09_data_store</string>.
+    <string name="et_name">Name</string>
+    <string name="et_age">Age</string>
+    <string name="cb_adult">I hereby confirm, that I am an adult.</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_load">Load</string>
+</resources>
