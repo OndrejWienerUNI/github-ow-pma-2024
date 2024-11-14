@@ -27,8 +27,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="@string/btn_pick_pick_image"
-        android:background="@color/button_color"
-        android:textColor="@android:color/white"
+        android:backgroundTint="@color/button_color"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@+id/ivImage"
         android:stateListAnimator="@animator/button_press_anim"/>
 
@@ -101,8 +102,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:text="@string/btn_apply"
-        android:background="@color/button_color"
-        android:textColor="@android:color/white"
+        android:backgroundTint="@color/button_color"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/seekBarContrast"

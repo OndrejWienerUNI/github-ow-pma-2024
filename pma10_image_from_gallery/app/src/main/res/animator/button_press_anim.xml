@@ -5,13 +5,15 @@
             android:duration="100"
             android:propertyName="scaleX"
             android:valueFrom="1"
-            android:valueTo="0.95" />
+            android:valueTo="0.95"
+            android:backgroundTint="@color/button_pressed"/>
     </item>
     <item>
         <objectAnimator
             android:duration="100"
             android:propertyName="scaleX"
             android:valueFrom="0.95"
-            android:valueTo="1" />
+            android:valueTo="1"
+            android:backgroundTint="@color/button_color"/>
     </item>
 </selector>
