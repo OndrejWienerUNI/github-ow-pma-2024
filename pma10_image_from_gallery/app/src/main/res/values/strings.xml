@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">pma10_image_from_gallery</string>
+    <string name="iv_image_description">Current image</string>
+    <string name="btn_pick_pick_image">Pick an Image</string>
+    <string name="tv_brightness_label">Brightness:</string>
+    <string name="tv_brightness_value">100%</string>
+    <string name="tv_contrast_label">Contrast:</string>
+    <string name="tv_contrast_value">100%</string>
+    <string name="btn_apply">Apply</string>
 </resources>
