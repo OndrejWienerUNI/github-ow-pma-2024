@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.example.pma12_note_hub_database"
-    compileSdk = 34
+    // newer features in com 35
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.pma12_note_hub_database"

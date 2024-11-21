@@ -4,4 +4,9 @@
     <string name="note_content_hint">Note Content</string>
     <string name="note_content_preview_text">Note Content Preview</string>
     <string name="add_note_description">Add Note</string>
+    <string name="edit_note_description">Edit Note</string>
+    <string name="delete_note_description">Delete Note</string>
+    <string name="note_category_text">Category</string>
+    <string name="tags_text">Tags</string>
+    <string name="pick_tags_hint">Pick Tags</string>
 </resources>
