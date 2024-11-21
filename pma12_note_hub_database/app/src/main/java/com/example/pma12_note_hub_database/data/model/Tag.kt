@@ -1,11 +1,12 @@
-package com.example.pma12_note_hub_database.data
+package com.example.pma12_note_hub_database.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "category_table")
+@Entity(tableName = "tag")
+data class Tag(
 
-data class Category(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String
+
 )

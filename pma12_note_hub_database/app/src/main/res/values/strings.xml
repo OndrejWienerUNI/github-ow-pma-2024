@@ -1,5 +1,8 @@
 <resources>
-    <string name="app_name">pma12_note_hub_database</string>
+    <!--  Broader usage  -->
+    <string name="app_name">My Note Hub</string>
+
+    <!--  XML elements  -->
     <string name="note_title_hint">Note Title</string>
     <string name="note_content_hint">Note Content</string>
     <string name="note_content_preview_text">Note Content Preview</string>
@@ -9,4 +12,25 @@
     <string name="note_category_text">Category</string>
     <string name="tags_text">Tags</string>
     <string name="pick_tags_hint">Pick Tags</string>
+
+    <!--  KT classes/modules  -->
+    <string name="save_str">Save</string>
+    <string name="cancel_str">Cancel</string>
+    <string name="yes_str">Yes</string>
+    <string name="no_str">No</string>
+
+    <string name="add_note_str">Add Note</string>
+    <string name="edit_note_str">Edit Note</string>
+    <string name="delete_note_str">Delete Note</string>
+    <string name="sure_to_delete_note_str">Are you sure you want to delete this note?</string>
+
+    <string name="cat_work_str">Work</string>
+    <string name="cat_personal_str">Personal</string>
+    <string name="cat_ideas_str">Ideas</string>
+
+    <string name="tag_important_str">Important</string>
+    <string name="tag_quick_task_str">Quick Task</string>
+    <string name="tag_project_str">Project</string>
+    <string name="tag_idea_str">Idea</string>
+
 </resources>

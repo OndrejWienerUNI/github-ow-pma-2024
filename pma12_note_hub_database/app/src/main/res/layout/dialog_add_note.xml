@@ -2,6 +2,7 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -11,49 +12,75 @@
         android:id="@+id/etNoteTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/note_title_hint"
         android:autofillHints=""
-        android:inputType="text" />
+        android:hint="@string/note_title_hint"
+        android:textStyle="normal"
+        android:textColor="@color/primaryText"
+        android:inputType="text"
+        android:minHeight="48dp"
+        tools:ignore="VisualLintTextFieldSize" />
 
     <EditText
         android:id="@+id/etNoteContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/note_content_hint"
         android:layout_marginTop="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:autofillHints=""
-        android:inputType="text" />
+        android:hint="@string/note_content_hint"
+        android:inputType="textMultiLine"
+        android:lines="3"
+        android:minLines="3"
+        android:scrollbars="vertical"
+        android:overScrollMode="ifContentScrolls"
+        android:padding="8dp"
+        android:background="@drawable/bg_bordered_rectangle"
+        android:gravity="top|start"
+        android:textStyle="normal"
+        android:imeOptions="actionDone"
+        tools:ignore="VisualLintTextFieldSize" />
+
 
     <TextView
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="18sp"
         android:text="@string/note_category_text"
         android:textStyle="bold"
+        android:textColor="@color/secondaryText"
         android:layout_marginTop="16dp" />
 
     <Spinner
         android:id="@+id/spCategory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"
+        style="@style/Widget.AppCompat.Spinner.Underlined"/>
 
     <TextView
         android:id="@+id/tvText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="18sp"
         android:text="@string/tags_text"
         android:textStyle="bold"
+        android:textColor="@color/secondaryText"
         android:layout_marginTop="16dp" />
 
     <EditText
         android:id="@+id/etTags"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:autofillHints=""
-        android:hint="@string/pick_tags_hint"
-        android:focusable="false"
         android:layout_marginTop="8dp"
-        android:inputType="text" />
+        android:autofillHints=""
+        android:focusable="false"
+        android:hint="@string/pick_tags_hint"
+        android:inputType="text"
+        android:minHeight="48dp"
+        tools:ignore="VisualLintTextFieldSize" />
 
 </LinearLayout>

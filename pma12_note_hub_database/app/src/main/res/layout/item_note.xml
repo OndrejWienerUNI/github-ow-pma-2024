@@ -8,12 +8,12 @@
     app:cardElevation="4dp"
     app:cardBackgroundColor="@color/cardBackground">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="10dp">
 
+        <!-- Note Title -->
         <TextView
             android:id="@+id/tvNoteTitle"
             android:layout_width="wrap_content"
@@ -21,8 +21,13 @@
             android:text="@string/note_title_hint"
             android:textColor="@color/primaryText"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/icEdit"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="10dp" />
 
+        <!-- Note Content Preview -->
         <TextView
             android:id="@+id/tvNoteContentPreview"
             android:layout_width="wrap_content"
@@ -32,30 +37,37 @@
             android:ellipsize="end"
             android:textColor="@color/secondaryText"
             android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:layout_below="@id/tvNoteTitle"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/icEdit"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="10dp" />
 
-        <LinearLayout
+        <!-- Edit Icon -->
+        <ImageView
+            android:id="@+id/icEdit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:padding="8dp"
+            android:src="@drawable/ic_edit"
+            android:contentDescription="@string/edit_note_description"
+            android:layout_alignParentEnd="true"
+            android:layout_alignTop="@id/tvNoteTitle"
+            android:layout_marginStart="8dp" />
 
-            <ImageView
-                android:id="@+id/icEdit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                android:src="@drawable/ic_edit"
-                android:contentDescription="@string/edit_note_description" />
+        <!-- Delete Icon -->
+        <ImageView
+            android:id="@+id/icDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/delete_note_description"
+            android:padding="8dp"
+            android:src="@drawable/ic_delete"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="2dp"
+            android:layout_below="@id/icEdit" />
 
-            <ImageView
-                android:id="@+id/icDelete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/delete_note_description"
-                android:padding="8dp"
-                android:src="@drawable/ic_delete" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>
