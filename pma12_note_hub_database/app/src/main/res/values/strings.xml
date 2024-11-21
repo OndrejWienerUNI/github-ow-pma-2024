@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">pma12_note_hub_database</string>
+    <string name="note_title_hint">Note Title</string>
+    <string name="note_content_hint">Note Content</string>
+    <string name="note_content_preview_text">Note Content Preview</string>
+    <string name="add_note_description">Add Note</string>
+</resources>
