@@ -3,6 +3,7 @@ package com.example.pma12_note_hub_database.ui
 import android.app.AlertDialog
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -51,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         loadNotes()
 
         binding.fabAddNote.setOnClickListener {
-            showAddNoteDialog()
+            addNote()
         }
     }
 
@@ -61,47 +62,6 @@ class MainActivity : AppCompatActivity() {
             database.noteDao().insert(newNote)
             loadNotes()
         }
-    }
-
-    private fun showAddNoteDialog() {
-        val dialogBinding = DialogAddNoteBinding.inflate(layoutInflater)
-        val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
-        val titleEditText = dialogBinding.etNoteTitle
-        val contentEditText = dialogBinding.etNoteContent
-        val spinnerCategory = dialogBinding.spCategory
-
-        // Sync category spinner with the categories in the database
-        lifecycleScope.launch {
-            val categories = database.categoryDao().getAllCategories().first()
-            val categoryNames = categories.map { it.name }
-            val adapter = ArrayAdapter(this@MainActivity,
-                android.R.layout.simple_spinner_item, categoryNames)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinnerCategory.adapter = adapter
-        }
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.add_note_str)
-            .setView(dialogView)
-
-            .setPositiveButton(R.string.save_str) { _, _ ->
-                val title = titleEditText.text.toString()
-                val content = contentEditText.text.toString()
-                val selectedCategory = spinnerCategory.selectedItem.toString()
-
-                // Get category id from lifecycle and add to database if category was found
-                lifecycleScope.launch {
-                    val category = database.categoryDao().getCategoryByName(selectedCategory)
-                    if (category != null) {
-                        addNoteToDatabase(title, content, category.id)
-                    }
-                }
-            }
-            .setNegativeButton(R.string.cancel_str, null)
-            .create()
-
-        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_rounded_rectangle)
-        dialog.show()
     }
 
     private fun loadNotes() {
@@ -119,25 +79,71 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun editNote(note: Note) {
+    private suspend fun populateCategorySpinner(
+        spinner: Spinner,
+        selectedCategoryId: Int? = null
+    ): String {
+        val noneCategoryText = getString(R.string.cat_none_str)
+        val invalidCategoryText = getString(R.string.cat_invalid_str)
+
+        val categories = database.categoryDao().getAllCategories().first()
+        val categoryNames = categories.map { it.name }.toMutableList()
+
+        val currentCategoryName = if (selectedCategoryId == null) {
+            noneCategoryText
+        } else {
+            val category = database.categoryDao().getCategoryById(selectedCategoryId)
+            category?.name ?: invalidCategoryText
+        }
+
+        if (!categoryNames.contains(currentCategoryName)) {
+            categoryNames.add(0, currentCategoryName) // Add current category if missing
+        }
+
+        val adapter = ArrayAdapter(
+            this@MainActivity,
+            android.R.layout.simple_spinner_item,
+            categoryNames
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+        spinner.setSelection(categoryNames.indexOf(currentCategoryName))
+
+        return currentCategoryName
+    }
+
+    private fun showNoteDialog(
+        note: Note? = null,
+        onSave: (String, String, Int?) -> Unit
+    ) {
         val dialogBinding = DialogAddNoteBinding.inflate(layoutInflater)
         val titleEditText = dialogBinding.etNoteTitle
         val contentEditText = dialogBinding.etNoteContent
+        val spinnerCategory = dialogBinding.spCategory
 
-        titleEditText.setText(note.title)
-        contentEditText.setText(note.content)
+        // Set existing note details if editing
+        if (note != null) {
+            titleEditText.setText(note.title)
+            contentEditText.setText(note.content)
+        }
+
+        lifecycleScope.launch {
+            val categoryId = note?.categoryId
+            populateCategorySpinner(spinnerCategory, categoryId)
+        }
 
         val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.edit_note_str)
+            .setTitle(if (note == null) R.string.add_note_str else R.string.edit_note_str)
             .setView(dialogBinding.root)
             .setPositiveButton(R.string.save_str) { _, _ ->
-                val updatedTitle = titleEditText.text.toString()
-                val updatedContent = contentEditText.text.toString()
+                val title = titleEditText.text.toString()
+                val content = contentEditText.text.toString()
+                val selectedCategory = spinnerCategory.selectedItem.toString()
 
                 lifecycleScope.launch {
-                    val updatedNote = note.copy(title = updatedTitle, content = updatedContent)
-                    database.noteDao().update(updatedNote)
-                    loadNotes()
+                    val category = database.categoryDao().getCategoryByName(selectedCategory)
+                    val categoryId = category?.id ?: if (selectedCategory == getString(R.string.cat_none_str)) null else note?.categoryId
+                    onSave(title, content, categoryId)
                 }
             }
             .setNegativeButton(getString(R.string.cancel_str), null)
@@ -145,6 +151,26 @@ class MainActivity : AppCompatActivity() {
 
         dialog.window?.setBackgroundDrawableResource(R.drawable.bg_rounded_rectangle)
         dialog.show()
+    }
+
+    private fun addNote() {
+        showNoteDialog { title, content, categoryId ->
+            addNoteToDatabase(title, content, categoryId ?: 0)
+        }
+    }
+
+    private fun editNote(note: Note) {
+        showNoteDialog(note) { updatedTitle, updatedContent, updatedCategoryId ->
+            val updatedNote = note.copy(
+                title = updatedTitle,
+                content = updatedContent,
+                categoryId = updatedCategoryId
+            )
+            lifecycleScope.launch {
+                database.noteDao().update(updatedNote)
+                loadNotes()
+            }
+        }
     }
 
     private fun deleteNote(note: Note) {
@@ -208,6 +234,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Deletes everything in the database - be careful
+    @Suppress("unused")
     private fun wipeDatabase() {
         lifecycleScope.launch {
             database.noteDao().deleteAllNotes()

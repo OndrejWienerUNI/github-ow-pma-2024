@@ -1,0 +1,18 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background with rounded corners at the top -->
+    <item>
+        <shape>
+            <solid android:color="@android:color/transparent" />
+            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp" />
+        </shape>
+    </item>
+
+    <!-- Black line at the bottom -->
+    <item
+        android:gravity="bottom"> <!-- Ensures the line appears at the bottom -->
+        <shape>
+            <size android:height="2px" /> <!-- Line height -->
+            <solid android:color="@color/gray" /> <!-- Line color -->
+        </shape>
+    </item>
+</layer-list>
