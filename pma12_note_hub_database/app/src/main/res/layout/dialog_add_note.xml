@@ -41,13 +41,12 @@
         android:imeOptions="actionDone"
         tools:ignore="VisualLintTextFieldSize" />
 
-
     <TextView
         android:id="@+id/tvCategory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:text="@string/note_category_text"
+        android:text="@string/category_label"
         android:textStyle="bold"
         android:textColor="@color/secondaryText"
         android:layout_marginTop="16dp" />
@@ -59,6 +58,7 @@
         android:textSize="16sp"
         android:layout_marginTop="8dp"
         android:minHeight="48dp"
+        android:spinnerMode="dropdown"
         style="@style/Widget.AppCompat.Spinner.Underlined"/>
 
     <TextView
@@ -66,7 +66,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:text="@string/tags_text"
+        android:text="@string/tags_label"
         android:textStyle="bold"
         android:textColor="@color/secondaryText"
         android:layout_marginTop="16dp" />

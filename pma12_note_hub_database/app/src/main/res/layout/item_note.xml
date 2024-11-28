@@ -27,6 +27,22 @@
             android:layout_marginStart="2dp"
             android:layout_marginEnd="10dp" />
 
+        <!--- Note Category -->
+        <TextView
+            android:id="@+id/tvNoteCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/category_label"
+            android:textColor="@color/secondaryText"
+            android:textSize="14sp"
+            android:layout_below="@id/tvNoteTitle"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/icEdit"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="10dp" />
+
         <!-- Note Content Preview -->
         <TextView
             android:id="@+id/tvNoteContentPreview"
@@ -37,7 +53,7 @@
             android:ellipsize="end"
             android:textColor="@color/secondaryText"
             android:textSize="14sp"
-            android:layout_below="@id/tvNoteTitle"
+            android:layout_below="@id/tvNoteCategory"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@id/icEdit"
             android:layout_marginTop="4dp"

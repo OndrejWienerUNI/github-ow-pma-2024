@@ -3,9 +3,11 @@ package com.example.pma12_note_hub_database.data.model
 import android.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pma12_note_hub_database.R
 import com.example.pma12_note_hub_database.databinding.ItemNoteBinding
+import kotlinx.coroutines.launch
 
 // TODO: could this hold the cause of why i can't put in tags and categories?
 
@@ -13,7 +15,9 @@ import com.example.pma12_note_hub_database.databinding.ItemNoteBinding
 class NoteAdapter(
     private val notes: List<Note>,
     private val onDeleteClick: (Note) -> Unit,
-    private val onEditClick: (Note) -> Unit
+    private val onEditClick: (Note) -> Unit,
+    private val lifecycleScope: LifecycleCoroutineScope,
+    private val database: NoteHubDatabase
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     // called when a new ViewHolder needs to be created; returns a NoteViewHolder instance
@@ -41,6 +45,23 @@ class NoteAdapter(
             binding.tvNoteTitle.text = note.title
             binding.tvNoteContentPreview.text = note.content
 
+            // CategoryID from lifecycle
+            val categoryId = note.categoryId
+            if (categoryId != null) {
+                lifecycleScope.launch {
+                    val category = database.categoryDao().getCategoryById(categoryId)
+                    if (category != null) {
+                        binding.tvNoteCategory.text = category.name
+                    } else {
+                        binding.tvNoteCategory.text =
+                            itemView.context.getString(R.string.cat_invalid_str)
+                    }
+                }
+            } else {
+                binding.tvNoteCategory.text = itemView.context.getString(R.string.cat_none_str)
+            }
+
+            // OnClick Listener for Delete
             binding.icDelete.setOnClickListener {
                 val dialog = AlertDialog.Builder(itemView.context)
                     .setTitle(itemView.context.getString(R.string.delete_note_str))
@@ -55,6 +76,7 @@ class NoteAdapter(
                 dialog.show()
             }
 
+            // OnClick Listener for Edit
             binding.icEdit.setOnClickListener {
                 onEditClick(note)
             }

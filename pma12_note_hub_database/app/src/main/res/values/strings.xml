@@ -9,8 +9,8 @@
     <string name="add_note_description">Add Note</string>
     <string name="edit_note_description">Edit Note</string>
     <string name="delete_note_description">Delete Note</string>
-    <string name="note_category_text">Category</string>
-    <string name="tags_text">Tags</string>
+    <string name="category_label">Category</string>
+    <string name="tags_label">Tags</string>
     <string name="pick_tags_hint">Pick Tags</string>
 
     <!--  KT classes/modules  -->
@@ -27,6 +27,8 @@
     <string name="cat_work_str">Work</string>
     <string name="cat_personal_str">Personal</string>
     <string name="cat_ideas_str">Ideas</string>
+    <string name="cat_invalid_str">Invalid Category</string>
+    <string name="cat_none_str">No Category</string>
 
     <string name="tag_important_str">Important</string>
     <string name="tag_quick_task_str">Quick Task</string>

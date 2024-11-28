@@ -2,6 +2,7 @@ package com.example.pma12_note_hub_database.ui
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // In case of a mishap, wipeDatabase() can be used to delete everything in the database
+
         // Database init
         database = NoteHubDatabaseInstance.getDatabase(this)
 
@@ -52,9 +55,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun addNoteToDatabase(title: String, content: String) {
+    private fun addNoteToDatabase(title: String, content: String, categoryId: Int) {
         lifecycleScope.launch {
-            val newNote = Note(title = title, content = content)
+            val newNote = Note(title = title, content = content, categoryId = categoryId)
             database.noteDao().insert(newNote)
             loadNotes()
         }
@@ -65,14 +68,34 @@ class MainActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_note, null)
         val titleEditText = dialogBinding.etNoteTitle
         val contentEditText = dialogBinding.etNoteContent
+        val spinnerCategory = dialogBinding.spCategory
+
+        // Sync category spinner with the categories in the database
+        lifecycleScope.launch {
+            val categories = database.categoryDao().getAllCategories().first()
+            val categoryNames = categories.map { it.name }
+            val adapter = ArrayAdapter(this@MainActivity,
+                android.R.layout.simple_spinner_item, categoryNames)
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinnerCategory.adapter = adapter
+        }
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(R.string.add_note_str)
             .setView(dialogView)
+
             .setPositiveButton(R.string.save_str) { _, _ ->
                 val title = titleEditText.text.toString()
                 val content = contentEditText.text.toString()
-                addNoteToDatabase(title, content)
+                val selectedCategory = spinnerCategory.selectedItem.toString()
+
+                // Get category id from lifecycle and add to database if category was found
+                lifecycleScope.launch {
+                    val category = database.categoryDao().getCategoryByName(selectedCategory)
+                    if (category != null) {
+                        addNoteToDatabase(title, content, category.id)
+                    }
+                }
             }
             .setNegativeButton(R.string.cancel_str, null)
             .create()
@@ -87,7 +110,9 @@ class MainActivity : AppCompatActivity() {
                 noteAdapter = NoteAdapter(
                     notes,
                     onDeleteClick = { note -> deleteNote(note) },
-                    onEditClick = { note -> editNote(note) }
+                    onEditClick = { note -> editNote(note) },
+                    lifecycleScope = lifecycleScope,
+                    database = database
                 )
                 binding.recyclerView.adapter = noteAdapter
             }
@@ -181,5 +206,22 @@ class MainActivity : AppCompatActivity() {
                 .forEach { database.tagDao().insert(it) }
         }
     }
+
+    // Deletes everything in the database - be careful
+    private fun wipeDatabase() {
+        lifecycleScope.launch {
+            database.noteDao().deleteAllNotes()
+            database.categoryDao().deleteAllCategories()
+            resetAutoIncrement("note")
+            resetAutoIncrement("category")
+        }
+    }
+
+    private fun resetAutoIncrement(tableName: String) {
+        lifecycleScope.launch {
+            database.openHelper.writableDatabase.execSQL("DELETE FROM sqlite_sequence WHERE name = '$tableName'")
+        }
+    }
+
 
 }

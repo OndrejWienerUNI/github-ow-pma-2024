@@ -23,4 +23,8 @@ interface NoteDao {
     // Loads all notes from database and returns them as flow
     @Query("SELECT * FROM note ORDER BY id DESC")
     fun getAllNotes(): Flow<List<Note>>
+
+    // Deletes all notes from the table - be careful
+    @Query("DELETE FROM note")
+    suspend fun deleteAllNotes()
 }
