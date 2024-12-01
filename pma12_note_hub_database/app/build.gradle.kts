@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.media3.common.ktx)
     // If this project uses any Kotlin source, use Kotlin Symbol Processing (KSP)
     // See [Add the KSP plugin to your project](https://developer.android.com/build/migrate-to-ksp#add-ksp)
     ksp(libs.androidx.room.compiler.v250)

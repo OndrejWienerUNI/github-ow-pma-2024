@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="15dp"
+    android:background="@drawable/bg_rounded_rectangle_outlined">
+
+    <!-- Category Label -->
+    <TextView
+        android:id="@+id/tvTitleAndContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:text="@string/note_title_and_content"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/secondaryText" />
+
+    <!-- Note Title -->
+    <EditText
+        android:id="@+id/etNoteTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvTitleAndContent"
+        android:autofillHints=""
+        android:background="@drawable/bg_rounded_rectangle_outlined"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:layout_marginTop="8dp"
+        android:hint="@string/note_title_hint"
+        android:textStyle="normal"
+        android:textColor="@color/primaryText"
+        android:inputType="text"
+        android:textSize="18sp"
+        android:minHeight="48dp"
+        tools:ignore="VisualLintTextFieldSize" />
+
+    <!-- Note Content -->
+    <EditText
+        android:id="@+id/etNoteContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etNoteTitle"
+        android:layout_marginTop="8dp"
+        android:autofillHints=""
+        android:hint="@string/note_content_hint"
+        android:inputType="textMultiLine"
+        android:lines="3"
+        android:minLines="3"
+        android:scrollbars="vertical"
+        android:overScrollMode="ifContentScrolls"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="@drawable/bg_rounded_rectangle_outlined"
+        android:gravity="top|start"
+        android:textStyle="normal"
+        android:textSize="18sp"
+        android:imeOptions="actionDone"
+        tools:ignore="VisualLintTextFieldSize" />
+
+    <!-- Category Label -->
+    <TextView
+        android:id="@+id/tvCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etNoteContent"
+        android:layout_marginTop="16dp"
+        android:text="@string/category_label"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/secondaryText" />
+
+    <!-- Category Spinner -->
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/spCategory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvCategory"
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"
+        android:background="@drawable/bg_rounded_rectangle_outlined"
+        android:textAlignment="center"
+        android:popupBackground="@drawable/bg_rounded_rectangle_outlined"
+        android:spinnerMode="dropdown"
+        style="@style/Widget.AppCompat.Spinner" />
+
+    <!-- Tags Label -->
+    <TextView
+        android:id="@+id/tvText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/spCategory"
+        android:layout_marginTop="16dp"
+        android:text="@string/tags_label"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/secondaryText" />
+
+    <!-- Tags Input -->
+    <EditText
+        android:id="@+id/etTags"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvText"
+        android:layout_marginTop="8dp"
+        android:autofillHints=""
+        android:background="@drawable/bg_rounded_rectangle_outlined"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:hint="@string/pick_tags_hint"
+        android:inputType="text"
+        android:minHeight="48dp"
+        android:focusable="false"
+        android:textSize="18sp"
+        tools:ignore="VisualLintTextFieldSize" />
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etTags"
+        android:layout_toStartOf="@id/btnCancel"
+        android:layout_marginTop="16dp"
+        android:text="@string/save_str"
+        android:textStyle="bold"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        />
+
+    <!-- Cancel Button -->
+    <Button
+        android:id="@+id/btnCancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etTags"
+        android:layout_marginTop="16dp"
+        android:layout_alignParentEnd="true"
+        android:text="@string/cancel_str"
+        android:textStyle="bold"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"/>
+
+</RelativeLayout>

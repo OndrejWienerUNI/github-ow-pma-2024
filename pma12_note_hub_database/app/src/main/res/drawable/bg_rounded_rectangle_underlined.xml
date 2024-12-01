@@ -11,7 +11,7 @@
     <item
         android:gravity="bottom"> <!-- Ensures the line appears at the bottom -->
         <shape>
-            <size android:height="3px" /> <!-- Line height -->
+            <size android:height="1dp" /> <!-- Line height -->
             <solid android:color="@color/gray" /> <!-- Line color -->
         </shape>
     </item>

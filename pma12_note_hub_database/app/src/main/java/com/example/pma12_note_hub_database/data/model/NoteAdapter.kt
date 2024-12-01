@@ -6,56 +6,51 @@ import android.view.ViewGroup
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pma12_note_hub_database.R
+import com.example.pma12_note_hub_database.data.dao.CategoryDao
 import com.example.pma12_note_hub_database.databinding.ItemNoteBinding
 import kotlinx.coroutines.launch
 
-// TODO: could this hold the cause of why i can't put in tags and categories?
-
-// adapter for managing a list of notes in a RecyclerView; returns a NoteViewHolder for each item
+// Adapter for managing a list of notes in a RecyclerView; returns a NoteViewHolder for each item
 class NoteAdapter(
     private val notes: List<Note>,
     private val onDeleteClick: (Note) -> Unit,
     private val onEditClick: (Note) -> Unit,
     private val lifecycleScope: LifecycleCoroutineScope,
-    private val database: NoteHubDatabase
+    private val categoryDao: CategoryDao // Required DAO from the database repo file
 ) : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
-    // called when a new ViewHolder needs to be created; returns a NoteViewHolder instance
+    // Creates a new ViewHolder
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val binding = ItemNoteBinding.inflate(LayoutInflater.from(parent.context),
             parent, false)
         return NoteViewHolder(binding)
     }
 
-    // returns the total number of notes
+    // Returns the total number of notes
     override fun getItemCount() = notes.size
 
-    // binds data to the given ViewHolder
+    // Binds data to the given ViewHolder
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val note = notes[position]
         holder.bind(note)
     }
 
-    // nested view holder class to bind individual note data
+    // Nested ViewHolder class to bind individual note data
     inner class NoteViewHolder(private val binding: ItemNoteBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        // binds a Note object's fields to the corresponding ui elements of the view holder
+        // Binds a Note object's fields to the corresponding UI elements of the ViewHolder
         fun bind(note: Note) {
             binding.tvNoteTitle.text = note.title
             binding.tvNoteContentPreview.text = note.content
 
-            // CategoryID from lifecycle
+            // Resolve category name using the CategoryDao
             val categoryId = note.categoryId
             if (categoryId != null) {
                 lifecycleScope.launch {
-                    val category = database.categoryDao().getCategoryById(categoryId)
-                    if (category != null) {
-                        binding.tvNoteCategory.text = category.name
-                    } else {
-                        binding.tvNoteCategory.text =
-                            itemView.context.getString(R.string.cat_invalid_str)
-                    }
+                    val category = categoryDao.getCategoryById(categoryId)
+                    binding.tvNoteCategory.text = category?.name
+                        ?: itemView.context.getString(R.string.cat_invalid_str)
                 }
             } else {
                 binding.tvNoteCategory.text = itemView.context.getString(R.string.cat_none_str)

@@ -14,7 +14,9 @@ object NoteHubDatabaseInstance {
                 context.applicationContext,
                 NoteHubDatabase::class.java,
                 "note_hub_database"
-            ).build()
+            )
+                .fallbackToDestructiveMigration()
+                .build()
             INSTANCE = instance
             instance
         }

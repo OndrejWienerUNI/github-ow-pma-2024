@@ -36,4 +36,7 @@ interface NoteDao {
     @Query("UPDATE note SET timestamp = :timestamp WHERE id = :noteId")
     suspend fun updateTimestamp(noteId: Int, timestamp: Long)
 
+    // Resets auto increment for a specified table
+    @Query("DELETE FROM sqlite_sequence WHERE name = :tableName")
+    suspend fun resetAutoIncrement(tableName: String)
 }
