@@ -12,6 +12,10 @@
     <string name="category_label">Category</string>
     <string name="tags_label">Tags</string>
     <string name="pick_tags_hint">Pick Tags</string>
+    <string name="sorted_title_asc">By Title Ascending</string>
+    <string name="sorted_title_dsc">By Title Descending</string>
+    <string name="sorted_recency_asc">By Recency Ascending</string>
+    <string name="sorted_recency_dsc">By Recency Descending</string>
 
     <!--  KT classes/modules  -->
     <string name="save_str">Save</string>
@@ -29,6 +33,7 @@
     <string name="cat_ideas_str">Ideas</string>
     <string name="cat_invalid_str">Invalid Category</string>
     <string name="cat_none_str">No Category</string>
+    <string name="all_categories_str">All</string>
 
     <string name="tag_important_str">Important</string>
     <string name="tag_quick_task_str">Quick Task</string>

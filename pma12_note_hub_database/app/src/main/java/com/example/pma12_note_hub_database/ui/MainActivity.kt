@@ -3,6 +3,8 @@ package com.example.pma12_note_hub_database.ui
 import android.app.AlertDialog
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.AdapterView
+import android.view.View
 import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +26,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var noteAdapter: NoteAdapter
     private lateinit var database: NoteHubDatabase
+    private var isNameAscending = true
+    private var currentCategory: String = ""
+
+    private enum class SortMode {
+        RECENCY_DESCENDING,
+        RECENCY_ASCENDING,
+        TITLE_DESCENDING,
+        TITLE_ASCENDING
+    }
+
+    private var currentSortMode: SortMode = SortMode.RECENCY_DESCENDING
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +44,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // In case of a mishap, wipeDatabase() can be used to delete everything in the database
+        // If needed, wipeDatabase() can be used to delete everything in the database,
+        // but the structure will stay the same (use adb or versions when adding columns)
 
         // Database init
         database = NoteHubDatabaseInstance.getDatabase(this)
@@ -50,15 +64,75 @@ class MainActivity : AppCompatActivity() {
         // )
         // binding.recyclerView.adapter = noteAdapter
         loadNotes()
+        setupUI()
 
         binding.fabAddNote.setOnClickListener {
             addNote()
         }
     }
 
+    private fun setupUI() {
+        setupFilterSpinner()
+        setupSortButtons()
+        getString(R.string.all_categories_str)
+    }
+
+    private fun setupFilterSpinner() {
+        lifecycleScope.launch {
+            val categories = database.categoryDao().getAllCategories().first()
+            val categoryNames = categories.map { it.name }.toMutableList()
+            categoryNames.add(0, getString(R.string.all_categories_str))
+
+            val adapter = ArrayAdapter(this@MainActivity,
+                R.layout.custom_spiner_item, categoryNames)
+            adapter.setDropDownViewResource(R.layout.custom_spiner_item)
+            binding.spFilterCategory.adapter = adapter
+
+            // Sets up an on-item listener
+            binding.spFilterCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    currentCategory = categoryNames[position]
+                    loadNotes()
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    // Do nothing
+                }
+            }
+        }
+    }
+
+    private fun setupSortButtons() {
+        binding.btnSortedBy.setOnClickListener {
+            // Cycle through the sort modes
+            currentSortMode = when (currentSortMode) {
+                SortMode.RECENCY_DESCENDING -> SortMode.RECENCY_ASCENDING
+                SortMode.RECENCY_ASCENDING -> SortMode.TITLE_DESCENDING
+                SortMode.TITLE_DESCENDING -> SortMode.TITLE_ASCENDING
+                SortMode.TITLE_ASCENDING -> SortMode.RECENCY_DESCENDING
+            }
+            // Update the button text based on the current mode
+            val buttonText = when (currentSortMode) {
+                SortMode.RECENCY_DESCENDING -> getString(R.string.sorted_recency_dsc)
+                SortMode.RECENCY_ASCENDING -> getString(R.string.sorted_recency_asc)
+                SortMode.TITLE_DESCENDING -> getString(R.string.sorted_title_dsc)
+                SortMode.TITLE_ASCENDING -> getString(R.string.sorted_title_asc)
+            }
+            binding.btnSortedBy.text = buttonText
+
+            loadNotes()
+        }
+        // Initialize the button text to match the initial sort mode
+        binding.btnSortedBy.text = getString(R.string.sorted_recency_dsc)
+    }
+
     private fun addNoteToDatabase(title: String, content: String, categoryId: Int) {
         lifecycleScope.launch {
-            val newNote = Note(title = title, content = content, categoryId = categoryId)
+            val newNote = Note(
+                title = title,
+                content = content,
+                categoryId = categoryId,
+                timestamp = System.currentTimeMillis()
+            )
             database.noteDao().insert(newNote)
             loadNotes()
         }
@@ -66,16 +140,36 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadNotes() {
         lifecycleScope.launch {
-            database.noteDao().getAllNotes().collect { notes ->
-                noteAdapter = NoteAdapter(
-                    notes,
-                    onDeleteClick = { note -> deleteNote(note) },
-                    onEditClick = { note -> editNote(note) },
-                    lifecycleScope = lifecycleScope,
-                    database = database
-                )
-                binding.recyclerView.adapter = noteAdapter
+            var notes = if (currentCategory == getString(R.string.all_categories_str)) {
+                database.noteDao().getAllNotes().first()
+            } else {
+                val category = database.categoryDao().getCategoryByName(currentCategory)
+                if (category != null) {
+                    database.noteDao().getNotesByCategoryId(category.id).first()
+                } else {
+                    emptyList()
+                }
             }
+
+            // Apply sorting based on the current mode
+            notes = when (currentSortMode) {
+                SortMode.RECENCY_DESCENDING -> notes.sortedByDescending { it.timestamp }
+                SortMode.RECENCY_ASCENDING -> notes.sortedBy { it.timestamp }
+                SortMode.TITLE_DESCENDING ->
+                    notes.sortedWith(compareByDescending { it.title.lowercase() })
+                SortMode.TITLE_ASCENDING ->
+                    notes.sortedWith(compareBy { it.title.lowercase() })
+            }
+
+            // Update RecyclerView
+            noteAdapter = NoteAdapter(
+                notes = notes,
+                onDeleteClick = { note -> deleteNote(note) },
+                onEditClick = { note -> editNote(note) },
+                lifecycleScope = lifecycleScope,
+                database = database
+            )
+            binding.recyclerView.adapter = noteAdapter
         }
     }
 
@@ -164,7 +258,8 @@ class MainActivity : AppCompatActivity() {
             val updatedNote = note.copy(
                 title = updatedTitle,
                 content = updatedContent,
-                categoryId = updatedCategoryId
+                categoryId = updatedCategoryId,
+                timestamp = System.currentTimeMillis()
             )
             lifecycleScope.launch {
                 database.noteDao().update(updatedNote)

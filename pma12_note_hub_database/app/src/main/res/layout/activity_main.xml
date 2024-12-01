@@ -6,10 +6,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Spinner for category filtering -->
+    <Spinner
+        android:id="@+id/spFilterCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_rounded_rectangle_outlined"
+        android:popupBackground="@drawable/bg_rounded_rectangle_outlined"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="21dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="10dp"
+        android:minWidth="90dp"
+        android:minHeight="37dp" />
+
+    <!-- Sorting button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSortedBy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:height="49dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="8dp"
+        app:cornerRadius="12dp"
+        android:layout_toEndOf="@id/spFilterCategory"
+        android:text="@string/sorted_recency_dsc"
+        android:backgroundTint="@color/primary" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/spFilterCategory"
         android:padding="16dp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

@@ -21,10 +21,19 @@ interface NoteDao {
     suspend fun delete(note: Note)
 
     // Loads all notes from database and returns them as flow
-    @Query("SELECT * FROM note ORDER BY id DESC")
+    @Query("SELECT * FROM note ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<Note>>
 
     // Deletes all notes from the table - be careful
     @Query("DELETE FROM note")
     suspend fun deleteAllNotes()
+
+    // Loads all notes from a certain category and returns them as flow
+    @Query("SELECT * FROM note WHERE categoryId = :categoryId")
+    fun getNotesByCategoryId(categoryId: Int): Flow<List<Note>>
+
+    // Update a note's timestamp - this should be called on addition
+    @Query("UPDATE note SET timestamp = :timestamp WHERE id = :noteId")
+    suspend fun updateTimestamp(noteId: Int, timestamp: Long)
+
 }
