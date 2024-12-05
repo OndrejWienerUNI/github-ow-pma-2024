@@ -1,4 +1,4 @@
-package com.example.pma13_tasks_with_cloud_firestore.data.model
+package com.example.pma13_tasks_with_cloud_firestore.data
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

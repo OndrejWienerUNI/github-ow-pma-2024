@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171320685158",
+    "project_id": "sharedtaskslist-8236c",
+    "storage_bucket": "sharedtaskslist-8236c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171320685158:android:589d08d753543d386733a7",
+        "android_client_info": {
+          "package_name": "com.example.pma13_tasks_with_cloud_firestore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBTFB6t4SCD7J4Lp60fFDly47dSlRC9Lk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
