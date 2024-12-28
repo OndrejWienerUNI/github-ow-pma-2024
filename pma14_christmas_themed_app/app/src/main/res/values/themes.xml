@@ -16,7 +16,8 @@
     <style name="Theme.Christmas.Splash" parent="NightAdjusted.Theme.Splash">
         <item name="android:windowSplashScreenBehavior">icon_preferred</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="windowSplashScreenBackground">#C22424</item>
+        <item name="windowSplashScreenAnimationDuration">500</item>
         <item name="postSplashScreenTheme">@style/Theme.Christmas</item>
     </style>
 </resources>

@@ -9,34 +9,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // Added color scheme on top of the default light and dark schemes
-val ChristmasRedLight = Color(0xFFFF475E)
-val ChristmasRedDark = Color(0xFFC22424)
-
-val ChristmasGreenLight = Color(0xFF6AFF6F)
-val ChristmasGreenDark = Color(0xFF128617)
-
+val ChristmasRed = Color(0xFFC22424)
+val ChristmasGreen = Color(0xFF12863D)
 val ChristmasLightGray = Color(0xFFAFAFAF)
 val ChristmasDarkGray = Color(0xFF343434)
-
 val ChristmasGold = Color(0xFFFFD700)
 
 
 val DarkColorScheme: ColorScheme = darkColorScheme(
-    primary = ChristmasRedLight,
-    secondary = ChristmasGreenLight,
+    primary = ChristmasRed,
+    secondary = ChristmasGreen,
     tertiary = ChristmasGold,
     background = ChristmasDarkGray,
     surface = ChristmasDarkGray,
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
+    onPrimary = Color.White,
+    onSecondary = Color.White,
     onTertiary = Color.Black,
     onBackground = Color.White,
     onSurface = Color.White
 )
 
 val LightColorScheme: ColorScheme = lightColorScheme(
-    primary = ChristmasRedDark,
-    secondary = ChristmasGreenDark,
+    primary = ChristmasRed,
+    secondary = ChristmasGreen,
     tertiary = ChristmasGold,
     background = Color.White,
     surface = ChristmasLightGray,
