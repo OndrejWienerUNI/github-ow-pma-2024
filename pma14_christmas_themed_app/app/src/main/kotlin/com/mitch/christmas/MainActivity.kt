@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
          */
         val splashScreen = installSplashScreen()
         enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
 
         val dependenciesProvider = (application as ChristmasApplication).dependenciesProvider
