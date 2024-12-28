@@ -16,26 +16,26 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
-val packageName = "com.mitch.template"
+val packageName = "com.mitch.christmas"
 
-enum class TemplateBuildType(val applicationIdSuffix: String? = null) {
+enum class ChristmasBuildType(val applicationIdSuffix: String? = null) {
     Debug(".debug"),
     Staging(".staging"),
     Release
 }
 
-enum class TemplateFlavorDimension {
+enum class ChristmasFlavorDimension {
     Version;
 
     val dimensionName = this.name.replaceFirstChar { it.lowercase() }
 }
 
-enum class TemplateFlavor(
-    val dimension: TemplateFlavorDimension,
+enum class ChristmasFlavor(
+    val dimension: ChristmasFlavorDimension,
     val applicationIdSuffix: String? = null
 ) {
-    Demo(dimension = TemplateFlavorDimension.Version),
-    Prod(dimension = TemplateFlavorDimension.Version);
+    Demo(dimension = ChristmasFlavorDimension.Version),
+    Prod(dimension = ChristmasFlavorDimension.Version);
 
     val flavorName = this.name.replaceFirstChar { it.lowercase() }
 }
@@ -75,12 +75,12 @@ android {
         debug {
             isDebuggable = true
             isMinifyEnabled = false
-            applicationIdSuffix = TemplateBuildType.Debug.applicationIdSuffix
+            applicationIdSuffix = ChristmasBuildType.Debug.applicationIdSuffix
         }
         create("staging") {
             initWith(getByName("release"))
             isDebuggable = true
-            applicationIdSuffix = TemplateBuildType.Staging.applicationIdSuffix
+            applicationIdSuffix = ChristmasBuildType.Staging.applicationIdSuffix
             secrets.propertiesFileName = "secrets.staging.properties"
             signingConfig = try {
                 signingConfigs.named("staging").get()
@@ -104,9 +104,9 @@ android {
             }
         }
     }
-    flavorDimensions += TemplateFlavorDimension.values().map { it.dimensionName }
+    flavorDimensions += ChristmasFlavorDimension.values().map { it.dimensionName }
     productFlavors {
-        TemplateFlavor.values().forEach { flavor ->
+        ChristmasFlavor.values().forEach { flavor ->
             create(flavor.flavorName) {
                 dimension = flavor.dimension.dimensionName
                 if (flavor.applicationIdSuffix != null) {

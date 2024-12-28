@@ -27,6 +27,6 @@ dependencies {
 
 tasks.jar {
     manifest {
-        attributes["Lint-Registry-v2"] = "com.mitch.template.lint.TemplateIssueRegistry"
+        attributes["Lint-Registry-v2"] = "com.mitch.template.lint.ChristmasIssueRegistry"
     }
 }

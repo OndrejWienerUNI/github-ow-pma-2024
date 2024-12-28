@@ -19,7 +19,7 @@ dependencyResolutionManagement {
 }
 
 
-rootProject.name = "template"
+rootProject.name = "pma14_christmas_themed_app"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Template" parent="NightAdjusted.Theme.Template">
+    <style name="Theme.Christmas" parent="NightAdjusted.Theme.Christmas">
         <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>

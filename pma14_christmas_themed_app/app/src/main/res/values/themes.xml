@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="NightAdjusted.Theme.Template" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <style name="NightAdjusted.Theme.Christmas" parent="Theme.AppCompat.DayNight.NoActionBar" />
 
     <!-- The final theme we use -->
-    <style name="Theme.Template" parent="NightAdjusted.Theme.Template">
+    <style name="Theme.Christmas" parent="NightAdjusted.Theme.Christmas">
         <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
     </style>
 
@@ -13,8 +13,8 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>
 
-    <style name="Theme.Template.Splash" parent="NightAdjusted.Theme.Splash">
+    <style name="Theme.Christmas.Splash" parent="NightAdjusted.Theme.Splash">
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="postSplashScreenTheme">@style/Theme.Template</item>
+        <item name="postSplashScreenTheme">@style/Theme.Christmas</item>
     </style>
 </resources>
