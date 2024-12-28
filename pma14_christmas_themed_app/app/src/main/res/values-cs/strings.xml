@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Template</string>
+    <string name="system_default">Podle systému</string>
+    <string name="light_theme">Světlý</string>
+    <string name="dark_theme">Tmavý</string>
+    <string name="change_language">Změnit jazyk</string>
+    <string name="change_theme">Změnit režim</string>
+    <string name="cancel">Zrušit</string>
+    <string name="save">Uložit</string>
+    <string name="dismiss_snackbar_content_description">Zavřít</string>
+</resources>
