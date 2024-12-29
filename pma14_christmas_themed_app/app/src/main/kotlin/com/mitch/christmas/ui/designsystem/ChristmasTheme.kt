@@ -10,17 +10,18 @@ import androidx.compose.ui.graphics.Color
 
 // Added color scheme on top of the default light and dark schemes
 val ChristmasRed = Color(0xFFC22424)
-val ChristmasGreen = Color(0xFF12863D)
-val ChristmasLightGray = Color(0xFFAFAFAF)
+val ChristmasLightGreen = Color(0xFF12863D)
+val ChristmasDarkGreen = Color(0xFF05421E)
+val ChristmasLightGray = Color(0xFFE8E8E8)
 val ChristmasDarkGray = Color(0xFF343434)
 val ChristmasGold = Color(0xFFFFD700)
 
 
 val DarkColorScheme: ColorScheme = darkColorScheme(
     primary = ChristmasRed,
-    secondary = ChristmasGreen,
+    secondary = ChristmasDarkGreen,
     tertiary = ChristmasGold,
-    background = ChristmasDarkGray,
+    background = ChristmasDarkGreen,
     surface = ChristmasDarkGray,
     onPrimary = Color.White,
     onSecondary = Color.White,
@@ -31,9 +32,9 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
 
 val LightColorScheme: ColorScheme = lightColorScheme(
     primary = ChristmasRed,
-    secondary = ChristmasGreen,
+    secondary = ChristmasLightGreen,
     tertiary = ChristmasGold,
-    background = Color.White,
+    background = ChristmasLightGreen,
     surface = ChristmasLightGray,
     onPrimary = Color.White,
     onSecondary = Color.White,
@@ -43,7 +44,7 @@ val LightColorScheme: ColorScheme = lightColorScheme(
 )
 
 
-// Use ChristmasDesignSystem instead of MaterialTheme everywhere
+// Use ChristmasDesignSystem instead of MaterialTheme everywhere, NOT ChristmasTheme
 typealias ChristmasDesignSystem = MaterialTheme
 
 @Composable
