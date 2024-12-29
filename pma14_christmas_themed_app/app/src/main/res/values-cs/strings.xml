@@ -9,4 +9,8 @@
     <string name="cancel">Zrušit</string>
     <string name="save">Uložit</string>
     <string name="dismiss_snackbar_content_description">Zavřít</string>
+    <string name="days">Dní</string>
+    <string name="hours">Hodin</string>
+    <string name="minutes">Minut</string>
+    <string name="seconds">Vteřin</string>
 </resources>

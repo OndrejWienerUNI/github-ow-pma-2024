@@ -9,4 +9,8 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="dismiss_snackbar_content_description">Dismiss</string>
+    <string name="days">Days</string>
+    <string name="hours">Hours</string>
+    <string name="minutes">Minutes</string>
+    <string name="seconds">Seconds</string>
 </resources>

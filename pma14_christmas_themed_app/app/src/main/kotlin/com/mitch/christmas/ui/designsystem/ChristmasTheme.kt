@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 
 // Added color scheme on top of the default light and dark schemes
 val ChristmasRed = Color(0xFFC22424)
-val ChristmasLightGreen = Color(0xFF12863D)
+val ChristmasLightGreen = Color(0xFF18C058)
 val ChristmasDarkGreen = Color(0xFF05421E)
 val ChristmasLightGray = Color(0xFFE8E8E8)
 val ChristmasDarkGray = Color(0xFF343434)
