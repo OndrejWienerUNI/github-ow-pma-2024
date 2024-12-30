@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dnů do vánoc</string>
+    <string name="app_name">Další vánoce</string>
+    <string name="home_title">Jak dloho do vánoc?</string>
     <string name="system_default">Podle systému</string>
     <string name="light_theme">Světlý</string>
     <string name="dark_theme">Tmavý</string>

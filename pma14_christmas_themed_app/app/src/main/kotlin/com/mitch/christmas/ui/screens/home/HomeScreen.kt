@@ -1,6 +1,8 @@
 package com.mitch.christmas.ui.screens.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,13 +17,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mitch.christmas.R
 import com.mitch.christmas.domain.models.ChristmasLanguagePreference
 import com.mitch.christmas.domain.models.ChristmasThemePreference
+import com.mitch.christmas.ui.animations.SnowingAnimation
+import com.mitch.christmas.ui.designsystem.ChristmasDesignSystem
 import com.mitch.christmas.ui.designsystem.ChristmasTheme
 import com.mitch.christmas.ui.designsystem.components.loading.LoadingScreen
 import com.mitch.christmas.ui.screens.home.components.ChristmasCountdownTimer
@@ -31,6 +38,8 @@ import com.mitch.christmas.ui.screens.home.components.ThemePickerDialog
 // Constants for layout configuration
 private val SCREEN_PADDING_VERTICAL = 26.dp
 private val BUTTON_SPACING = 20.dp
+private val TITLE_MARGIN_HORIZONTAL = 12.dp
+private val TITLE_MARGIN_VERTICAL = 12.dp
 private val BUTTON_MARGIN_VERTICAL = 10.dp
 private val TIMER_PADDING = 6.dp
 
@@ -50,7 +59,8 @@ fun HomeScreen(
     uiState: HomeUiState,
     onChangeTheme: (ChristmasThemePreference) -> Unit,
     onChangeLanguage: (ChristmasLanguagePreference) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isPreview: Boolean = false
 ) {
     when (uiState) {
         HomeUiState.Loading -> LoadingScreen()
@@ -73,30 +83,58 @@ fun HomeScreen(
                 )
             }
 
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(vertical = SCREEN_PADDING_VERTICAL),
-                verticalArrangement = Arrangement.Center, // Center content vertically
-                horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally
+            Box(
+                modifier = modifier.fillMaxSize()
             ) {
-                // Countdown Timer
-                ChristmasCountdownTimer(
-                    modifier = Modifier.padding(horizontal = TIMER_PADDING),
+                // Snowing Animation in the background
+                SnowingAnimation(
+                    modifier = Modifier.fillMaxSize(),
+                    snowflakeSize = 24.dp,
+                    snowflakeCount = if (isPreview) 30 else 50,
+                    isPreview = isPreview // Use the flag here
                 )
 
-                // Buttons below the timer
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(BUTTON_SPACING),
+                // Content layered on top of the animation
+                Column(
                     modifier = Modifier
-                        .padding(top = BUTTON_MARGIN_VERTICAL)
+                        .fillMaxSize()
+                        .padding(vertical = SCREEN_PADDING_VERTICAL),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Button(onClick = { activeDialog = ActiveDialog.Language }) {
-                        Text(text = stringResource(id = R.string.change_language))
-                    }
+                    Text(
+                        text = stringResource(id = R.string.home_title),
+                        color = ChristmasDesignSystem.colorScheme.tertiary,
+                        style = ChristmasDesignSystem.typography.displaySmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 40.sp,
+                            letterSpacing = 1.5.sp
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(
+                                horizontal = TITLE_MARGIN_HORIZONTAL,
+                                vertical = TITLE_MARGIN_VERTICAL
+                            )
+                    )
 
-                    Button(onClick = { activeDialog = ActiveDialog.Theme }) {
-                        Text(text = stringResource(R.string.change_theme))
+                    ChristmasCountdownTimer(
+                        modifier = Modifier.padding(horizontal = TIMER_PADDING),
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(BUTTON_SPACING),
+                        modifier = Modifier.padding(top = BUTTON_MARGIN_VERTICAL)
+                    ) {
+                        Button(onClick = { activeDialog = ActiveDialog.Language }) {
+                            Text(text = stringResource(id = R.string.change_language),
+                                style = ChristmasDesignSystem.typography.labelLarge.copy())
+                        }
+
+                        Button(onClick = { activeDialog = ActiveDialog.Theme }) {
+                            Text(text = stringResource(R.string.change_theme),
+                                style = ChristmasDesignSystem.typography.labelLarge.copy())
+                        }
                     }
                 }
             }
@@ -111,18 +149,26 @@ private enum class ActiveDialog {
     None, Language, Theme
 }
 
+
 @PreviewLightDark
 @PreviewScreenSizes
 @Composable
 private fun HomeScreenContentPreview() {
     ChristmasTheme {
-        HomeScreen(
-            uiState = HomeUiState.Success(
-                language = ChristmasLanguagePreference.English,
-                theme = ChristmasThemePreference.Light
-            ),
-            onChangeTheme = { },
-            onChangeLanguage = { }
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = ChristmasDesignSystem.colorScheme.secondary)
+        ) {
+            HomeScreen(
+                uiState = HomeUiState.Success(
+                    language = ChristmasLanguagePreference.English,
+                    theme = ChristmasThemePreference.Light
+                ),
+                onChangeTheme = { },
+                onChangeLanguage = { },
+                isPreview = true
+            )
+        }
     }
 }
