@@ -1,6 +1,7 @@
-<div align="center">
+<div style="display: flex; justify-content: center; align-items: center;">
   <a href="https://developer.android.com/jetpack/compose">
-    <img src="https://tabris.com/wp-content/uploads/2021/06/jetpack-compose-icon_RGB.png" alt="Jetpack Compose logo" title="Jetpack Compose logo" width="200" height="200" />
+    <img src="https://tabris.com/wp-content/uploads/2021/06/jetpack-compose-icon_RGB.png"
+         alt="Jetpack Compose logo" title="Jetpack Compose logo" width="200" height="200" />
   </a>
 </div>
 
