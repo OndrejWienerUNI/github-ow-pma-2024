@@ -45,6 +45,7 @@ class FontPickerAppState(
      *
      * Starting destination: search for `@RootNavGraph(start = true)`
      */
+    @Suppress("Unused")
     val currentDestination: NavDestination?
         @Composable get() {
             // Collect the currentBackStackEntryFlow as a state
@@ -62,6 +63,7 @@ class FontPickerAppState(
     /**
      * Manages app connectivity status
      */
+    @Suppress("Unused")
     val isOffline: StateFlow<Boolean> = networkMonitor.networkInfo
         .map { it.isOnline }
         .map(Boolean::not)

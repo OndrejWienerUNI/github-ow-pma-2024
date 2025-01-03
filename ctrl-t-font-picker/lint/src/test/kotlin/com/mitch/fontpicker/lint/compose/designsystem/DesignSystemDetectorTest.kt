@@ -1,3 +1,5 @@
+@file:Suppress("TestFunctionName")
+
 package com.mitch.fontpicker.lint.compose.designsystem
 
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest.kotlin

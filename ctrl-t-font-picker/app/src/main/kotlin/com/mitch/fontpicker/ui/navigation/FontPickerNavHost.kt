@@ -18,6 +18,7 @@ import com.mitch.fontpicker.ui.screens.home.HomeViewModel
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun FontPickerNavHost(
     onShowSnackbar: suspend (SnackbarEvent) -> SnackbarResult,
     dependenciesProvider: DependenciesProvider,
@@ -45,6 +46,7 @@ fun FontPickerNavHost(
 // dropUnlessResumed is used to avoid navigating multiple times to the same destination or
 // popping the backstack when the destination is already on top.
 @Composable
+@Suppress("Unused")
 fun NavController.navigateTo(
     destination: FontPickerDestination,
     navOptions: NavOptions? = null,

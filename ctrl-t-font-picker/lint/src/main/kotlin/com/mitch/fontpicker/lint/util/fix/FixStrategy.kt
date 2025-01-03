@@ -24,6 +24,7 @@ data class Reportable(
     val fix: Fix? = null
 )
 
+@Suppress("Unused")
 fun designSystemComponentFixStrategy(oldName: String, newName: String): FixStrategy = FixStrategy {
     val componentsPackage = "com.mitch.fontpicker.ui.designsystem.components"
 

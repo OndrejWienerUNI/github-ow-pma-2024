@@ -109,6 +109,7 @@ class ConnectivityManagerNetworkMonitor(
 }
 
 @Composable
+@Suppress("Unused")
 fun NetworkMonitor.networkInfoState(): State<NetworkInfo> {
     return produceState(initialValue = NetworkInfo(isOnline = false, isOnWifi = false)) {
         this@networkInfoState.networkInfo.collect { value = it }

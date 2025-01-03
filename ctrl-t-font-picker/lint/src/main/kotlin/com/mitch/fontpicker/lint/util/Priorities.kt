@@ -1,5 +1,6 @@
 package com.mitch.fontpicker.lint.util
 
+@Suppress("ConstPropertyName", "Unused")
 object Priorities {
     const val Lowest: Int = 1
     const val Low: Int = 3

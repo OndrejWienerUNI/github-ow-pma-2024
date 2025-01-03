@@ -9,5 +9,6 @@ sealed interface FontPickerDestination {
         data object Home : Screen
     }
 
+    @Suppress("Unused")
     sealed interface Graph : FontPickerDestination
 }

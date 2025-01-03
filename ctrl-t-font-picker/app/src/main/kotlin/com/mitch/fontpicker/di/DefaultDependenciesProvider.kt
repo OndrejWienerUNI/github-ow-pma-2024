@@ -86,6 +86,7 @@ class DefaultDependenciesProvider(
         }
     }
 
+    @Suppress("Unused")
     private val httpClient: HttpClient by lazy {
         HttpClient {
             if (BuildConfig.DEBUG) {

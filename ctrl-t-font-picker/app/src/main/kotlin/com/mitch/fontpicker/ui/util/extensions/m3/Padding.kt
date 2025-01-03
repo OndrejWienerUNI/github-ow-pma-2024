@@ -15,6 +15,7 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.LocalPadding
  *
  * see value at [Material3 Card Layout values](https://m3.material.io/components/cards/specs#9abbced9-d5d3-4893-9a67-031825205f06)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val CardDefaults.ContentPadding: Dp
     @Composable
     @ReadOnlyComposable
@@ -25,6 +26,7 @@ val CardDefaults.ContentPadding: Dp
  *
  * see value at [Material3 Card Layout values](https://m3.material.io/components/cards/specs#9abbced9-d5d3-4893-9a67-031825205f06)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val CardDefaults.PaddingBetweenCards: Dp
     @Composable
     @ReadOnlyComposable
@@ -35,6 +37,7 @@ val CardDefaults.PaddingBetweenCards: Dp
  *
  * see value at [Material3 Dialog Layout values](https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val AlertDialogDefaults.ContentPadding: Dp
     get() = 24.dp
 
@@ -43,6 +46,7 @@ val AlertDialogDefaults.ContentPadding: Dp
  *
  * see value at [Material3 Dialog Layout values](https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val AlertDialogDefaults.ButtonsPadding: Dp
     @Composable
     @ReadOnlyComposable
@@ -53,6 +57,7 @@ val AlertDialogDefaults.ButtonsPadding: Dp
  *
  * see value at [Material3 Dialog Layout values](https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val AlertDialogDefaults.PaddingIconTitle: Dp
     @Composable
     @ReadOnlyComposable
@@ -63,6 +68,7 @@ val AlertDialogDefaults.PaddingIconTitle: Dp
  *
  * see value at [Material3 Dialog Layout values](https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val AlertDialogDefaults.PaddingTitleBody: Dp
     @Composable
     @ReadOnlyComposable
@@ -73,5 +79,6 @@ val AlertDialogDefaults.PaddingTitleBody: Dp
  *
  * see value at [Material3 Dialog Layout values](https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1)
  */
+@Suppress("UnusedReceiverParameter","Unused")
 val AlertDialogDefaults.PaddingBodyButtons: Dp
     get() = 24.dp

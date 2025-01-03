@@ -20,15 +20,15 @@ class LanguagePickerDialogTest {
 
     private val correctItemsRobot = LanguagePickerRobot(
         composeTestRule,
-        listOf(LanguagePickerItem.English, LanguagePickerItem.Italian)
+        listOf(FontPickerLanguagePreference.English, FontPickerLanguagePreference.Italian)
     )
 
     private val wrongItemsRobot = LanguagePickerRobot(
         composeTestRule,
         listOf(
-            LanguagePickerItem.English,
-            LanguagePickerItem.English,
-            LanguagePickerItem.Italian
+            FontPickerLanguagePreference.English,
+            FontPickerLanguagePreference.English,
+            FontPickerLanguagePreference.Italian
         )
     )
 
@@ -81,42 +81,50 @@ class LanguagePickerDialogTest {
 
 class LanguagePickerRobot(
     private val composeTestRule: AppNameAndroidComposeTestRule,
-    private val items: List<LanguagePickerItem>
+    private val items: List<FontPickerLanguagePreference>
 ) {
 
     fun selectLanguage(language: FontPickerLanguagePreference) {
-        composeTestRule
-            .onNodeWithText(language.locale.displayLanguage)
-            .performClick()
+        language.locale?.let {
+            composeTestRule
+                .onNodeWithText(it.displayLanguage)
+                .performClick()
+        }
     }
 
     fun assertLanguageExists(language: FontPickerLanguagePreference) {
-        val item = items.singleOrNull { it.language == language }
+        val item: FontPickerLanguagePreference? = items.singleOrNull { it == language }
         requireNotNull(item) {
             "item from language $language is null; check that items DO NOT have the same language"
         }
 
-        composeTestRule
-            .onNodeWithText(item.language.locale.displayLanguage)
-            .assertExists()
+        item.locale?.let {
+            composeTestRule
+                .onNodeWithText(it.displayLanguage)
+                .assertExists()
+        }
 
         composeTestRule
             .onNodeWithTag(
-                testTag = item.flagId.toString(),
+                testTag = item.name,
                 useUnmergedTree = true
             )
             .assertExists()
     }
 
     fun assertLanguageIsSelected(language: FontPickerLanguagePreference) {
-        composeTestRule
-            .onNodeWithText(language.locale.displayLanguage)
-            .assertIsSelected()
+        language.locale?.let {
+            composeTestRule
+                .onNodeWithText(it.displayLanguage)
+                .assertIsSelected()
+        }
     }
 
     fun assertLanguageIsNotSelected(language: FontPickerLanguagePreference) {
-        composeTestRule
-            .onNodeWithText(language.locale.displayLanguage)
-            .assertIsNotSelected()
+        language.locale?.let {
+            composeTestRule
+                .onNodeWithText(it.displayLanguage)
+                .assertIsNotSelected()
+        }
     }
 }

@@ -30,6 +30,7 @@ sealed interface Result<out T> {
  * @param T type of a successful operation
  * @return same flow wrapped in a [Result]
  */
+@Suppress("Unused")
 fun <T> Flow<T>.asResult(): Flow<Result<T>> {
     return this
         .map<T, Result<T>> {

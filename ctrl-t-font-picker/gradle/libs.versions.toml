@@ -55,7 +55,6 @@ ktor = "3.0.1"
 # Plugins
 # android-gradle-plugin and androidTools should be updated together
 android-gradle-plugin = "8.7.3" # agp = x.y.z
-gradle = "7.6"  # Replace with the Gradle version compatible with AGP 8.7.3
 androidTools = "31.7.3" # androidTools = (agp.x + 23).(agp.y).(agp.z)
 ksp = "2.1.0-1.0.29" # kotlin and ksp should be updated together
 junit5-plugin = "1.11.2.0"

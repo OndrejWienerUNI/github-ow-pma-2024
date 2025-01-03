@@ -91,6 +91,7 @@ class CryptoManager {
         }
     }
 
+    @Suppress("ConstPropertyName")
     private companion object {
         private const val KeyAlias = "keystore_key"
         private const val ChunkSize = 4096

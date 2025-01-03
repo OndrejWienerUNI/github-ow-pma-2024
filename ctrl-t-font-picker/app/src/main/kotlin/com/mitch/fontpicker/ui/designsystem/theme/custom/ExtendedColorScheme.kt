@@ -22,6 +22,7 @@ val LightExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     onWarning = Color(0xFF424242)
 )
 
+@Suppress("Unused")
 val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     success = Color(0xFF4EBD26),
     onSuccess = Color(0xFF1A1C1E),
@@ -32,7 +33,7 @@ val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
 val LocalExtendedColorScheme: ProvidableCompositionLocal<ExtendedColorScheme> =
     staticCompositionLocalOf { LightExtendedColorScheme }
 
-@Suppress("TopLevelPropertyNaming")
+@Suppress("TopLevelPropertyNaming", "UnusedReceiverParameter")
 val FontPickerDesignSystem.extendedColorScheme: ExtendedColorScheme
     @Composable
     get() = LocalExtendedColorScheme.current
