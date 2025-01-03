@@ -9,14 +9,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 
-val ColCerulean = Color(0xFF0C8BB7)
+val ColCerulean = Color(0xFF0E7498)
 val ColSkyBlue = Color(0xFF13CDF6)
 val ColBusYellow = Color(0xFFF8D525)
 
 val ColWhiteSmoke = Color(0xFFF5F5F5)
 val ColBloodRed = Color(0xFF6E0E0D)
 
-val ColOnyx = Color(0xFF2C2C2C)
+val ColOnyx = Color(0xFF1A1B20)
 val ColRed = Color(0xFFDD1C1A)
 
 
