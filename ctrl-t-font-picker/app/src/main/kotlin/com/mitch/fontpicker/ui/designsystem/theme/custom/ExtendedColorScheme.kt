@@ -7,8 +7,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 
-// TODO: Check this out, maybe the colors should go here
-
 @Immutable
 data class ExtendedColorScheme(
     val success: Color,

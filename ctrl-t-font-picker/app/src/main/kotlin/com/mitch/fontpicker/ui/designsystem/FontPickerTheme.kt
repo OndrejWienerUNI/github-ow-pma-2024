@@ -47,7 +47,7 @@ val LightColorScheme: ColorScheme = lightColorScheme(
 )
 
 
-// Use ChristmasDesignSystem instead of MaterialTheme everywhere, NOT ChristmasTheme
+// Use FontPickerDesignSystem instead of MaterialTheme everywhere, NOT FontPickerTheme
 typealias FontPickerDesignSystem = MaterialTheme
 
 @Composable
