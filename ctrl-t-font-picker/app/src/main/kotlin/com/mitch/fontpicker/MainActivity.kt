@@ -1,5 +1,6 @@
 package com.mitch.fontpicker
 
+import android.annotation.SuppressLint
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
@@ -178,6 +179,7 @@ private fun themeInfo(uiState: MainActivityUiState): ThemeInfo {
 /**
  * Sets app theme to reflect user choice.
  */
+@SuppressLint("ObsoleteSdkInt")
 private fun setAppTheme(
     uiModeManager: UiModeManager,
     isThemeDark: Boolean,

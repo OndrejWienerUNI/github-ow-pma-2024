@@ -5,12 +5,12 @@
 
     <!-- The final theme we use -->
     <style name="Theme.FontPicker" parent="NightAdjusted.Theme.FontPicker">
-        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="29" tools:ignore="ObsoleteSdkInt">false</item>
     </style>
 
     <style name="NightAdjusted.Theme.Splash" parent="Theme.SplashScreen">
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27" tools:ignore="ObsoleteSdkInt">true</item>
     </style>
 
     <style name="Theme.FontPicker.Splash" parent="NightAdjusted.Theme.Splash">

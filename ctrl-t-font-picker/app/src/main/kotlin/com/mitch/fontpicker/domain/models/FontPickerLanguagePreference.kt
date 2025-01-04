@@ -5,7 +5,7 @@ import java.util.Locale
 enum class FontPickerLanguagePreference(val locale: Locale?) {
     FollowSystem(locale = null),
     English(locale = Locale.ENGLISH),
-    Italian(locale = Locale.ITALIAN);
+    Czech(locale = Locale("cs", "CZ"));
 
     companion object {
         val Default: FontPickerLanguagePreference = FollowSystem

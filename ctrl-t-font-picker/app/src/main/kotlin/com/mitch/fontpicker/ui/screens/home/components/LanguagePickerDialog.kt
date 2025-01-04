@@ -126,7 +126,7 @@ private fun FontPickerLanguagePreference.flag(): Painter {
     val flagId = when (this) {
         FontPickerLanguagePreference.FollowSystem -> R.drawable.earth_flag
         FontPickerLanguagePreference.English -> R.drawable.english_flag
-        FontPickerLanguagePreference.Italian -> R.drawable.italian_flag
+        FontPickerLanguagePreference.Czech -> R.drawable.czech_flag
     }
     return painterResource(id = flagId)
 }
