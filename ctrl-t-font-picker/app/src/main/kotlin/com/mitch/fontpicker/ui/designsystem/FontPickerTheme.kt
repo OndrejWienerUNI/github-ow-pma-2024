@@ -11,21 +11,17 @@ import androidx.compose.ui.graphics.Color
 
 val ColCerulean = Color(0xFF0E7498)
 val ColSkyBlue = Color(0xFF13CDF6)
-val ColBusYellow = Color(0xFFF8D525)
-
+val ColGray = Color(0xFF999999)
 val ColWhiteSmoke = Color(0xFFF5F5F5)
-val ColBloodRed = Color(0xFF6E0E0D)
-
 val ColOnyx = Color(0xFF1A1B20)
-val ColRed = Color(0xFFDD1C1A)
 
 
 val DarkColorScheme: ColorScheme = darkColorScheme(
     primary = ColSkyBlue,
     secondary = ColSkyBlue,
-    tertiary = ColBusYellow,
+    tertiary = ColGray,
     background = ColOnyx,
-    surface = ColRed,
+    surface = ColOnyx,
     onPrimary = Color.Black,
     onSecondary = Color.Black,
     onTertiary = Color.Black,
@@ -36,9 +32,9 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
 val LightColorScheme: ColorScheme = lightColorScheme(
     primary = ColCerulean,
     secondary = ColCerulean,
-    tertiary = ColBusYellow,
+    tertiary = ColGray,
     background = ColWhiteSmoke,
-    surface = ColBloodRed,
+    surface = ColWhiteSmoke,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
