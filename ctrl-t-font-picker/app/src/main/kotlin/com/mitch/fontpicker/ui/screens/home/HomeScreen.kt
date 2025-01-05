@@ -54,7 +54,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(R.string.welcome_message))
+            Text(text = stringResource(R.string.screen_desc_camera))
         }
     }
 }

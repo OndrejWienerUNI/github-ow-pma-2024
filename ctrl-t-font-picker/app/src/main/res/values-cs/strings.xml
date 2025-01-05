@@ -11,6 +11,7 @@
     <string name="save">Uložit</string>
     <string name="dismiss_snackbar_content_description">Zavřít</string>
     <string name="menu">Menu</string>
-    <string name="welcome_message">Vítejte zpět!</string>
+    <string name="screen_desc_camera">Obrazovka kamery</string>
     <string name="in_app_description">Vaše oblíbená aplikace pro rozpoznávání fontů</string>
+    <string name="screen_desc_saved">Obrazovka uložených fontů</string>
 </resources>
