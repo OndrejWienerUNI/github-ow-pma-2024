@@ -17,8 +17,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mitch.fontpicker.R
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
+import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
-import com.mitch.fontpicker.ui.layouts.HomeDrawer
+import com.mitch.fontpicker.ui.designsystem.components.drawers.HomeDrawer
+
+private val SCREEN_PADDING_HORIZONTAL = 16.dp
 
 @Composable
 fun HomeRoute(viewModel: HomeViewModel) {
@@ -36,7 +39,7 @@ fun HomeScreen(
     uiState: HomeUiState,
     onChangeTheme: (FontPickerThemePreference) -> Unit,
     onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
-    modifier: Modifier = Modifier.padding(vertical = 50.dp)
+    modifier: Modifier = Modifier
 ) {
     HomeDrawer(
         uiState = uiState,
@@ -44,21 +47,21 @@ fun HomeScreen(
         onChangeLanguage = onChangeLanguage,
         modifier = modifier
     ) {
-        // TODO: Add a HorizontalPager implementation for multiple screens, give them some texts
-
-        // Main content of the Home Screen
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = SCREEN_PADDING_HORIZONTAL),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(R.string.screen_desc_camera))
+            Text(
+                text = stringResource(R.string.screen_desc_camera),
+                style = FontPickerDesignSystem.typography.bodyLarge,
+                color = FontPickerDesignSystem.colorScheme.onBackground
+            )
         }
     }
 }
-
 
 @PreviewLightDark
 @PreviewScreenSizes
@@ -70,8 +73,8 @@ private fun HomeScreenContentPreview() {
                 language = FontPickerLanguagePreference.English,
                 theme = FontPickerThemePreference.Light
             ),
-            onChangeTheme = { },
-            onChangeLanguage = { }
+            onChangeTheme = { /* Stub: handle theme change */ },
+            onChangeLanguage = { /* Stub: handle language change */ }
         )
     }
 }
