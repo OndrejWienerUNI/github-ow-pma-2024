@@ -13,5 +13,5 @@
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Obrazovka kamery</string>
     <string name="screen_desc_favorites">Obrazovka s oblíbenými fonty</string>
-    <string name="in_app_description">Vaše oblíbená aplikace pro rozpoznávání fontů</string>
+    <string name="in_app_description">Vaše oblíbená aplikace pro\u00A0rozpoznávání\u00A0fontů</string>
 </resources>

@@ -13,5 +13,5 @@
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Camera Screen</string>
     <string name="screen_desc_favorites">Favorites Screen</string>
-    <string name="in_app_description">Your favorite font picker app</string>
+    <string name="in_app_description">Your favorite font\u00A0picker\u00A0app</string>
 </resources>
