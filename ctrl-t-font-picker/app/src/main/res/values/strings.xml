@@ -12,6 +12,6 @@
     <string name="dismiss_snackbar_content_description">Dismiss message</string>
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Camera Screen</string>
-    <string name="screen_desc_gallery">Gallery Screen</string>
+    <string name="screen_desc_favorites">Favorites Screen</string>
     <string name="in_app_description">Your favorite font picker app</string>
 </resources>

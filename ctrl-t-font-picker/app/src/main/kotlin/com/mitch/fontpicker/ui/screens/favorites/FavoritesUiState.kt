@@ -1,13 +1,13 @@
-package com.mitch.fontpicker.ui.screens.gallery
+package com.mitch.fontpicker.ui.screens.favorites
 
-sealed interface GalleryUiState {
-    data object Loading : GalleryUiState
+sealed interface FavoritesUiState {
+    data object Loading : FavoritesUiState
 
     data class Error(
         val error: String? = null
-    ) : GalleryUiState
+    ) : FavoritesUiState
 
     data class Success(
         val fontPreviews: List<Int> // Replace with actual data type for font previews (will be something else)
-    ) : GalleryUiState
+    ) : FavoritesUiState
 }

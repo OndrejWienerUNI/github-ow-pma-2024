@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.gallery
+package com.mitch.fontpicker.ui.screens.favorites
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,13 +16,13 @@ import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
 
 @Composable
-fun GalleryScreen(viewModel: GalleryViewModel) {
+fun FavoritesScreen(viewModel: FavoritesViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (uiState) {
-        is GalleryUiState.Loading -> LoadingScreen()
-        is GalleryUiState.Success -> {
-            val galleryTitle = stringResource(
-                id = (uiState as GalleryUiState.Success).fontPreviews.first()
+        is FavoritesUiState.Loading -> LoadingScreen()
+        is FavoritesUiState.Success -> {
+            val favoritesTitle = stringResource(
+                id = (uiState as FavoritesUiState.Success).fontPreviews.first()
             )
             // Centering the text
             Column(
@@ -33,13 +33,13 @@ fun GalleryScreen(viewModel: GalleryViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally // Center horizontally
             ) {
                 Text(
-                    text = galleryTitle,
+                    text = favoritesTitle,
                     style = FontPickerDesignSystem.typography.bodyLarge,
                     color = FontPickerDesignSystem.colorScheme.onBackground
                 )
             }
         }
-        is GalleryUiState.Error -> {
+        is FavoritesUiState.Error -> {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -48,7 +48,7 @@ fun GalleryScreen(viewModel: GalleryViewModel) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = (uiState as GalleryUiState.Error).error ?: "Unknown Error",
+                    text = (uiState as FavoritesUiState.Error).error ?: "Unknown Error",
                     style = FontPickerDesignSystem.typography.bodyLarge,
                     color = FontPickerDesignSystem.colorScheme.error
                 )

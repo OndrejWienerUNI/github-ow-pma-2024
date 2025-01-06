@@ -12,6 +12,6 @@
     <string name="dismiss_snackbar_content_description">Zavřít</string>
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Obrazovka kamery</string>
-    <string name="screen_desc_gallery">Obrazovka s galerií fontů</string>
+    <string name="screen_desc_favorites">Obrazovka s oblíbenými fonty</string>
     <string name="in_app_description">Vaše oblíbená aplikace pro rozpoznávání fontů</string>
 </resources>

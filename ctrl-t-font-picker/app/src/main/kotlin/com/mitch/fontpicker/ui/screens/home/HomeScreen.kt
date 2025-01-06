@@ -20,8 +20,8 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.drawers.HomeDrawer
 import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.camera.CameraScreen
-import com.mitch.fontpicker.ui.screens.gallery.GalleryViewModel
-import com.mitch.fontpicker.ui.screens.gallery.GalleryScreen
+import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
+import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
 
 val PAGE_PADDING_HORIZONTAL = 16.dp
 
@@ -45,7 +45,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val cameraViewModel: CameraViewModel = viewModel()
-    val galleryViewModel: GalleryViewModel = viewModel()
+    val favoritesViewModel: FavoritesViewModel = viewModel()
 
     HomeDrawer(
         uiState = uiState,
@@ -64,7 +64,7 @@ fun HomeScreen(
         ) { page ->
             when (page) {
                 0 -> CameraScreen(viewModel = cameraViewModel)
-                1 -> GalleryScreen(viewModel = galleryViewModel)
+                1 -> FavoritesScreen(viewModel = favoritesViewModel)
             }
         }
     }
