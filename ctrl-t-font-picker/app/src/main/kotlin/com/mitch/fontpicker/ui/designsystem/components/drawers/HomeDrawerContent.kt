@@ -23,9 +23,11 @@ import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
-import com.mitch.fontpicker.ui.screens.home.HomeUiState
+import com.mitch.fontpicker.ui.designsystem.components.common.AppBrandingRow
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerDialog
+import com.mitch.fontpicker.ui.screens.home.HomeUiState
+
 
 private enum class ActiveDialog {
     None, Language, Theme
@@ -36,9 +38,9 @@ private val DRAWER_WIDTH_MAX = 400.dp
 private val DRAWER_CORNER_RADIUS = 16.dp
 private val DRAWER_PADDING_TOP = 56.dp
 private val DRAWER_PADDING_HORIZONTAL = 18.dp
-private val TEXT_PADDING_BOTTOM = 18.dp
 private val DESCRIPTION_PADDING_BOTTOM = 20.dp
 private val BUTTON_PADDING_BOTTOM = 10.dp
+
 
 @Composable
 fun HomeDrawerContent(
@@ -70,11 +72,11 @@ fun HomeDrawerContent(
                     end = DRAWER_PADDING_HORIZONTAL
                 )
         ) {
-            Text(
-                text = stringResource(id = R.string.in_app_title),
-                color = FontPickerDesignSystem.colorScheme.primary,
-                style = FontPickerDesignSystem.typography.displayMedium,
-                modifier = Modifier.padding(bottom = TEXT_PADDING_BOTTOM)
+            AppBrandingRow(
+                iconResId = R.drawable.app_icon_cropped,
+                titleResId = R.string.in_app_title,
+                topMargin = 0.dp,
+                bottomMargin = 18.dp
             )
             Text(
                 text = stringResource(id = R.string.in_app_description),
@@ -122,9 +124,10 @@ fun HomeDrawerContent(
     }
 }
 
+
 @Preview
 @Composable
-private fun MainDrawerContentPreview() {
+private fun HomeDrawerContentPreview() {
     FontPickerTheme {
         HomeDrawerContent(
             uiState = HomeUiState.Success(
