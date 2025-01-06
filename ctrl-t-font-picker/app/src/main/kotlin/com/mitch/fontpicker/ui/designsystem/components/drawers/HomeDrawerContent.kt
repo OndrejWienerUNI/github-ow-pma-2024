@@ -24,8 +24,8 @@ import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.home.HomeUiState
-import com.mitch.fontpicker.ui.screens.home.components.LanguagePickerDialog
-import com.mitch.fontpicker.ui.screens.home.components.ThemePickerDialog
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerDialog
 
 private enum class ActiveDialog {
     None, Language, Theme

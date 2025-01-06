@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
 import com.mitch.fontpicker.ui.util.AppNameAndroidComposeTestRule
 import org.junit.Before
 import org.junit.Rule
@@ -20,7 +21,7 @@ class LanguagePickerDialogTest {
 
     private val correctItemsRobot = LanguagePickerRobot(
         composeTestRule,
-        listOf(FontPickerLanguagePreference.English, FontPickerLanguagePreference.Italian)
+        listOf(FontPickerLanguagePreference.English, FontPickerLanguagePreference.Czech)
     )
 
     private val wrongItemsRobot = LanguagePickerRobot(
@@ -28,7 +29,7 @@ class LanguagePickerDialogTest {
         listOf(
             FontPickerLanguagePreference.English,
             FontPickerLanguagePreference.English,
-            FontPickerLanguagePreference.Italian
+            FontPickerLanguagePreference.Czech
         )
     )
 
@@ -47,7 +48,7 @@ class LanguagePickerDialogTest {
     fun allLanguageOptionsExist() {
         with(correctItemsRobot) {
             assertLanguageExists(FontPickerLanguagePreference.English)
-            assertLanguageExists(FontPickerLanguagePreference.Italian)
+            assertLanguageExists(FontPickerLanguagePreference.Czech)
             assertLanguageIsSelected(FontPickerLanguagePreference.Default)
         }
     }
@@ -56,10 +57,10 @@ class LanguagePickerDialogTest {
     fun whenNewSelected_displaysCorrectOption() {
         with(correctItemsRobot) {
             assertLanguageIsSelected(FontPickerLanguagePreference.Default)
-            selectLanguage(FontPickerLanguagePreference.Italian)
-            assertLanguageIsSelected(FontPickerLanguagePreference.Italian)
+            selectLanguage(FontPickerLanguagePreference.Czech)
+            assertLanguageIsSelected(FontPickerLanguagePreference.Czech)
 
-            if (FontPickerLanguagePreference.Default != FontPickerLanguagePreference.Italian) {
+            if (FontPickerLanguagePreference.Default != FontPickerLanguagePreference.Czech) {
                 assertLanguageIsNotSelected(FontPickerLanguagePreference.Default)
             }
         }
@@ -69,10 +70,10 @@ class LanguagePickerDialogTest {
     fun whenItemsAreWrong_throwsError() {
         with(wrongItemsRobot) {
             assertLanguageIsSelected(FontPickerLanguagePreference.Default)
-            selectLanguage(FontPickerLanguagePreference.Italian)
-            assertLanguageIsSelected(FontPickerLanguagePreference.Italian)
+            selectLanguage(FontPickerLanguagePreference.Czech)
+            assertLanguageIsSelected(FontPickerLanguagePreference.Czech)
 
-            if (FontPickerLanguagePreference.Default != FontPickerLanguagePreference.Italian) {
+            if (FontPickerLanguagePreference.Default != FontPickerLanguagePreference.Czech) {
                 assertLanguageIsNotSelected(FontPickerLanguagePreference.Default)
             }
         }

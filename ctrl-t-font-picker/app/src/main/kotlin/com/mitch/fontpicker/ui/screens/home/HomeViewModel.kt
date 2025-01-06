@@ -15,7 +15,8 @@ class HomeViewModel(
     private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState> = userSettingsRepository.preferences
+    // Private mutable state (hidden from external components)
+    private val _uiState = userSettingsRepository.preferences
         .map {
             HomeUiState.Success(
                 language = it.language,
@@ -27,6 +28,8 @@ class HomeViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = HomeUiState.Loading
         )
+
+    val uiState: StateFlow<HomeUiState> = _uiState
 
     fun updateTheme(theme: FontPickerThemePreference) {
         viewModelScope.launch {
@@ -40,3 +43,4 @@ class HomeViewModel(
         }
     }
 }
+

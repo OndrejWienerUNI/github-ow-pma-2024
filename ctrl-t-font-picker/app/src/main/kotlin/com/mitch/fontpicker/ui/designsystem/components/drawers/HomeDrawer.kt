@@ -23,9 +23,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.ui.unit.dp
 
-
 private val ICON_PADDING_HORIZONTAL = 6.dp
-
 
 @Composable
 fun HomeDrawer(
