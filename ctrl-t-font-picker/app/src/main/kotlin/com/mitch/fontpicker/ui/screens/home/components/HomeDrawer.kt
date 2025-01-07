@@ -1,9 +1,14 @@
-package com.mitch.fontpicker.ui.designsystem.components.drawers
+package com.mitch.fontpicker.ui.screens.home.components
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
@@ -18,25 +23,28 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.home.HomeUiState
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.ui.unit.dp
 
-private val ICON_PADDING_HORIZONTAL = 6.dp
+const val FIRST_PAGE_INDEX = 0
 
 @Composable
 fun HomeDrawer(
     uiState: HomeUiState,
     onChangeTheme: (FontPickerThemePreference) -> Unit,
     onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
+    currentPage: Int,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     val drawerState = rememberDrawerState(
-        initialValue = androidx.compose.material3.DrawerValue.Closed
+        initialValue = DrawerValue.Closed
     )
     val scope = rememberCoroutineScope()
+
+    // Animate the top bar's alpha based on the current page
+    val rowAlpha = animateFloatAsState(
+        targetValue = if (currentPage == FIRST_PAGE_INDEX) 1f else 0f,
+        label = "DisappearingAnimation"
+    ).value
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -53,10 +61,11 @@ fun HomeDrawer(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBars)
             ) {
+
                 content() // Main screen content
 
-                // Drawer toggle icon respects system bars' padding
-                DrawerToggleIcon(
+                HomeDrawerTopBar(
+                    rowAlpha = rowAlpha,
                     onToggleDrawer = {
                         if (drawerState.isClosed) {
                             scope.launch { drawerState.open() }
@@ -64,9 +73,7 @@ fun HomeDrawer(
                             scope.launch { drawerState.close() }
                         }
                     },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(horizontal = ICON_PADDING_HORIZONTAL)
+                    modifier = modifier
                 )
             }
         }
@@ -83,6 +90,12 @@ private fun HomeDrawerClosedPreview() {
                 .fillMaxSize()
                 .background(FontPickerDesignSystem.colorScheme.background)
         ) {
+
+            val pagerState = rememberPagerState(
+                initialPage = 0,
+                pageCount = { 2 }
+            )
+
             HomeDrawer(
                 uiState = HomeUiState.Success(
                     language = FontPickerLanguagePreference.English,
@@ -90,7 +103,8 @@ private fun HomeDrawerClosedPreview() {
                 ),
                 onChangeTheme = { /* Stub: handle theme change */ },
                 onChangeLanguage = { /* Stub: handle language change */ },
-                modifier = Modifier
+                modifier = Modifier,
+                currentPage = pagerState.currentPage
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -107,12 +121,11 @@ private fun HomeDrawerClosedPreview() {
     }
 }
 
-
 @Preview(name = "Home Drawer - Opened")
 @Composable
 private fun HomeDrawerOpenedPreview() {
     FontPickerTheme {
-        val drawerState = rememberDrawerState(initialValue = androidx.compose.material3.DrawerValue.Open)
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
 
         ModalNavigationDrawer(
             drawerState = drawerState,

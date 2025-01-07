@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.designsystem.components.drawers
+package com.mitch.fontpicker.ui.screens.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,10 +24,8 @@ import com.mitch.fontpicker.R
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
+import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
-import com.mitch.fontpicker.ui.designsystem.components.common.AppBrandingRow
-import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
-import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerDialog
 import com.mitch.fontpicker.ui.screens.home.HomeUiState
 
 
@@ -39,8 +39,9 @@ private val DRAWER_CORNER_RADIUS = 16.dp
 private val DRAWER_PADDING_TOP = 56.dp
 private val DRAWER_PADDING_HORIZONTAL = 18.dp
 private val DESCRIPTION_PADDING_BOTTOM = 20.dp
-private val BUTTON_PADDING_BOTTOM = 10.dp
-
+private val BUTTON_PADDING_BOTTOM = 16.dp
+private val BUTTON_ICON_SIZE = 30.dp
+private val BUTTON_ICON_PADDING_END = 12.dp
 
 @Composable
 fun HomeDrawerContent(
@@ -80,20 +81,51 @@ fun HomeDrawerContent(
             )
             Text(
                 text = stringResource(id = R.string.in_app_description),
-                style = FontPickerDesignSystem.typography.bodyLarge,
+                style = FontPickerDesignSystem.typography.titleMedium,
                 modifier = Modifier.padding(bottom = DESCRIPTION_PADDING_BOTTOM)
             )
+
+            // Button to change language
             Button(
                 onClick = { activeDialog = ActiveDialog.Language },
                 modifier = Modifier.padding(bottom = BUTTON_PADDING_BOTTOM)
             ) {
-                Text(text = stringResource(id = R.string.change_language))
+                Icon(
+                    imageVector = FontPickerIcons.Outlined.Translate,
+                    contentDescription = stringResource(R.string.change_language),
+                    modifier = Modifier
+                        .size(BUTTON_ICON_SIZE)
+                        .padding(end = BUTTON_ICON_PADDING_END),
+                    tint = FontPickerDesignSystem.colorScheme.onPrimary
+                )
+                Text(
+                    text = stringResource(id = R.string.change_language),
+                    style = FontPickerDesignSystem.typography.bodyLarge
+                )
             }
+
+            // Button to change theme
             Button(
                 onClick = { activeDialog = ActiveDialog.Theme },
                 modifier = Modifier.padding(bottom = BUTTON_PADDING_BOTTOM)
             ) {
-                Text(text = stringResource(id = R.string.change_theme))
+                Icon(
+                    imageVector = if ((uiState as? HomeUiState.Success)?.theme
+                        == FontPickerThemePreference.Light) {
+                        FontPickerIcons.Outlined.LightMode
+                    } else {
+                        FontPickerIcons.Outlined.DarkMode
+                    },
+                    contentDescription = stringResource(R.string.change_theme),
+                    modifier = Modifier
+                        .size(BUTTON_ICON_SIZE)
+                        .padding(end = BUTTON_ICON_PADDING_END),
+                    tint = FontPickerDesignSystem.colorScheme.onPrimary
+                )
+                Text(
+                    text = stringResource(id = R.string.change_theme),
+                    style = FontPickerDesignSystem.typography.bodyLarge
+                )
             }
         }
     }

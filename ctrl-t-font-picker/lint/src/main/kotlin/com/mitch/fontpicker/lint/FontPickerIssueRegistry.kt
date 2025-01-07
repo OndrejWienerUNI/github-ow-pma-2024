@@ -12,7 +12,7 @@ class FontPickerIssueRegistry : IssueRegistry() {
     override val minApi: Int = 14
     override val api: Int = CURRENT_API
 
-    // TODO: Change this when the dir is prepared
+    // TODO: Change this when the repo is prepared
     private val repoUrl = "https://github.com/seve-andre/jetpack-compose-template"
     override val vendor: Vendor =
         Vendor(

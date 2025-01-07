@@ -6,12 +6,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import com.mitch.fontpicker.ui.designsystem.theme.custom.DarkExtendedColorScheme
+import com.mitch.fontpicker.ui.designsystem.theme.custom.LightExtendedColorScheme
+import com.mitch.fontpicker.ui.designsystem.theme.custom.LocalExtendedColorScheme
 
 
 val ColCerulean = Color(0xFF0E7498)
 val ColSkyBlue = Color(0xFF13CDF6)
-val ColGray = Color(0xFF999999)
+val ColLightGray = Color(0xFF999999)
+val ColDarkGray = Color(0xFF6E6E6E)
 val ColWhiteSmoke = Color(0xFFF5F5F5)
 val ColOnyx = Color(0xFF1A1B20)
 
@@ -19,20 +24,20 @@ val ColOnyx = Color(0xFF1A1B20)
 val DarkColorScheme: ColorScheme = darkColorScheme(
     primary = ColSkyBlue,
     secondary = ColSkyBlue,
-    tertiary = ColGray,
+    tertiary = ColLightGray,
     background = ColOnyx,
     surface = ColOnyx,
     onPrimary = Color.Black,
     onSecondary = Color.Black,
     onTertiary = Color.Black,
     onBackground = Color.White,
-    onSurface = Color.White
+    onSurface = Color.White,
 )
 
 val LightColorScheme: ColorScheme = lightColorScheme(
     primary = ColCerulean,
     secondary = ColCerulean,
-    tertiary = ColGray,
+    tertiary = ColDarkGray,
     background = ColWhiteSmoke,
     surface = ColWhiteSmoke,
     onPrimary = Color.White,
@@ -57,8 +62,19 @@ fun FontPickerTheme(
         LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
+    val extendedColorScheme = if (isThemeDark) {
+        DarkExtendedColorScheme
+    } else {
+        LightExtendedColorScheme
+    }
+
+    CompositionLocalProvider(
+        LocalExtendedColorScheme provides extendedColorScheme
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            content = content
+        )
+    }
 }
+

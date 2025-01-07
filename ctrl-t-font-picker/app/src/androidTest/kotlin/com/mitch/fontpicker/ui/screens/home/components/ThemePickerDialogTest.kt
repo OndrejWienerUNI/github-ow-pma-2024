@@ -8,8 +8,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
-import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerDialog
-import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerItem
 import com.mitch.fontpicker.ui.util.AppNameAndroidComposeTestRule
 import com.mitch.fontpicker.ui.util.stringResource
 import org.junit.Before

@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.designsystem.components.common
+package com.mitch.fontpicker.ui.screens.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.designsystem.components.drawers
+package com.mitch.fontpicker.ui.screens.home.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -19,7 +19,7 @@ private val ICON_BUTTON_SIZE = 36.dp
 private val ICON_SIZE = 32.dp
 
 @Composable
-fun DrawerToggleIcon(
+fun HomeDrawerIcon(
     onToggleDrawer: suspend () -> Unit, // Pass a suspending function to control the drawer
     modifier: Modifier = Modifier
         .size(ICON_BUTTON_SIZE)
@@ -38,7 +38,7 @@ fun DrawerToggleIcon(
             imageVector = Icons.Default.Menu,
             contentDescription = stringResource(R.string.menu),
             modifier = Modifier.size(ICON_SIZE),
-            tint = FontPickerDesignSystem.colorScheme.primary
+            tint = FontPickerDesignSystem.colorScheme.tertiary
         )
     }
 }

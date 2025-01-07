@@ -11,7 +11,13 @@
     <string name="save">Save</string>
     <string name="dismiss_snackbar_content_description">Dismiss message</string>
     <string name="menu">Menu</string>
-    <string name="screen_desc_camera">Camera Screen</string>
-    <string name="screen_desc_favorites">Favorites Screen</string>
+    <string name="screen_desc_camera">Camera screen</string>
+    <string name="screen_desc_favorites">Favorites screen</string>
     <string name="in_app_description">Your favorite font\u00A0picker\u00A0app</string>
+    <string name="capture_a_font">Capture a Font!</string>
+
+    <string name="camera_initialized">Camera initialized</string>
+    <string name="photo_captured">Photo captured</string>
+    <string name="camera_flipped">Camera flipped</string>
+    <string name="gallery_opened">Gallery opened</string>
 </resources>

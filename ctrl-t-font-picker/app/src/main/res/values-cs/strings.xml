@@ -14,4 +14,9 @@
     <string name="screen_desc_camera">Obrazovka kamery</string>
     <string name="screen_desc_favorites">Obrazovka s oblíbenými fonty</string>
     <string name="in_app_description">Vaše oblíbená aplikace pro\u00A0rozpoznávání\u00A0fontů</string>
+    <string name="capture_a_font">Pořiďte snímek fontu!</string>
+    <string name="camera_initialized">Fotoaparát spuštěn</string>
+    <string name="photo_captured">Fotografie zachycena</string>
+    <string name="camera_flipped">Fotoaparát převrácen</string>
+    <string name="gallery_opened">Galerie otevřena</string>
 </resources>
