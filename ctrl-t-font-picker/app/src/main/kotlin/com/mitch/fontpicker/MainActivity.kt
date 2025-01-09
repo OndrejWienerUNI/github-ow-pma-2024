@@ -112,6 +112,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun proceedWithPermissions(context: Context) {
+        Timber.i("Essential proceedWithPermissions called")
         try {
             ensureAppDirectories(context)
             proceedToHomeScreen()
