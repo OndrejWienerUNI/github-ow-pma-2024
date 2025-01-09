@@ -3,14 +3,14 @@ package com.mitch.fontpicker
 import android.annotation.SuppressLint
 import android.app.UiModeManager
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.view.ViewGroup
+import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,15 +27,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.ui.platform.LocalContext
+import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.snackbars.FontPickerSnackbarHost
@@ -45,115 +39,180 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.navigation.FontPickerDestination
 import com.mitch.fontpicker.ui.navigation.FontPickerNavHost
 import com.mitch.fontpicker.ui.rememberFontPickerAppState
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import com.mitch.fontpicker.ui.screens.home.HomeRoute
+import com.mitch.fontpicker.ui.screens.home.HomeViewModel
+import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        /* Must be called before super.onCreate()
-         *
-         * Splashscreen look in res/values/themes.xml
-         */
-        val splashScreen = installSplashScreen()
-        enableEdgeToEdge()
-        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                dependenciesProvider.userSettingsRepository.initLocaleIfNeeded()
+    private lateinit var permissionsHandler: PermissionsHandler
+
+    private val cameraPermissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                Timber.i("Camera permission granted.")
+                proceedToHomeScreen()
+            } else {
+                Timber.e("Camera permission denied.")
             }
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_FontPicker)
         super.onCreate(savedInstanceState)
 
-        val viewModel = MainActivityViewModel(dependenciesProvider.userSettingsRepository)
+        // Initialize PermissionsHandler
+        permissionsHandler = PermissionsHandler(
+            context = this,
+            permissionLauncher = cameraPermissionRequest,
+            onPermissionGranted = { permission -> Timber.i("$permission granted.") },
+            onPermissionDenied = { permission -> Timber.e("$permission denied.") },
+            onAllPermissionsGranted = { proceedWithPermissions(this) }
+        )
 
-        var uiState: MainActivityUiState by mutableStateOf(MainActivityUiState.Loading)
-        // Update the uiState
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState
-                    .onEach { uiState = it }
-                    .collect()
-            }
-        }
+        // Relax StrictMode
+        permissionsHandler.relaxStrictMode()
 
-        splashScreen.setKeepOnScreenCondition {
-            when (uiState) {
-                MainActivityUiState.Loading -> true
-                is MainActivityUiState.Success -> false
-            }
-        }
-
+        // Set UI content
+        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
         setContent {
-            val themeInfo = themeInfo(uiState)
-            DisposableEffect(themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(
-                        Color.TRANSPARENT,
-                        Color.TRANSPARENT
-                    ) { themeInfo.isThemeDark },
-                    navigationBarStyle = SystemBarStyle.auto(
-                        LightScrim,
-                        DarkScrim
-                    ) { themeInfo.isThemeDark }
-                )
-                setAppTheme(
-                    uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
-                    isThemeDark = themeInfo.isThemeDark,
-                    shouldFollowSystem = themeInfo.shouldFollowSystem
-                )
-                onDispose { }
-            }
+            MainContent(
+                uiState = MainActivityUiState.Loading, // Replace with dynamic state if necessary
+                dependenciesProvider = dependenciesProvider,
+                permissionsHandler = permissionsHandler
+            )
+        }
+    }
 
-            CompositionLocalProvider(LocalPadding provides padding) {
-                FontPickerTheme(isThemeDark = themeInfo.isThemeDark) {
-                    val appState = rememberFontPickerAppState(
-                        networkMonitor = dependenciesProvider.networkMonitor
-                    )
-
-                    Scaffold(
-                        snackbarHost = { FontPickerSnackbarHost(appState.snackbarHostState) },
-                        contentWindowInsets = WindowInsets(0)
-                    ) { padding ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(padding)
-                                .consumeWindowInsets(padding)
-                                .windowInsetsPadding(
-                                    WindowInsets.safeDrawing.only(
-                                        WindowInsetsSides.Horizontal
-                                    )
-                                )
-                        ) {
-                            FontPickerNavHost(
-                                onShowSnackbar = { event ->
-                                    appState
-                                        .snackbarHostState
-                                        .showSnackbar(event.toVisuals())
-                                },
-                                dependenciesProvider = dependenciesProvider,
-                                navController = appState.navController,
-                                startDestination = FontPickerDestination.Screen.Home
-                            )
-                        }
+    private fun ensureAppDirectories(context: Context) {
+        CoroutineScope(Dispatchers.IO).launch {
+            Timber.i("Attempting to ensure directories.")
+            try {
+                val picturesDir = File(context.getExternalFilesDir("Pictures"), "FontPicker")
+                if (!picturesDir.exists()) {
+                    Timber.i("Creating directory at: ${picturesDir.absolutePath}")
+                    val created = picturesDir.mkdirs()
+                    if (created) {
+                        Timber.i("Directory successfully created.")
+                    } else {
+                        Timber.e("Failed to create directory.")
                     }
+                } else {
+                    Timber.i("Directory already exists: ${picturesDir.absolutePath}")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error while ensuring directories.")
+            }
+        }
+    }
+
+    private fun proceedWithPermissions(context: Context) {
+        try {
+            ensureAppDirectories(context)
+            proceedToHomeScreen()
+        } catch (e: Exception) {
+            Timber.e(e, "Error during proceedWithPermissions")
+        } finally {
+            permissionsHandler.restoreStrictMode()
+        }
+    }
+
+    private fun proceedToHomeScreen() {
+        Timber.i("Proceeding to Home Screen.")
+        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
+        setContent {
+            FontPickerTheme {
+                HomeRoute(
+                    viewModel = HomeViewModel(
+                        userSettingsRepository = dependenciesProvider.userSettingsRepository
+                    )
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun MainContent(
+    uiState: MainActivityUiState,
+    dependenciesProvider: DependenciesProvider,
+    permissionsHandler: PermissionsHandler
+) {
+    Timber.i("Rendering MainContent. Current UI State: $uiState")
+
+    val activity = LocalContext.current as? ComponentActivity
+    val themeInfo = themeInfo(uiState)
+
+    // Apply theme dynamically based on `themeInfo`
+    DisposableEffect(activity, themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+        activity?.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                Color.TRANSPARENT,
+                Color.TRANSPARENT
+            ) { themeInfo.isThemeDark },
+            navigationBarStyle = SystemBarStyle.auto(
+                LightScrim,
+                DarkScrim
+            ) { themeInfo.isThemeDark }
+        )
+
+        activity?.let {
+            setAppTheme(
+                uiModeManager = it.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
+                isThemeDark = themeInfo.isThemeDark,
+                shouldFollowSystem = themeInfo.shouldFollowSystem
+            )
+        }
+
+        onDispose { }
+    }
+
+    CompositionLocalProvider(LocalPadding provides padding) {
+        FontPickerTheme(isThemeDark = themeInfo.isThemeDark) {
+            val appState = rememberFontPickerAppState(
+                networkMonitor = dependenciesProvider.networkMonitor
+            )
+            val navController = appState.navController
+
+            Scaffold(
+                snackbarHost = { FontPickerSnackbarHost(appState.snackbarHostState) },
+                contentWindowInsets = WindowInsets(0)
+            ) { padding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .consumeWindowInsets(padding)
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                        )
+                ) {
+                    FontPickerNavHost(
+                        onShowSnackbar = { event ->
+                            appState.snackbarHostState.showSnackbar(event.toVisuals())
+                        },
+                        dependenciesProvider = dependenciesProvider,
+                        navController = navController,
+                        startDestination = if (permissionsHandler.isPermissionGrantedForAll()) {
+                            FontPickerDestination.Screen.Home
+                        } else {
+                            FontPickerDestination.Screen.Permissions
+                        },
+                        permissionsHandler = permissionsHandler
+                    )
                 }
             }
         }
     }
-
-    // Workaround to let Compose know that the configuration has changed
-    // https://issuetracker.google.com/issues/321896385
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        val composeView = window.decorView
-            .findViewById<ViewGroup>(android.R.id.content)
-            .getChildAt(0) as? ComposeView
-        composeView?.dispatchConfigurationChanged(newConfig)
-    }
 }
+
 
 private data class ThemeInfo(val isThemeDark: Boolean, val shouldFollowSystem: Boolean)
 
@@ -164,7 +223,6 @@ private fun themeInfo(uiState: MainActivityUiState): ThemeInfo {
             isThemeDark = isSystemInDarkTheme(),
             shouldFollowSystem = false
         )
-
         is MainActivityUiState.Success -> {
             val isThemeDark = uiState.theme == FontPickerThemePreference.Dark
             val shouldFollowSystem = uiState.theme == FontPickerThemePreference.FollowSystem
@@ -176,9 +234,6 @@ private fun themeInfo(uiState: MainActivityUiState): ThemeInfo {
     }
 }
 
-/**
- * Sets app theme to reflect user choice.
- */
 @SuppressLint("ObsoleteSdkInt")
 private fun setAppTheme(
     uiModeManager: UiModeManager,
@@ -202,14 +257,6 @@ private fun setAppTheme(
     }
 }
 
-/**
- * The default light scrim, as defined by androidx and the platform:
- * https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:activity/activity/src/main/java/androidx/activity/EdgeToEdge.kt;l=35-38;drc=27e7d52e8604a080133e8b842db10c89b4482598
- */
 private val LightScrim = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
-
-/**
- * The default dark scrim, as defined by androidx and the platform:
- * https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:activity/activity/src/main/java/androidx/activity/EdgeToEdge.kt;l=40-44;drc=27e7d52e8604a080133e8b842db10c89b4482598
- */
 private val DarkScrim = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+

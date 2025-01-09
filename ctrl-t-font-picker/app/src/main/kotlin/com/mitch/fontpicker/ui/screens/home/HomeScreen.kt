@@ -27,7 +27,7 @@ import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
 import com.mitch.fontpicker.ui.screens.home.components.HomeDrawer
 
-val PAGE_PADDING_HORIZONTAL = 16.dp
+val PAGE_PADDING_HORIZONTAL = 18.dp
 
 @Composable
 fun HomeRoute(viewModel: HomeViewModel) {
@@ -45,7 +45,8 @@ fun HomeScreen(
     uiState: HomeUiState,
     onChangeTheme: (FontPickerThemePreference) -> Unit,
     onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isPreview: Boolean = false
 ) {
     // Semi-transparent box below the status bar
     Box(
@@ -77,7 +78,7 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 when (page) {
-                    0 -> CameraScreen(viewModel = CameraViewModel())
+                    0 -> { CameraScreen(viewModel = CameraViewModel(), isPreview = isPreview) }
                     1 -> FavoritesScreen(viewModel = FavoritesViewModel())
                 }
             }
@@ -85,7 +86,7 @@ fun HomeScreen(
     }
 }
 
-// The little dot in the middle is supposed to be there - its a simple loading indicator
+
 @PreviewLightDark
 @PreviewScreenSizes
 @Composable
@@ -102,7 +103,8 @@ private fun HomeScreenContentPreview() {
                     theme = FontPickerThemePreference.Light
                 ),
                 onChangeTheme = { /* Stub: handle theme change */ },
-                onChangeLanguage = { /* Stub: handle language change */ }
+                onChangeLanguage = { /* Stub: handle language change */ },
+                isPreview = true
             )
         }
     }

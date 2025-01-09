@@ -23,7 +23,8 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 private val ICON_PADDING_HORIZONTAL = 6.dp
 private val ICON_END_PADDING = 8.dp
 private val TEXT_HORIZONTAL_PADDING = 18.dp
-private val TEXT_VERTICAL_OFFSET = 1.dp
+private val TEXT_VERTICAL_OFFSET = 0.dp
+private val ROW_PADDING_VERTICAL = 2.dp
 
 
 @Composable
@@ -35,7 +36,7 @@ fun HomeDrawerTopBar(
     if (rowAlpha > 0f) {
         Row(
             modifier = Modifier
-                .padding(horizontal = ICON_PADDING_HORIZONTAL)
+                .padding(horizontal = ICON_PADDING_HORIZONTAL, vertical = ROW_PADDING_VERTICAL)
                 .background(
                     FontPickerDesignSystem.colorScheme.surface.copy(alpha = rowAlpha)
                 )

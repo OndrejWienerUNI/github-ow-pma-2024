@@ -1,6 +1,7 @@
 package com.mitch.fontpicker.ui.screens.camera.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +29,7 @@ import com.mitch.fontpicker.R
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
+import kotlinx.coroutines.launch
 
 private val BUTTON_SIZE = 52.dp
 private val SHOOT_BUTTON_SIZE = 72.dp
@@ -40,7 +47,7 @@ fun CameraActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = ROW_PADDING_HORIZONTAL, vertical = ROW_PADDING_VERTICAL),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -64,7 +71,7 @@ fun CameraActionRow(
                     )
                 } else {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_gallery_placeholder),
+                        painter = painterResource(id = R.drawable.ic_gallery),
                         contentDescription = "Gallery Placeholder",
                         tint = Color.Unspecified
                     )
@@ -72,25 +79,8 @@ fun CameraActionRow(
             }
         }
 
-        // Shoot Button
-        IconButton(
-            onClick = onShoot,
-            modifier = Modifier.size(SHOOT_BUTTON_SIZE) // Size of the entire button
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(FontPickerDesignSystem.colorScheme.background),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_shoot_button),
-                    contentDescription = "Shoot Button",
-                    modifier = Modifier.fillMaxSize(), // Icon fills the parent Box
-                    tint = FontPickerDesignSystem.extendedColorScheme.icOnBackground
-                )
-            }
-        }
+        // Shoot Button with Color Change
+        ShootButton(onShoot = onShoot)
 
         // Flip Button
         IconButton(
@@ -103,6 +93,43 @@ fun CameraActionRow(
                 tint = Color.Unspecified
             )
         }
+    }
+}
+
+
+@Composable
+private fun ShootButton(onShoot: () -> Unit) {
+    var isPressed by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Determine the icon tint based on the pressed state
+    val iconTint = if (isPressed) {
+        FontPickerDesignSystem.extendedColorScheme.icOnBackgroundPressed
+    } else {
+        FontPickerDesignSystem.extendedColorScheme.icOnBackground
+    }
+
+    IconButton(
+        onClick = {
+            if (!isPressed) { // Prevent overlapping presses
+                isPressed = true
+                onShoot()
+
+                // Reset the tint after a delay
+                coroutineScope.launch {
+                    kotlinx.coroutines.delay(200) // Hold pressed tint for 200ms
+                    isPressed = false
+                }
+            }
+        },
+        modifier = Modifier.size(SHOOT_BUTTON_SIZE)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_shoot_button),
+            contentDescription = "Shoot Button",
+            tint = iconTint, // Tint changes dynamically based on state
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

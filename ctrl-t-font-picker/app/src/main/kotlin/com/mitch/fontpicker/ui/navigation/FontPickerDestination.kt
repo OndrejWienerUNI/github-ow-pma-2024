@@ -7,6 +7,8 @@ sealed interface FontPickerDestination {
     sealed interface Screen : FontPickerDestination {
         @Serializable
         data object Home : Screen
+        @Serializable
+        data object Permissions : Screen
     }
 
     @Suppress("Unused")

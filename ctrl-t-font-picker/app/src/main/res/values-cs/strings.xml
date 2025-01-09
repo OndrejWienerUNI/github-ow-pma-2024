@@ -15,8 +15,23 @@
     <string name="screen_desc_favorites">Obrazovka s oblíbenými fonty</string>
     <string name="in_app_description">Vaše oblíbená aplikace pro\u00A0rozpoznávání\u00A0fontů</string>
     <string name="capture_a_font">Pořiďte snímek fontu!</string>
+
     <string name="camera_initialized">Fotoaparát spuštěn</string>
     <string name="photo_captured">Fotografie zachycena</string>
     <string name="camera_flipped">Fotoaparát převrácen</string>
     <string name="gallery_opened">Galerie otevřena</string>
+
+    <string name="access_images">
+    Povolte prosím aplikaci přístup k\u00A0vašim fotografiím kvůli\u00A0správě obrázků.
+    </string>
+    <string name="access_camera">
+    Povolte prosím aplikaci přístup k\u00A0fotoaparátu kvůli\u00A0pořizování fotografií.
+    </string>
+    <string name="permission_denied_message">
+    Oprávnění bylo zamítnuto. Můžete ho udělit v\u00A0nastavení aplikace.
+    </string>
+    <string name="open_settings">Otevřít nastavení</string>
+    <string name="grant_permission">Povolit přístup</string>
+    <string name="permissions_granted">All permissions granted!</string>
+
 </resources>

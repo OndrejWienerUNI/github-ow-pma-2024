@@ -20,4 +20,18 @@
     <string name="photo_captured">Photo captured</string>
     <string name="camera_flipped">Camera flipped</string>
     <string name="gallery_opened">Gallery opened</string>
+
+    <string name="access_images">
+    Please allow access to your\u00A0photos for\u00A0image management.
+    </string>
+        <string name="access_camera">
+    Please allow access to your\u00A0camera for\u00A0photo capture.
+    </string>
+    <string name="permission_denied_message">
+    Permission denied. You can grant it in\u00A0app settings.
+    </string>
+    <string name="open_settings">Open Settings</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="permissions_granted">All permissions granted!</string>
+
 </resources>
