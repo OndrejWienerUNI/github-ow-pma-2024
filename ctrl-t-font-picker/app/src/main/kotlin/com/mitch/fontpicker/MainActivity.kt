@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 Timber.i("Camera permission granted.")
-                proceedToHomeScreen()
+                proceedWithPermissions(this) // Call proceedWithPermissions instead
             } else {
                 Timber.e("Camera permission denied.")
             }
@@ -72,7 +72,10 @@ class MainActivity : AppCompatActivity() {
             permissionLauncher = cameraPermissionRequest,
             onPermissionGranted = { permission -> Timber.i("$permission granted.") },
             onPermissionDenied = { permission -> Timber.e("$permission denied.") },
-            onAllPermissionsGranted = { proceedWithPermissions(this) }
+            onAllPermissionsGranted = {
+                Timber.i("Permissions granted: Proceeding with app setup")
+                proceedWithPermissions(this)
+            }
         )
 
         // Relax StrictMode
@@ -112,14 +115,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun proceedWithPermissions(context: Context) {
-        Timber.i("Essential proceedWithPermissions called")
+        Timber.i("proceedWithPermissions: Method called")
         try {
+            Timber.i("proceedWithPermissions: Ensuring app directories.")
             ensureAppDirectories(context)
+
+            Timber.i("proceedWithPermissions: Proceeding to Home Screen.")
             proceedToHomeScreen()
         } catch (e: Exception) {
-            Timber.e(e, "Error during proceedWithPermissions")
+            Timber.e(e, "Error in proceedWithPermissions")
         } finally {
+            // Ensure strict mode is restored
             permissionsHandler.restoreStrictMode()
+            Timber.i("proceedWithPermissions: Strict mode restored")
         }
     }
 

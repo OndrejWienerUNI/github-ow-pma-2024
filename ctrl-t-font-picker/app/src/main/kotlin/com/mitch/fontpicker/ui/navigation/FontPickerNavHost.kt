@@ -16,6 +16,7 @@ import com.mitch.fontpicker.ui.screens.permissions.PermissionsRoute
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsViewModel
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsViewModelFactory
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
+import timber.log.Timber
 
 @Composable
 @Suppress("UNUSED_PARAMETER")
@@ -26,6 +27,8 @@ fun FontPickerNavHost(
     startDestination: Screen,
     permissionsHandler: PermissionsHandler
 ) {
+    Timber.i("FontPickerNavHost: startDestination is $startDestination")
+
     NavHost(
         navController = navController,
         startDestination = when (startDestination) {
@@ -33,12 +36,13 @@ fun FontPickerNavHost(
             Screen.Permissions -> "permissions"
         }
     ) {
-        // Permissions Screen Route
         composable("permissions") {
+            Timber.i("Rendering PermissionsRoute")
             val viewModel: PermissionsViewModel = viewModel(
                 factory = PermissionsViewModelFactory(
                     permissionsHandler = permissionsHandler,
                     onPermissionsGranted = {
+                        Timber.i("onPermissionsGranted: Navigating to Home Screen from Permissions")
                         navController.navigate("home") {
                             popUpTo("permissions") { inclusive = true }
                         }
@@ -48,6 +52,7 @@ fun FontPickerNavHost(
             PermissionsRoute(
                 viewModel = viewModel,
                 onPermissionsGranted = {
+                    Timber.i("PermissionsRoute: onPermissionsGranted triggered")
                     navController.navigate("home") {
                         popUpTo("permissions") { inclusive = true }
                     }
@@ -55,8 +60,8 @@ fun FontPickerNavHost(
             )
         }
 
-        // Home Screen Route
         composable("home") {
+            Timber.i("Rendering HomeRoute")
             HomeRoute(
                 viewModel = viewModel(
                     factory = viewModelProviderFactory {
