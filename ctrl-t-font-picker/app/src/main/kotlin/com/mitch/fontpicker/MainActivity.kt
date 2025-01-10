@@ -66,6 +66,8 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_FontPicker)
         super.onCreate(savedInstanceState)
 
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+
         // Initialize PermissionsHandler
         permissionsHandler = PermissionsHandler(
             context = this,
@@ -154,37 +156,11 @@ fun MainContent(
     dependenciesProvider: DependenciesProvider,
     permissionsHandler: PermissionsHandler
 ) {
-    Timber.i("Rendering MainContent. Current UI State: $uiState")
-
-    val activity = LocalContext.current as? ComponentActivity
-    val themeInfo = themeInfo(uiState)
-
-    // Apply theme dynamically based on `themeInfo`
-    DisposableEffect(activity, themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
-        activity?.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                Color.TRANSPARENT,
-                Color.TRANSPARENT
-            ) { themeInfo.isThemeDark },
-            navigationBarStyle = SystemBarStyle.auto(
-                LightScrim,
-                DarkScrim
-            ) { themeInfo.isThemeDark }
-        )
-
-        activity?.let {
-            setAppTheme(
-                uiModeManager = it.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
-                isThemeDark = themeInfo.isThemeDark,
-                shouldFollowSystem = themeInfo.shouldFollowSystem
-            )
-        }
-
-        onDispose { }
-    }
+    // Ensure the theme and system bars are enforced
+    EnforceTheme(uiState)
 
     CompositionLocalProvider(LocalPadding provides padding) {
-        FontPickerTheme(isThemeDark = themeInfo.isThemeDark) {
+        FontPickerTheme(isThemeDark = themeInfo(uiState).isThemeDark) {
             val appState = rememberFontPickerAppState(
                 networkMonitor = dependenciesProvider.networkMonitor
             )
@@ -222,7 +198,6 @@ fun MainContent(
     }
 }
 
-
 private data class ThemeInfo(val isThemeDark: Boolean, val shouldFollowSystem: Boolean)
 
 @Composable
@@ -240,6 +215,35 @@ private fun themeInfo(uiState: MainActivityUiState): ThemeInfo {
                 shouldFollowSystem = shouldFollowSystem
             )
         }
+    }
+}
+
+@Composable
+fun EnforceTheme(uiState: MainActivityUiState) {
+    val activity = LocalContext.current as? ComponentActivity
+    val themeInfo = themeInfo(uiState)
+
+    DisposableEffect(activity, themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+        activity?.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                Color.TRANSPARENT,
+                Color.TRANSPARENT
+            ) { themeInfo.isThemeDark },
+            navigationBarStyle = SystemBarStyle.auto(
+                LightScrim,
+                DarkScrim
+            ) { themeInfo.isThemeDark }
+        )
+
+        activity?.let {
+            setAppTheme(
+                uiModeManager = it.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
+                isThemeDark = themeInfo.isThemeDark,
+                shouldFollowSystem = themeInfo.shouldFollowSystem
+            )
+        }
+
+        onDispose { }
     }
 }
 
