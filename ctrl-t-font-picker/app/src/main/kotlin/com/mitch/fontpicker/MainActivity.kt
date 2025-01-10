@@ -27,8 +27,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
@@ -42,8 +49,6 @@ import com.mitch.fontpicker.ui.rememberFontPickerAppState
 import com.mitch.fontpicker.ui.screens.home.HomeRoute
 import com.mitch.fontpicker.ui.screens.home.HomeViewModel
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
@@ -51,43 +56,96 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private lateinit var permissionsHandler: PermissionsHandler
+    private lateinit var viewModel: MainActivityViewModel
+
+    // Local state to store the current UI state
+    private var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
 
     private val cameraPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 Timber.i("Camera permission granted.")
-                proceedWithPermissions(this) // Call proceedWithPermissions instead
+                proceedWithPermissions(this)
             } else {
                 Timber.e("Camera permission denied.")
             }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.Theme_FontPicker)
+        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
+
+        enableEdgeToEdge()
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                dependenciesProvider.userSettingsRepository.initLocaleIfNeeded()
+            }
+        }
+
         super.onCreate(savedInstanceState)
 
-        window.setBackgroundDrawableResource(android.R.color.transparent)
-
-        // Initialize PermissionsHandler
         permissionsHandler = PermissionsHandler(
             context = this,
             permissionLauncher = cameraPermissionRequest,
             onPermissionGranted = { permission -> Timber.i("$permission granted.") },
             onPermissionDenied = { permission -> Timber.e("$permission denied.") },
             onAllPermissionsGranted = {
-                Timber.i("Permissions granted: Proceeding with app setup")
+                Timber.i("All permissions granted.")
                 proceedWithPermissions(this)
             }
         )
 
-        // Relax StrictMode
+        viewModel = ViewModelProvider(
+            this,
+            object : ViewModelProvider.AndroidViewModelFactory(application) {
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(MainActivityViewModel::class.java)) {
+                        @Suppress("UNCHECKED_CAST")
+                        return MainActivityViewModel(
+                            application = application,
+                            userSettingsRepository = dependenciesProvider.userSettingsRepository
+                        ) as T
+                    }
+                    throw IllegalArgumentException("Unknown ViewModel class")
+                }
+            }
+        )[MainActivityViewModel::class.java]
+
         permissionsHandler.relaxStrictMode()
 
-        // Set UI content
-        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
+        // Observe UI state from the ViewModel
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect {
+                    uiState = it
+                }
+            }
+        }
+
         setContent {
+            val themeInfo = themeInfo(uiState)
+
+            DisposableEffect(themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        Color.TRANSPARENT,
+                        Color.TRANSPARENT
+                    ) { themeInfo.isThemeDark },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        LightScrim,
+                        DarkScrim
+                    ) { themeInfo.isThemeDark }
+                )
+                setAppTheme(
+                    uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
+                    isThemeDark = themeInfo.isThemeDark,
+                    shouldFollowSystem = themeInfo.shouldFollowSystem
+                )
+                onDispose { }
+            }
+
             MainContent(
-                uiState = MainActivityUiState.Loading, // Replace with dynamic state if necessary
+                uiState = uiState,
                 dependenciesProvider = dependenciesProvider,
                 permissionsHandler = permissionsHandler
             )
@@ -95,46 +153,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ensureAppDirectories(context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Timber.i("Attempting to ensure directories.")
+        lifecycleScope.launch {
             try {
                 val picturesDir = File(context.getExternalFilesDir("Pictures"), "FontPicker")
-                if (!picturesDir.exists()) {
-                    Timber.i("Creating directory at: ${picturesDir.absolutePath}")
-                    val created = picturesDir.mkdirs()
-                    if (created) {
-                        Timber.i("Directory successfully created.")
-                    } else {
-                        Timber.e("Failed to create directory.")
-                    }
+                if (!picturesDir.exists() && picturesDir.mkdirs()) {
+                    Timber.i("Directory created: ${picturesDir.absolutePath}")
                 } else {
                     Timber.i("Directory already exists: ${picturesDir.absolutePath}")
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error while ensuring directories.")
+                Timber.e(e, "Error ensuring directories.")
             }
         }
     }
 
     private fun proceedWithPermissions(context: Context) {
-        Timber.i("proceedWithPermissions: Method called")
-        try {
-            Timber.i("proceedWithPermissions: Ensuring app directories.")
-            ensureAppDirectories(context)
-
-            Timber.i("proceedWithPermissions: Proceeding to Home Screen.")
-            proceedToHomeScreen()
-        } catch (e: Exception) {
-            Timber.e(e, "Error in proceedWithPermissions")
-        } finally {
-            // Ensure strict mode is restored
-            permissionsHandler.restoreStrictMode()
-            Timber.i("proceedWithPermissions: Strict mode restored")
-        }
+        ensureAppDirectories(context)
+        permissionsHandler.restoreStrictMode()
+        proceedToHomeScreen()
     }
 
     private fun proceedToHomeScreen() {
-        Timber.i("Proceeding to Home Screen.")
         val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
         setContent {
             FontPickerTheme {
@@ -149,14 +188,12 @@ class MainActivity : AppCompatActivity() {
 }
 
 
-
 @Composable
 fun MainContent(
     uiState: MainActivityUiState,
     dependenciesProvider: DependenciesProvider,
     permissionsHandler: PermissionsHandler
 ) {
-    // Ensure the theme and system bars are enforced
     EnforceTheme(uiState)
 
     CompositionLocalProvider(LocalPadding provides padding) {
@@ -164,7 +201,6 @@ fun MainContent(
             val appState = rememberFontPickerAppState(
                 networkMonitor = dependenciesProvider.networkMonitor
             )
-            val navController = appState.navController
 
             Scaffold(
                 snackbarHost = { FontPickerSnackbarHost(appState.snackbarHostState) },
@@ -184,7 +220,7 @@ fun MainContent(
                             appState.snackbarHostState.showSnackbar(event.toVisuals())
                         },
                         dependenciesProvider = dependenciesProvider,
-                        navController = navController,
+                        navController = appState.navController,
                         startDestination = if (permissionsHandler.isPermissionGrantedForAll()) {
                             FontPickerDestination.Screen.Home
                         } else {
@@ -197,6 +233,7 @@ fun MainContent(
         }
     }
 }
+
 
 private data class ThemeInfo(val isThemeDark: Boolean, val shouldFollowSystem: Boolean)
 

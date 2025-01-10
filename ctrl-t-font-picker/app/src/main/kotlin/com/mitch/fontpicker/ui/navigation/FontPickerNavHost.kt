@@ -18,6 +18,24 @@ import com.mitch.fontpicker.ui.screens.permissions.PermissionsViewModelFactory
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
+/**
+ * Custom extension to safely navigate using `dropUnlessResumed`.
+ */
+fun NavHostController.navigateTo(
+    route: String,
+    popUpToRoute: String? = null,
+    inclusive: Boolean = false
+) {
+    if (currentBackStackEntry?.lifecycle?.currentState?.
+        isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED) == true) {
+        this.navigate(route) {
+            popUpToRoute?.let {
+                popUpTo(it) { this.inclusive = inclusive }
+            }
+        }
+    }
+}
+
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun FontPickerNavHost(
@@ -43,9 +61,7 @@ fun FontPickerNavHost(
                     permissionsHandler = permissionsHandler,
                     onPermissionsGranted = {
                         Timber.i("onPermissionsGranted: Navigating to Home Screen from Permissions")
-                        navController.navigate("home") {
-                            popUpTo("permissions") { inclusive = true }
-                        }
+                        navController.navigateTo("home", popUpToRoute = "permissions", inclusive = true)
                     }
                 )
             )
@@ -53,9 +69,7 @@ fun FontPickerNavHost(
                 viewModel = viewModel,
                 onPermissionsGranted = {
                     Timber.i("PermissionsRoute: onPermissionsGranted triggered")
-                    navController.navigate("home") {
-                        popUpTo("permissions") { inclusive = true }
-                    }
+                    navController.navigateTo("home", popUpToRoute = "permissions", inclusive = true)
                 }
             )
         }
