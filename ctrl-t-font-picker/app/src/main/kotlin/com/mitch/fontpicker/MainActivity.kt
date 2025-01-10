@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private val cameraPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            Timber.d("Camera permission result: $isGranted")
             if (isGranted) {
                 Timber.i("Camera permission granted.")
                 proceedWithPermissions(this)
@@ -72,13 +73,16 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Timber.d("MainActivity onCreate started.")
         val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
 
         enableEdgeToEdge()
+        Timber.d("Edge-to-edge enabled.")
 
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 dependenciesProvider.userSettingsRepository.initLocaleIfNeeded()
+                Timber.d("Locale initialized if needed.")
             }
         }
 
@@ -94,11 +98,13 @@ class MainActivity : AppCompatActivity() {
                 proceedWithPermissions(this)
             }
         )
+        Timber.d("PermissionsHandler initialized.")
 
         viewModel = ViewModelProvider(
             this,
             object : ViewModelProvider.AndroidViewModelFactory(application) {
                 override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    Timber.d("Creating ViewModel for ${modelClass.simpleName}")
                     if (modelClass.isAssignableFrom(MainActivityViewModel::class.java)) {
                         @Suppress("UNCHECKED_CAST")
                         return MainActivityViewModel(
@@ -106,17 +112,19 @@ class MainActivity : AppCompatActivity() {
                             userSettingsRepository = dependenciesProvider.userSettingsRepository
                         ) as T
                     }
-                    throw IllegalArgumentException("Unknown ViewModel class")
+                    throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
                 }
             }
         )[MainActivityViewModel::class.java]
+        Timber.d("ViewModel initialized: $viewModel")
 
         permissionsHandler.relaxStrictMode()
+        Timber.d("Strict mode relaxed.")
 
-        // Observe UI state from the ViewModel
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect {
+                    Timber.d("UI state updated: $it")
                     uiState = it
                 }
             }
@@ -124,8 +132,10 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val themeInfo = themeInfo(uiState)
+            Timber.d("Theme info in setContent: $themeInfo")
 
             DisposableEffect(themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+                Timber.d("Applying edge-to-edge styles for theme.")
                 enableEdgeToEdge(
                     statusBarStyle = SystemBarStyle.auto(
                         Color.TRANSPARENT,
@@ -141,7 +151,7 @@ class MainActivity : AppCompatActivity() {
                     isThemeDark = themeInfo.isThemeDark,
                     shouldFollowSystem = themeInfo.shouldFollowSystem
                 )
-                onDispose { }
+                onDispose { Timber.d("DisposableEffect disposed for theme.") }
             }
 
             MainContent(
@@ -153,6 +163,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ensureAppDirectories(context: Context) {
+        Timber.d("Ensuring app directories.")
         lifecycleScope.launch {
             try {
                 val picturesDir = File(context.getExternalFilesDir("Pictures"), "FontPicker")
@@ -168,12 +179,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun proceedWithPermissions(context: Context) {
+        Timber.d("Proceeding with permissions.")
         ensureAppDirectories(context)
         permissionsHandler.restoreStrictMode()
         proceedToHomeScreen()
     }
 
     private fun proceedToHomeScreen() {
+        Timber.d("Navigating to Home Screen.")
         val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
         setContent {
             FontPickerTheme {
@@ -185,8 +198,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-}
 
+    override fun onStart() {
+        super.onStart()
+        Timber.d("MainActivity onStart invoked.")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Timber.d("MainActivity onResume invoked.")
+    }
+}
 
 @Composable
 fun MainContent(
@@ -194,6 +216,7 @@ fun MainContent(
     dependenciesProvider: DependenciesProvider,
     permissionsHandler: PermissionsHandler
 ) {
+    Timber.d("MainContent Composable started with uiState: $uiState")
     EnforceTheme(uiState)
 
     CompositionLocalProvider(LocalPadding provides padding) {
@@ -201,6 +224,7 @@ fun MainContent(
             val appState = rememberFontPickerAppState(
                 networkMonitor = dependenciesProvider.networkMonitor
             )
+            Timber.d("App state initialized: $appState")
 
             Scaffold(
                 snackbarHost = { FontPickerSnackbarHost(appState.snackbarHostState) },
@@ -217,13 +241,16 @@ fun MainContent(
                 ) {
                     FontPickerNavHost(
                         onShowSnackbar = { event ->
+                            Timber.d("Snackbar event: $event")
                             appState.snackbarHostState.showSnackbar(event.toVisuals())
                         },
                         dependenciesProvider = dependenciesProvider,
                         navController = appState.navController,
                         startDestination = if (permissionsHandler.isPermissionGrantedForAll()) {
+                            Timber.d("Navigating to Home screen.")
                             FontPickerDestination.Screen.Home
                         } else {
+                            Timber.d("Navigating to Permissions screen.")
                             FontPickerDestination.Screen.Permissions
                         },
                         permissionsHandler = permissionsHandler
@@ -261,6 +288,8 @@ fun EnforceTheme(uiState: MainActivityUiState) {
     val themeInfo = themeInfo(uiState)
 
     DisposableEffect(activity, themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+        Timber.d("Applying theme: isThemeDark=${themeInfo.isThemeDark}, " +
+                "shouldFollowSystem=${themeInfo.shouldFollowSystem}")
         activity?.enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(
                 Color.TRANSPARENT,

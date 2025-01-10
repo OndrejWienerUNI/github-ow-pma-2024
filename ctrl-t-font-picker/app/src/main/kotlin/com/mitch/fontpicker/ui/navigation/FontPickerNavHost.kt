@@ -26,13 +26,18 @@ fun NavHostController.navigateTo(
     popUpToRoute: String? = null,
     inclusive: Boolean = false
 ) {
+    Timber.d("Navigating to $route. Current state: ${currentBackStackEntry?.lifecycle?.currentState}")
     if (currentBackStackEntry?.lifecycle?.currentState?.
         isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED) == true) {
+        Timber.d("Navigation allowed to $route")
         this.navigate(route) {
             popUpToRoute?.let {
+                Timber.d("Pop up to route: $it, inclusive: $inclusive")
                 popUpTo(it) { this.inclusive = inclusive }
             }
         }
+    } else {
+        Timber.w("Navigation to $route prevented. Current state is not RESUMED.")
     }
 }
 
@@ -45,13 +50,19 @@ fun FontPickerNavHost(
     startDestination: Screen,
     permissionsHandler: PermissionsHandler
 ) {
-    Timber.i("FontPickerNavHost: startDestination is $startDestination")
+    Timber.i("FontPickerNavHost initialized. StartDestination is $startDestination")
 
     NavHost(
         navController = navController,
         startDestination = when (startDestination) {
-            Screen.Home -> "home"
-            Screen.Permissions -> "permissions"
+            Screen.Home -> {
+                Timber.d("Setting start destination to Home")
+                "home"
+            }
+            Screen.Permissions -> {
+                Timber.d("Setting start destination to Permissions")
+                "permissions"
+            }
         }
     ) {
         composable("permissions") {
@@ -60,7 +71,7 @@ fun FontPickerNavHost(
                 factory = PermissionsViewModelFactory(
                     permissionsHandler = permissionsHandler,
                     onPermissionsGranted = {
-                        Timber.i("onPermissionsGranted: Navigating to Home Screen from Permissions")
+                        Timber.i("Permissions granted callback triggered in PermissionsViewModel")
                         navController.navigateTo("home", popUpToRoute = "permissions", inclusive = true)
                     }
                 )
