@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class PermissionsViewModel(
     private val permissionsHandler: PermissionsHandler,
@@ -37,17 +38,31 @@ class PermissionsViewModel(
         }
 
         permissionsHandler.onAllPermissionsGranted = {
+            Timber.i("PermissionsHandler: All permissions granted callback invoked.")
             _allPermissionsGranted.value = true
             onPermissionsGranted() // Trigger navigation to the next screen
         }
     }
 
-    fun checkPermissions() {
-        val allGranted = permissionsHandler.isPermissionGrantedForAll()
-        _allPermissionsGranted.value = allGranted
+    private fun checkPermissions() {
+        viewModelScope.launch {
+            val allGranted = permissionsHandler.isPermissionGrantedForAll()
 
-        if (allGranted) {
-            onPermissionsGranted() // If all permissions are already granted
+            if (!allGranted) {
+                val nextPermissionIndex = PermissionsHandler.permissionsToRequest.indexOfFirst {
+                    !permissionsHandler.isPermissionGranted(it.first)
+                }
+                _currentPermissionIndex.value = nextPermissionIndex
+            }
+
+            _allPermissionsGranted.value = allGranted
+
+            if (allGranted) {
+                Timber.i("PermissionsViewModel: All permissions are granted.")
+                onPermissionsGranted()
+            } else {
+                Timber.i("PermissionsViewModel: Some permissions are still denied.")
+            }
         }
     }
 
@@ -67,12 +82,22 @@ class PermissionsViewModel(
         _isRequestingPermission.value = false
         val nextIndex = _currentPermissionIndex.value + 1
 
-        if (nextIndex < PermissionsHandler.permissionsToRequest.size) {
+        // Skip already granted permissions
+        while (nextIndex < PermissionsHandler.permissionsToRequest.size &&
+            permissionsHandler.isPermissionGranted(PermissionsHandler.permissionsToRequest[nextIndex].first)) {
+            _currentPermissionIndex.value = nextIndex + 1
+        }
+
+        if (_currentPermissionIndex.value < PermissionsHandler.permissionsToRequest.size) {
+            Timber.i("PermissionsViewModel: Moving to next permission.")
             _currentPermissionIndex.value = nextIndex
         } else {
+            Timber.i("PermissionsViewModel: All permissions granted.")
             _allPermissionsGranted.value = true
+            onPermissionsGranted()
         }
     }
+
 }
 
 class PermissionsViewModelFactory(

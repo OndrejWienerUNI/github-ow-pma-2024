@@ -4,23 +4,25 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.StrictMode
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.mitch.fontpicker.R
 import timber.log.Timber
 
+@Suppress("MemberVisibilityCanBePrivate")
 class PermissionsHandler(
     private val context: Context,
-    private val permissionLauncher: ActivityResultLauncher<String>,
+    private val activityResultRegistry: ActivityResultRegistry,
     var onPermissionGranted: (String) -> Unit,
     var onPermissionDenied: (String) -> Unit,
-    var onAllPermissionsGranted: () -> Unit // Callback for all permissions granted
+    var onAllPermissionsGranted: () -> Unit
 ) {
     companion object {
         const val CAMERA_PERMISSION = android.Manifest.permission.CAMERA
         const val IMAGES_PERMISSION = android.Manifest.permission.READ_MEDIA_IMAGES
         val SUPPORTED_PERMISSIONS = setOf(CAMERA_PERMISSION, IMAGES_PERMISSION)
 
-        // List of permissions with UI descriptions (can be accessed by the UI layer)
         val permissionsToRequest = listOf(
             CAMERA_PERMISSION to R.string.access_camera,
             IMAGES_PERMISSION to R.string.access_images
@@ -28,10 +30,32 @@ class PermissionsHandler(
     }
 
     private var originalPolicy: StrictMode.ThreadPolicy? = null
-    private val grantedPermissions = mutableSetOf<String>() // Tracks granted permissions
+    private val grantedPermissions = mutableSetOf<String>()
+    private val permissionLaunchers = mutableMapOf<String, ActivityResultLauncher<String>>()
+
+    init {
+        Timber.i("PermissionsHandler initialized.")
+        registerPermissionLaunchers()
+    }
 
     /**
-     * Request a single permission.
+     * Dynamically register launchers for all supported permissions.
+     */
+    private fun registerPermissionLaunchers() {
+        SUPPORTED_PERMISSIONS.forEach { permission ->
+            val launcher = activityResultRegistry.register(
+                "launcher_$permission",
+                ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                handlePermissionResult(permission, isGranted)
+            }
+            permissionLaunchers[permission] = launcher
+        }
+        Timber.i("Permission launchers registered: $permissionLaunchers")
+    }
+
+    /**
+     * Request a single permission using its corresponding launcher.
      */
     fun requestPermission(permission: String) {
         if (!SUPPORTED_PERMISSIONS.contains(permission)) {
@@ -40,16 +64,17 @@ class PermissionsHandler(
         }
 
         if (isPermissionGranted(permission)) {
-            Timber.i("$permission is already granted.")
-            handlePermissionResult(permission, true)
+            Timber.i("$permission is already granted. Triggering callback.")
+            onPermissionGranted(permission)
         } else {
             Timber.i("Requesting permission: $permission")
-            permissionLauncher.launch(permission)
+            permissionLaunchers[permission]?.launch(permission)
+                ?: Timber.e("Launcher for $permission not found!")
         }
     }
 
     /**
-     * Check if a permission is granted.
+     * Check if a specific permission is granted.
      */
     fun isPermissionGranted(permission: String): Boolean {
         if (!SUPPORTED_PERMISSIONS.contains(permission)) {
@@ -67,34 +92,39 @@ class PermissionsHandler(
      * Check if all permissions are granted.
      */
     fun isPermissionGrantedForAll(): Boolean {
-        val allGranted = SUPPORTED_PERMISSIONS.all { isPermissionGranted(it) }
-        Timber.i("Checked if all permissions are granted: $allGranted")
+        val grantedPermissions = SUPPORTED_PERMISSIONS.filter { isPermissionGranted(it) }
+        val deniedPermissions = SUPPORTED_PERMISSIONS - grantedPermissions.toSet()
+
+        Timber.i("Granted permissions: $grantedPermissions")
+        Timber.i("Denied permissions: $deniedPermissions")
+
+        val allGranted = deniedPermissions.isEmpty()
+        Timber.i("All permissions granted: $allGranted")
         return allGranted
     }
 
     /**
-     * Handle permission result.
+     * Handle the result of a permission request.
      */
-    fun handlePermissionResult(permission: String, isGranted: Boolean) {
+    private fun handlePermissionResult(permission: String, isGranted: Boolean) {
         if (!SUPPORTED_PERMISSIONS.contains(permission)) {
-            Timber.e("Permission result for unsupported permission: $permission")
+            Timber.e("Unsupported permission result: $permission")
             throw IllegalArgumentException("Unsupported permission: $permission")
         }
 
         if (isGranted) {
             grantedPermissions.add(permission)
             Timber.i("$permission granted. Current granted permissions: $grantedPermissions")
-
             onPermissionGranted(permission)
-
-            // Check if all permissions are now granted
-            if (grantedPermissions.containsAll(SUPPORTED_PERMISSIONS)) {
-                Timber.i("All required permissions granted.")
-                onAllPermissionsGranted()
-            }
         } else {
             Timber.e("$permission denied.")
             onPermissionDenied(permission)
+        }
+
+        // Check if all permissions are granted after the result.
+        if (grantedPermissions.containsAll(SUPPORTED_PERMISSIONS)) {
+            Timber.i("All required permissions granted.")
+            onAllPermissionsGranted()
         }
     }
 

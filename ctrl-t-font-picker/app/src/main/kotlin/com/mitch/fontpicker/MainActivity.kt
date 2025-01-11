@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -46,8 +47,6 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.navigation.FontPickerDestination
 import com.mitch.fontpicker.ui.navigation.FontPickerNavHost
 import com.mitch.fontpicker.ui.rememberFontPickerAppState
-import com.mitch.fontpicker.ui.screens.home.HomeRoute
-import com.mitch.fontpicker.ui.screens.home.HomeViewModel
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -60,17 +59,6 @@ class MainActivity : AppCompatActivity() {
 
     // Local state to store the current UI state
     private var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
-
-    private val cameraPermissionRequest =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            Timber.d("Camera permission result: $isGranted")
-            if (isGranted) {
-                Timber.i("Camera permission granted.")
-                proceedWithPermissions(this)
-            } else {
-                Timber.e("Camera permission denied.")
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Timber.d("MainActivity onCreate started.")
@@ -90,20 +78,18 @@ class MainActivity : AppCompatActivity() {
 
         permissionsHandler = PermissionsHandler(
             context = this,
-            permissionLauncher = cameraPermissionRequest,
+            activityResultRegistry = activityResultRegistry,
             onPermissionGranted = { permission -> Timber.i("$permission granted.") },
             onPermissionDenied = { permission -> Timber.e("$permission denied.") },
-            onAllPermissionsGranted = {
-                Timber.i("All permissions granted.")
-                proceedWithPermissions(this)
-            }
+            onAllPermissionsGranted = { Timber.i("All permissions granted.") }
         )
+
         Timber.d("PermissionsHandler initialized.")
 
         viewModel = ViewModelProvider(
             this,
             object : ViewModelProvider.AndroidViewModelFactory(application) {
-                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     Timber.d("Creating ViewModel for ${modelClass.simpleName}")
                     if (modelClass.isAssignableFrom(MainActivityViewModel::class.java)) {
                         @Suppress("UNCHECKED_CAST")
@@ -147,7 +133,7 @@ class MainActivity : AppCompatActivity() {
                     ) { themeInfo.isThemeDark }
                 )
                 setAppTheme(
-                    uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
+                    uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager,
                     isThemeDark = themeInfo.isThemeDark,
                     shouldFollowSystem = themeInfo.shouldFollowSystem
                 )
@@ -182,31 +168,6 @@ class MainActivity : AppCompatActivity() {
         Timber.d("Proceeding with permissions.")
         ensureAppDirectories(context)
         permissionsHandler.restoreStrictMode()
-        proceedToHomeScreen()
-    }
-
-    private fun proceedToHomeScreen() {
-        Timber.d("Navigating to Home Screen.")
-        val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
-        setContent {
-            FontPickerTheme {
-                HomeRoute(
-                    viewModel = HomeViewModel(
-                        userSettingsRepository = dependenciesProvider.userSettingsRepository
-                    )
-                )
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Timber.d("MainActivity onStart invoked.")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Timber.d("MainActivity onResume invoked.")
     }
 }
 

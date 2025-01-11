@@ -35,70 +35,66 @@ fun PermissionsRoute(
     val currentPermissionIndex by viewModel.currentPermissionIndex.collectAsState()
     val allPermissionsGranted by viewModel.allPermissionsGranted.collectAsState()
 
-    Timber.d("PermissionsRoute: Current Permission Index = $currentPermissionIndex, All Permissions Granted = $allPermissionsGranted")
+    Timber.d("PermissionsRoute: Current Permission Index = $currentPermissionIndex, " +
+            "All Permissions Granted = $allPermissionsGranted")
 
     if (allPermissionsGranted) {
         Timber.i("All permissions granted, triggering onPermissionsGranted")
-        onPermissionsGranted() // Navigate to the next screen
-    } else {
+        onPermissionsGranted()
+    } else if (currentPermissionIndex < PermissionsHandler.permissionsToRequest.size) {
         PermissionsScreen(
             currentPermissionIndex = currentPermissionIndex,
-            allPermissionsGranted = allPermissionsGranted,
             onRequestPermission = {
                 Timber.d("Request permission button clicked")
                 viewModel.requestPermission()
             }
         )
+    } else {
+        Timber.w("PermissionsRoute: No valid permission index found!")
     }
 }
+
 
 @Composable
 fun PermissionsScreen(
     currentPermissionIndex: Int,
-    allPermissionsGranted: Boolean,
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Timber.d("Rendering PermissionsScreen with currentPermissionIndex = $currentPermissionIndex, allPermissionsGranted = $allPermissionsGranted")
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(FontPickerDesignSystem.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
-        if (!allPermissionsGranted) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(SCREEN_PADDING)
-            ) {
-                val (_, messageResId) = PermissionsHandler.permissionsToRequest[currentPermissionIndex]
-                Timber.d("Displaying permission message with messageResId = $messageResId")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(SCREEN_PADDING)
+        ) {
+            val (_, messageResId) = PermissionsHandler.permissionsToRequest[currentPermissionIndex]
+            Timber.d("Displaying permission message with messageResId = $messageResId")
 
-                Text(
-                    text = stringResource(id = messageResId),
-                    style = FontPickerDesignSystem.typography.titleMedium,
-                    color = FontPickerDesignSystem.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
+            Text(
+                text = stringResource(id = messageResId),
+                style = FontPickerDesignSystem.typography.titleMedium,
+                color = FontPickerDesignSystem.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(TEXT_BUTTON_SPACING))
+
+            Button(
+                onClick = {
+                    Timber.d("Grant Permission button clicked")
+                    onRequestPermission()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = FontPickerDesignSystem.colorScheme.primaryContainer,
+                    contentColor = FontPickerDesignSystem.colorScheme.onPrimaryContainer
                 )
-
-                Spacer(modifier = Modifier.height(TEXT_BUTTON_SPACING))
-
-                Button(
-                    onClick = {
-                        Timber.d("Grant Permission button clicked")
-                        onRequestPermission()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = FontPickerDesignSystem.colorScheme.primaryContainer,
-                        contentColor = FontPickerDesignSystem.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Text(stringResource(id = R.string.grant_permission))
-                }
+            ) {
+                Text(stringResource(id = R.string.grant_permission))
             }
-        } else {
-            Timber.d("All permissions already granted, skipping UI rendering for request")
         }
     }
 }
