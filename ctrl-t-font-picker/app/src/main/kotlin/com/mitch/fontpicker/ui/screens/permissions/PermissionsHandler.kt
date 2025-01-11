@@ -47,7 +47,7 @@ class PermissionsHandler(
                 "launcher_$permission",
                 ActivityResultContracts.RequestPermission()
             ) { isGranted ->
-                handlePermissionResult(permission, isGranted)
+                handlePermissionResult(permission, isGranted) // Pass the result
             }
             permissionLaunchers[permission] = launcher
         }
@@ -64,12 +64,11 @@ class PermissionsHandler(
         }
 
         if (isPermissionGranted(permission)) {
-            Timber.i("$permission is already granted. Triggering callback.")
-            onPermissionGranted(permission)
+            Timber.i("$permission is already granted. Skipping request.")
+            handlePermissionResult(permission, true) // Process it as granted
         } else {
             Timber.i("Requesting permission: $permission")
-            permissionLaunchers[permission]?.launch(permission)
-                ?: Timber.e("Launcher for $permission not found!")
+            permissionLaunchers[permission]?.launch(permission) // Fix: Use `permissionLaunchers`
         }
     }
 
