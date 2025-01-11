@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +28,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
+import com.mitch.fontpicker.ui.screens.camera.components.ErrorDisplayBox
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
 
 private val TOP_PADDING = 84.dp
@@ -132,37 +131,21 @@ private fun CameraScreenContent(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            if (!isPreview) {
-                CameraActionRow(
-                    onShoot = { onCapturePhoto() },
-                    onGallery = { viewModel.onOpenGallery() },
-                    onFlip = { onFlipCamera() }
-                )
-            }
+            CameraActionRow(
+                onShoot = { onCapturePhoto() },
+                onGallery = { viewModel.onOpenGallery() },
+                onFlip = { onFlipCamera() }
+            )
             Spacer(modifier = Modifier.weight(1f))
         }
 
         // Handle errors
-        if (uiState is CameraUiState.Error) {
-            val errorMessage = (uiState as CameraUiState.Error).error
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(FontPickerDesignSystem.colorScheme.background.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = FontPickerDesignSystem.colorScheme.error,
-                    style = FontPickerDesignSystem.typography.titleMedium,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .background(
-                            color = FontPickerDesignSystem.colorScheme.surface,
-                            shape = FontPickerDesignSystem.shapes.medium
-                        )
-                        .padding(16.dp)
-                )
+        if (!isPreview) {
+            if (uiState is CameraUiState.Error) {
+                val errorMessage: String? = (uiState as CameraUiState.Error).error
+                if (errorMessage is String){
+                    ErrorDisplayBox(errorMessage)
+                }
             }
         }
     }

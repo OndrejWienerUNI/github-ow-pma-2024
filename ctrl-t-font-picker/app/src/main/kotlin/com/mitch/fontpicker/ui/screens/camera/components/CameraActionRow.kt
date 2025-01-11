@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -40,8 +39,7 @@ private val ROW_PADDING_VERTICAL = 16.dp
 fun CameraActionRow(
     onShoot: () -> Unit,
     onGallery: () -> Unit,
-    onFlip: () -> Unit,
-    galleryThumbnail: Painter? = null
+    onFlip: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -62,20 +60,11 @@ fun CameraActionRow(
                     .background(FontPickerDesignSystem.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
-                if (galleryThumbnail != null) {
-                    Icon(
-                        painter = galleryThumbnail,
-                        contentDescription = "Gallery Thumbnail",
-                        modifier = Modifier.fillMaxSize(), // Icon fills the parent Box
-                        tint = FontPickerDesignSystem.colorScheme.onSurface,
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_gallery),
-                        contentDescription = "Gallery Placeholder",
-                        tint = Color.Unspecified
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_gallery),
+                    contentDescription = "Gallery Placeholder",
+                    tint = Color.Unspecified
+                )
             }
         }
 
@@ -144,8 +133,7 @@ private fun CameraActionRowPreview() {
             CameraActionRow(
                 onShoot = { /* No-op for preview */ },
                 onGallery = { /* No-op for preview */ },
-                onFlip = { /* No-op for preview */ },
-                galleryThumbnail = null
+                onFlip = { /* No-op for preview */ }
             )
         }
     }
