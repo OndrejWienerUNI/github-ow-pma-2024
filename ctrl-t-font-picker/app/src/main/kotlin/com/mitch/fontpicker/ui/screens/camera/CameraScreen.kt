@@ -32,6 +32,7 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.ui.screens.camera.components.ErrorDisplayBox
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
+import com.mitch.fontpicker.util.StrictModeUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -84,9 +85,13 @@ fun CameraScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // Move file operations to a background thread
-            viewModel.viewModelScope.launch(Dispatchers.IO) {
-                viewModel.handleGalleryImageSelection(it, context)
+            StrictModeUtils.relax(diskReads = true)
+            try {
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    viewModel.handleGalleryImageSelection(it, context)
+                }
+            } finally {
+                StrictModeUtils.restore()
             }
         }
     }

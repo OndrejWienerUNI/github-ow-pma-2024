@@ -19,6 +19,8 @@ object StrictModeUtils {
             originalPolicy = StrictMode.getThreadPolicy()
 
             val builder = StrictMode.ThreadPolicy.Builder(originalPolicy)
+                .detectAll()
+                .penaltyLog()
             if (diskReads) builder.permitDiskReads()
             if (diskWrites) builder.permitDiskWrites()
             if (network) builder.permitNetwork()
