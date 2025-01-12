@@ -98,9 +98,11 @@ object StrictModeManager {
             Timber.e(
                 "$TAG: Unhandled StrictMode violation " +
                         "(ID: $violationId) in $policyType ($violationType). " +
-                        "Delegating to default StrictMode behavior."
+                        "Terminating the app."
             )
-            false
+
+            // Explicitly terminate the app for unhandled violations
+            throw RuntimeException("Unhandled StrictMode $policyType violation (ID: $violationId)", violation)
         }
     }
 }
