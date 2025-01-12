@@ -5,6 +5,7 @@ import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy.Builder
 import com.mitch.fontpicker.di.DefaultDependenciesProvider
 import com.mitch.fontpicker.di.DependenciesProvider
+import com.mitch.fontpicker.util.StrictModeUtils
 import timber.log.Timber
 
 class FontPickerApplication : Application() {
@@ -20,6 +21,10 @@ class FontPickerApplication : Application() {
             Timber.plant(Timber.DebugTree())
             setStrictModePolicy()
         }
+
+        // Device specific ignored violations
+        StrictModeUtils.captureOriginalPolicy()
+        StrictModeUtils.addIgnoredSubstring("com.mediatek.scnmodule.ScnModule.isGameApp")
     }
 
     /**

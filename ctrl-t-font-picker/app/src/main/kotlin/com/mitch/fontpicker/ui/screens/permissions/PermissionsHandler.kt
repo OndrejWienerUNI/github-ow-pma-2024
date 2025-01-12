@@ -7,9 +7,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.mitch.fontpicker.BuildConfig
 import com.mitch.fontpicker.R
-import com.mitch.fontpicker.util.StrictModeUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -73,7 +71,7 @@ class PermissionsHandler(
         }
 
         // Relax StrictMode DiskReads policy in debug
-        StrictModeUtils.relax(diskReads = true)
+        // StrictModeUtils.relax(diskReads = true)
 
         try {
             if (isPermissionGranted(permission)) {
@@ -142,7 +140,7 @@ class PermissionsHandler(
         updatePermissionsState()
 
         // Restore StrictMode policies to whatever is defined in App
-        StrictModeUtils.restore()
+        // StrictModeUtils.restore()
     }
 
     /**
