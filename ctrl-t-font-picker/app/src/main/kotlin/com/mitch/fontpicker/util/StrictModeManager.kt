@@ -86,7 +86,7 @@ object StrictModeManager {
                 .take(matchIndex + 1)
                 .joinToString("\n")
 
-            val truncationNote = ". . .  (stack trace shortened for clarity)"
+            val truncationNote = "... (stack trace shortened for clarity)"
 
             Timber.i(
                 "$TAG: Skipping whitelisted violation (ID: $violationId) " +
