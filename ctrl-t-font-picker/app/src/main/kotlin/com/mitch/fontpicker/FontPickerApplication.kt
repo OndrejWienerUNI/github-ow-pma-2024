@@ -30,7 +30,11 @@ class FontPickerApplication : Application() {
      */
     private fun setStrictModePolicy() {
         StrictMode.setThreadPolicy(
-            Builder().detectAll().penaltyLog().penaltyDeath().build()
+            Builder()
+                .detectAll()
+                .penaltyLog()
+                .penaltyDeath()
+                .build()
         )
     }
 }

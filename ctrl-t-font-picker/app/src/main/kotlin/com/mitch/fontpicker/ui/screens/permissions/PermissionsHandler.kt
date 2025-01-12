@@ -7,7 +7,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.mitch.fontpicker.BuildConfig
 import com.mitch.fontpicker.R
+import com.mitch.fontpicker.util.StrictModeUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -70,7 +72,9 @@ class PermissionsHandler(
             throw IllegalArgumentException("Unsupported permission: $permission")
         }
 
-        relaxStrictMode()
+        // Relax StrictMode DiskReads policy in debug
+        StrictModeUtils.relax(diskReads = true)
+
         try {
             if (isPermissionGranted(permission)) {
                 Timber.i("$permission is already granted. Skipping request.")
@@ -136,7 +140,9 @@ class PermissionsHandler(
         }
 
         updatePermissionsState()
-        restoreStrictMode()
+
+        // Restore StrictMode policies to whatever is defined in App
+        StrictModeUtils.restore()
     }
 
     /**
@@ -144,29 +150,5 @@ class PermissionsHandler(
      */
     private fun updatePermissionsState() {
         _allPermissionsGranted.update { isPermissionGrantedForAll() }
-    }
-
-    /**
-     * Relax StrictMode policy.
-     */
-    fun relaxStrictMode() {
-        originalPolicy = StrictMode.getThreadPolicy()
-        StrictMode.setThreadPolicy(
-            StrictMode.ThreadPolicy.Builder(originalPolicy)
-                .permitDiskReads()
-                .permitDiskWrites()
-                .build()
-        )
-        Timber.i("StrictMode relaxed.")
-    }
-
-    /**
-     * Restore StrictMode policy.
-     */
-    fun restoreStrictMode() {
-        originalPolicy?.let {
-            StrictMode.setThreadPolicy(it)
-            Timber.i("StrictMode restored to the original policy.")
-        } ?: Timber.w("StrictMode restore called, but no original policy was saved!")
     }
 }

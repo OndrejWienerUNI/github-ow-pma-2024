@@ -1,6 +1,7 @@
 package com.mitch.fontpicker.ui.screens.camera
 
 import android.net.Uri
+import android.os.StrictMode
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
@@ -30,6 +32,8 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.ui.screens.camera.components.ErrorDisplayBox
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private val TOP_PADDING = 84.dp
 
@@ -42,9 +46,22 @@ fun CameraScreen(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
+
+//    // TODO: delete this after violations are solved
+//    StrictMode.setThreadPolicy(
+//        StrictMode.ThreadPolicy.Builder()
+//            .detectAll() // Detect all thread violations
+//            .penaltyLog() // Log violations to Logcat
+//            .penaltyDeath() // Crash on violations (remove this after debugging)
+//            .build()
+//    )
+
+
     // Ensure the camera provider is loaded
     LaunchedEffect(Unit) {
-        viewModel.loadCameraProvider(context)
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
+            viewModel.loadCameraProvider(context)
+        }
     }
 
     // Photo capture launcher
@@ -53,8 +70,10 @@ fun CameraScreen(
     ) { success ->
         if (success) {
             photoUri?.let {
-                viewModel.onCapturePhoto(context) { capturedUri ->
-                    photoUri = capturedUri
+                viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    viewModel.onCapturePhoto(context) { capturedUri ->
+                        photoUri = capturedUri
+                    }
                 }
             }
         }
@@ -64,7 +83,12 @@ fun CameraScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { viewModel.handleGalleryImageSelection(it, context) }
+        uri?.let {
+            // Move file operations to a background thread
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                viewModel.handleGalleryImageSelection(it, context)
+            }
+        }
     }
 
     val galleryPickerEvent by viewModel.galleryPickerEvent.collectAsState()
@@ -78,15 +102,18 @@ fun CameraScreen(
         isPreview = isPreview,
         photoUri = photoUri,
         onCapturePhoto = {
-            photoUri = viewModel.createPhotoUri(context)
-            photoUri?.let { photoCaptureLauncher.launch(it) }
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                photoUri = viewModel.createPhotoUri(context)
+                photoUri?.let { photoCaptureLauncher.launch(it) }
+            }
         },
         onFlipCamera = {
-            if (!isPreview) viewModel.flipCamera()
+            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                if (!isPreview) viewModel.flipCamera()
+            }
         }
     )
 }
-
 
 @Composable
 private fun CameraScreenContent(
@@ -143,7 +170,7 @@ private fun CameraScreenContent(
         if (!isPreview) {
             if (uiState is CameraUiState.Error) {
                 val errorMessage: String? = (uiState as CameraUiState.Error).error
-                if (errorMessage is String){
+                if (errorMessage is String) {
                     ErrorDisplayBox(errorMessage)
                 }
             }

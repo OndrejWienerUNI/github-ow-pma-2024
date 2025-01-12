@@ -29,20 +29,23 @@ class CameraViewModel : ViewModel() {
     private val cameraProviderFuture = MutableStateFlow<ProcessCameraProvider?>(null)
 
     fun loadCameraProvider(context: Context) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
             try {
                 val provider = ProcessCameraProvider.getInstance(context).get()
                 cameraProviderFuture.value = provider
-                Timber.d("Camera provider loaded successfully")
-                _uiState.value = CameraUiState.Success(message = "Camera initialized")
+                withContext(Dispatchers.Main) {
+                    Timber.d("Camera provider loaded successfully")
+                    _uiState.value = CameraUiState.Success(message = "Camera initialized")
+                }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load camera provider")
-                onError("Failed to load camera provider: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    onError("Failed to load camera provider: ${e.message}")
+                }
             }
         }
     }
 
-    // TODO: this fucking thing says it flipped, even though nothing happens to the live view
     fun flipCamera() {
         lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
             CameraSelector.LENS_FACING_FRONT
@@ -56,32 +59,37 @@ class CameraViewModel : ViewModel() {
         context: Context,
         onPhotoCaptured: (Uri?) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
             try {
                 _uiState.value = CameraUiState.Loading
 
                 val photoUri = createPhotoUri(context)
                 if (photoUri == null) {
-                    onError("Failed to create photo file.")
-                    onPhotoCaptured(null)
+                    withContext(Dispatchers.Main) {
+                        onError("Failed to create photo file.")
+                        onPhotoCaptured(null)
+                    }
                     return@launch
                 }
 
                 delay(2000) // Simulate processing delay
 
-                _uiState.value = CameraUiState.Success(photoUri = photoUri)
-                onPhotoCaptured(photoUri)
-
-                _uiState.value = CameraUiState.Success(message = "Camera ready")
+                withContext(Dispatchers.Main) {
+                    _uiState.value = CameraUiState.Success(photoUri = photoUri)
+                    onPhotoCaptured(photoUri)
+                    _uiState.value = CameraUiState.Success(message = "Camera ready")
+                }
             } catch (e: Exception) {
-                onError("Error capturing photo: ${e.message}")
-                onPhotoCaptured(null)
+                withContext(Dispatchers.Main) {
+                    onError("Error capturing photo: ${e.message}")
+                    onPhotoCaptured(null)
+                }
             }
         }
     }
 
     private fun cleanupTempPhoto() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) { // Ensure file operations run off the main thread
             tempPhotoFile?.let { file ->
                 if (file.exists()) {
                     file.delete()
@@ -113,12 +121,12 @@ class CameraViewModel : ViewModel() {
     }
 
     fun handleGalleryImageSelection(uri: Uri, context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
             try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                inputStream?.use {
-                    // Process the image as needed here (e.g., save it, analyze it, etc.)
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    // Process the image if needed here
                 }
+
                 withContext(Dispatchers.Main) {
                     _uiState.value = CameraUiState.Success(galleryUri = uri)
                     Timber.d("Gallery image selected: $uri")
