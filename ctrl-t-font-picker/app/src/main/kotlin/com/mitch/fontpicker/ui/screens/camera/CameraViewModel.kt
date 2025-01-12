@@ -156,6 +156,11 @@ class CameraViewModel : ViewModel() {
         Timber.e(message)
     }
 
+    fun resetErrorState() {
+        _uiState.value = CameraUiState.Success(message = "Error cleared")
+        Timber.d("Error state reset to success.")
+    }
+
     override fun onCleared() {
         super.onCleared()
         cleanupTempPhoto()

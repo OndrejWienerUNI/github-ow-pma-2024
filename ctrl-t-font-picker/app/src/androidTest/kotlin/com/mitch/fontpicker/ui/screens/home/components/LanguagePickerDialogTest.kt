@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
 import com.mitch.fontpicker.ui.util.AppNameAndroidComposeTestRule
 import org.junit.Before
 import org.junit.Rule

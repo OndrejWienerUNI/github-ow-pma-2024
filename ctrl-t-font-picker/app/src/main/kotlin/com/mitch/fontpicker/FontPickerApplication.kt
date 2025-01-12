@@ -24,7 +24,7 @@ class FontPickerApplication : Application() {
 
         // Device specific ignored violations
         StrictModeUtils.captureOriginalPolicy()
-        StrictModeUtils.addIgnoredSubstring("com.mediatek.scnmodule.ScnModule.isGameApp")
+        StrictModeUtils.addIgnoredSubstring("ScnModule.isGameApp")
     }
 
     /**

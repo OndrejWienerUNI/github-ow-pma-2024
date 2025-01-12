@@ -21,7 +21,7 @@ import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
 import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
-import com.mitch.fontpicker.ui.screens.home.components.HomeDrawer
+import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import timber.log.Timber
 
 val PAGE_PADDING_HORIZONTAL = 18.dp

@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.home.components
+package com.mitch.fontpicker.ui.screens.home.components.drawers
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons

@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.home.components
+package com.mitch.fontpicker.ui.screens.home.components.drawers
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,6 +27,9 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.home.HomeUiState
+import com.mitch.fontpicker.ui.screens.home.components.branding.AppBrandingRow
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.LanguagePickerDialog
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.ThemePickerDialog
 
 
 private enum class ActiveDialog {

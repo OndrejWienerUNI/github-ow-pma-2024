@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.home.components
+package com.mitch.fontpicker.ui.designsystem.components.dialogs
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement

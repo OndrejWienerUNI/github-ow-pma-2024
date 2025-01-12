@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.home.components
+package com.mitch.fontpicker.ui.screens.home.components.drawers
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background

@@ -29,7 +29,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
-import com.mitch.fontpicker.ui.screens.camera.components.ErrorDisplayBox
+import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,7 +46,6 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
-
 
     // Ensure the camera provider is loaded
     LaunchedEffect(Unit) {
@@ -177,7 +176,15 @@ private fun CameraScreenContent(
             if (uiState is CameraUiState.Error) {
                 val errorMessage: String? = (uiState as CameraUiState.Error).error
                 if (errorMessage is String) {
-                    ErrorDisplayBox(errorMessage)
+                    ErrorOverlay(
+                        errorMessage = errorMessage,
+                        closable = true,
+                        verticalBias = 0.1f,
+                        onClose = {
+                            Timber.i("ErrorOverlay closed. Resetting error state.")
+                            viewModel.resetErrorState()
+                        }
+                    )
                 }
             }
         }
