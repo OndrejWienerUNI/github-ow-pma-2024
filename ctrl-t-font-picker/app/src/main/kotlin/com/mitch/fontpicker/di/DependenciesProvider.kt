@@ -5,6 +5,7 @@ import com.mitch.fontpicker.data.settings.UserSettingsRepository
 import com.mitch.fontpicker.util.network.NetworkMonitor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import java.io.File
 
 interface DependenciesProvider {
     val networkMonitor: NetworkMonitor
@@ -13,4 +14,5 @@ interface DependenciesProvider {
     val defaultDispatcher: CoroutineDispatcher
     val coroutineScope: CoroutineScope
     val database: FontPickerDatabase
+    val picturesDir: File
 }

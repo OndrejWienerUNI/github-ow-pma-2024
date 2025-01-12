@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
-import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
+import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
 @Composable
 fun FavoritesScreen(viewModel: FavoritesViewModel) {
@@ -28,7 +28,7 @@ fun FavoritesScreen(viewModel: FavoritesViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = PAGE_PADDING_HORIZONTAL),
+                    .padding(horizontal = padding.medium),
                 verticalArrangement = Arrangement.Center, // Center vertically
                 horizontalAlignment = Alignment.CenterHorizontally // Center horizontally
             ) {
@@ -43,7 +43,7 @@ fun FavoritesScreen(viewModel: FavoritesViewModel) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = PAGE_PADDING_HORIZONTAL),
+                    .padding(horizontal = padding.medium),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

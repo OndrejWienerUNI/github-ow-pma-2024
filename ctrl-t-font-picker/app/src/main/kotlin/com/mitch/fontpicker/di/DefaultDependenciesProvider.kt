@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
+import java.io.File
 
 class DefaultDependenciesProvider(
     private val context: Context
@@ -78,6 +79,10 @@ class DefaultDependenciesProvider(
             "fontpicker.db"
         ).build()
     }
+
+    override val picturesDir: File
+        get() = File(context.getExternalFilesDir(null), "pictures")
+
 
     private val jsonSerializer: Json by lazy {
         Json {

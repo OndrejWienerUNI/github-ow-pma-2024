@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.data.settings.UserSettingsRepository
+import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,13 +13,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 
 class MainActivityViewModel(
     application: Application,
     userSettingsRepository: UserSettingsRepository,
     permissionsHandler: PermissionsHandler
 ) : AndroidViewModel(application) {
+
+    private val dependenciesProvider: DependenciesProvider by lazy {
+        (getApplication<Application>() as FontPickerApplication).dependenciesProvider
+    }
 
     init {
         Timber.d("MainActivityViewModel initialized with application: $application")
@@ -47,8 +51,7 @@ class MainActivityViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Timber.d("Ensuring app directories.")
-                val appContext = getApplication<Application>()
-                val picturesDir = File(appContext.getExternalFilesDir(null), "pictures")
+                val picturesDir = dependenciesProvider.picturesDir
                 if (!picturesDir.exists() && picturesDir.mkdirs()) {
                     Timber.i("Directory created: ${picturesDir.absolutePath}")
                 } else {
@@ -59,6 +62,5 @@ class MainActivityViewModel(
             }
         }
     }
-
 }
 

@@ -10,21 +10,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
+import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
 import com.mitch.fontpicker.ui.screens.camera.CameraScreen
 import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
-import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
 import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import timber.log.Timber
-
-val PAGE_PADDING_HORIZONTAL = 18.dp
 
 @Composable
 fun HomeRoute(viewModel: HomeViewModel) {
