@@ -1,7 +1,6 @@
 package com.mitch.fontpicker.ui.screens.camera
 
 import android.net.Uri
-import android.os.StrictMode
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -32,9 +31,10 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.ui.screens.camera.components.ErrorDisplayBox
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
-import com.mitch.fontpicker.util.StrictModeUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 private val TOP_PADDING = 84.dp
 
@@ -46,16 +46,6 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var photoUri by remember { mutableStateOf<Uri?>(null) }
-
-
-//    // TODO: delete this after violations are solved
-//    StrictMode.setThreadPolicy(
-//        StrictMode.ThreadPolicy.Builder()
-//            .detectAll() // Detect all thread violations
-//            .penaltyLog() // Log violations to Logcat
-//            .penaltyDeath() // Crash on violations (remove this after debugging)
-//            .build()
-//    )
 
 
     // Ensure the camera provider is loaded
@@ -85,16 +75,19 @@ fun CameraScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            StrictModeUtils.relax(diskReads = true)
+            Timber.i("StrictMode relaxed for gallery launcher.")
             try {
                 viewModel.viewModelScope.launch(Dispatchers.IO) {
+                    Timber.i("Handling gallery image selection.")
                     viewModel.handleGalleryImageSelection(it, context)
+                    Timber.i("Gallery image selection completed.")
                 }
             } finally {
-                StrictModeUtils.restore()
+                Timber.i("StrictMode restore called.")
             }
         }
     }
+
 
     val galleryPickerEvent by viewModel.galleryPickerEvent.collectAsState()
     if (galleryPickerEvent) {
@@ -109,7 +102,9 @@ fun CameraScreen(
         onCapturePhoto = {
             viewModel.viewModelScope.launch(Dispatchers.IO) {
                 photoUri = viewModel.createPhotoUri(context)
-                photoUri?.let { photoCaptureLauncher.launch(it) }
+                withContext(Dispatchers.Main) {
+                    photoUri?.let { photoCaptureLauncher.launch(it) }
+                }
             }
         },
         onFlipCamera = {
@@ -156,9 +151,15 @@ private fun CameraScreenContent(
                         isLoading = false,
                         photoUri = photoUri,
                         onCameraReady = { ready ->
-                            if (!ready) viewModel.onError("Camera failed to initialize")
+                            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                if (!ready) viewModel.onError("Camera failed to initialize")
+                            }
                         },
-                        onError = { error -> viewModel.onError(error) }
+                        onError = { error ->
+                            viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                viewModel.onError(error)
+                            }
+                        }
                     )
                 }
             }

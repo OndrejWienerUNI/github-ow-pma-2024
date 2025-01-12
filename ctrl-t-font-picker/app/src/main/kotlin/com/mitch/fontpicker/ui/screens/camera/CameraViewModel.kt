@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -89,7 +90,7 @@ class CameraViewModel : ViewModel() {
     }
 
     private fun cleanupTempPhoto() {
-        viewModelScope.launch(Dispatchers.IO) { // Ensure file operations run off the main thread
+        viewModelScope.launch(Dispatchers.IO) {
             tempPhotoFile?.let { file ->
                 if (file.exists()) {
                     file.delete()
@@ -102,18 +103,20 @@ class CameraViewModel : ViewModel() {
 
     fun createPhotoUri(context: Context): Uri? {
         return try {
-            val appPicturesDir = File(context.getExternalFilesDir("Pictures"), "FontPicker")
-            if (!appPicturesDir.exists()) {
-                appPicturesDir.mkdirs()
-            }
-            val photoFile = File(appPicturesDir, "photo_${System.currentTimeMillis()}.jpg")
-            tempPhotoFile = photoFile
+            runBlocking(Dispatchers.IO) {
+                val appPicturesDir = File(context.getExternalFilesDir(null), "pictures")
+                if (!appPicturesDir.exists()) {
+                    appPicturesDir.mkdirs()
+                }
+                val photoFile = File(appPicturesDir, "fp_${System.currentTimeMillis()}.jpg")
+                tempPhotoFile = photoFile
 
-            FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                photoFile
-            )
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    photoFile
+                )
+            }
         } catch (e: Exception) {
             onError("Error creating photo URI: ${e.message}")
             null
@@ -121,7 +124,7 @@ class CameraViewModel : ViewModel() {
     }
 
     fun handleGalleryImageSelection(uri: Uri, context: Context) {
-        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 context.contentResolver.openInputStream(uri)?.use { inputStream ->
                     // Process the image if needed here
@@ -138,6 +141,7 @@ class CameraViewModel : ViewModel() {
             }
         }
     }
+
 
     fun onOpenGallery() {
         _galleryPickerEvent.value = true
