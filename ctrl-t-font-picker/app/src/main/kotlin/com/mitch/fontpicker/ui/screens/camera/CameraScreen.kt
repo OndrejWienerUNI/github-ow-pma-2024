@@ -1,5 +1,6 @@
 package com.mitch.fontpicker.ui.screens.camera
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,14 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
+import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
-import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.screens.home.PAGE_PADDING_HORIZONTAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 private val TOP_PADDING = 84.dp
@@ -49,9 +49,8 @@ fun CameraScreen(
 
     // Ensure the camera provider is loaded
     LaunchedEffect(Unit) {
-        viewModel.viewModelScope.launch(Dispatchers.IO) {
-            viewModel.loadCameraProvider(context)
-        }
+        Timber.d("Loading camera provider")
+        viewModel.loadCameraProvider(context)
     }
 
     // Photo capture launcher
@@ -60,12 +59,11 @@ fun CameraScreen(
     ) { success ->
         if (success) {
             photoUri?.let {
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    viewModel.onCapturePhoto(context) { capturedUri ->
-                        photoUri = capturedUri
-                    }
-                }
+                Timber.d("Photo capture success. Processing captured photo.")
+                viewModel.processCapturedPhoto(context, it)
             }
+        } else {
+            Timber.w("Photo capture failed.")
         }
     }
 
@@ -74,22 +72,14 @@ fun CameraScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            Timber.i("StrictMode relaxed for gallery launcher.")
-            try {
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    Timber.i("Handling gallery image selection.")
-                    viewModel.handleGalleryImageSelection(it, context)
-                    Timber.i("Gallery image selection completed.")
-                }
-            } finally {
-                Timber.i("StrictMode restore called.")
-            }
-        }
+            Timber.i("Gallery image selected: $it")
+            viewModel.handleGalleryImageSelection(it, context)
+        } ?: Timber.w("No gallery image selected.")
     }
-
 
     val galleryPickerEvent by viewModel.galleryPickerEvent.collectAsState()
     if (galleryPickerEvent) {
+        Timber.d("Launching gallery picker.")
         galleryLauncher.launch("image/*")
         viewModel.resetGalleryPickerEvent()
     }
@@ -99,19 +89,29 @@ fun CameraScreen(
         isPreview = isPreview,
         photoUri = photoUri,
         onCapturePhoto = {
-            viewModel.viewModelScope.launch(Dispatchers.IO) {
-                photoUri = viewModel.createPhotoUri(context)
-                withContext(Dispatchers.Main) {
-                    photoUri?.let { photoCaptureLauncher.launch(it) }
-                }
-            }
+            Timber.d("Attempting to capture photo.")
+            viewModel.createPhotoUri(context)?.let {
+                photoUri = it
+                photoCaptureLauncher.launch(it)
+            } ?: Timber.e("Failed to create photo URI for capture.")
         },
         onFlipCamera = {
-            viewModel.viewModelScope.launch(Dispatchers.IO) {
-                if (!isPreview) viewModel.flipCamera()
-            }
+            Timber.d("Flipping camera.")
+            viewModel.flipCamera()
         }
     )
+}
+
+private fun CameraViewModel.processCapturedPhoto(context: Context, uri: Uri) {
+    viewModelScope.launch {
+        try {
+            onCapturePhoto(context) { capturedUri ->
+                capturedUri?.let { Timber.i("Captured photo processed: $it") }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error processing captured photo.")
+        }
+    }
 }
 
 @Composable

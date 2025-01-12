@@ -2,7 +2,6 @@ package com.mitch.fontpicker.ui.screens.permissions
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.StrictMode
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,7 +28,6 @@ class PermissionsHandler(
         )
     }
 
-    private var originalPolicy: StrictMode.ThreadPolicy? = null
     private val grantedPermissions = mutableSetOf<String>()
     private val permissionLaunchers = mutableMapOf<String, ActivityResultLauncher<String>>()
 
@@ -69,9 +67,6 @@ class PermissionsHandler(
             Timber.e("Unsupported permission requested: $permission")
             throw IllegalArgumentException("Unsupported permission: $permission")
         }
-
-        // Relax StrictMode DiskReads policy in debug
-        // StrictModeUtils.relax(diskReads = true)
 
         try {
             if (isPermissionGranted(permission)) {
@@ -138,9 +133,6 @@ class PermissionsHandler(
         }
 
         updatePermissionsState()
-
-        // Restore StrictMode policies to whatever is defined in App
-        // StrictModeUtils.restore()
     }
 
     /**

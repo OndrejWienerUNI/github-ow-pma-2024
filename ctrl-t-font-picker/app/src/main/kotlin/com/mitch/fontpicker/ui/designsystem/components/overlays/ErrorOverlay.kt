@@ -30,6 +30,26 @@ private val TEXT_PADDING_HORIZONTAL = 22.dp
 private val TEXT_PADDING_VERTICAL = 20.dp
 private val CLOSE_ICON_SIZE = 24.dp
 
+/**
+ *         // Handle errors
+ *         if (!isPreview) {
+ *             if (uiState is CameraUiState.Error) {
+ *                 val errorMessage: String? = (uiState as CameraUiState.Error).error
+ *                 if (errorMessage is String) {
+ *                     ErrorOverlay(
+ *                         errorMessage = errorMessage,
+ *                         closable = true,
+ *                         verticalBias = 0.1f,
+ *                         onClose = {
+ *                             Timber.i("ErrorOverlay closed. Resetting error state.")
+ *                             viewModel.resetErrorState()
+ *                         }
+ *                     )
+ *                 }
+ *             }
+ *         }
+ */
+
 @Composable
 fun ErrorOverlay(
     errorMessage: String,

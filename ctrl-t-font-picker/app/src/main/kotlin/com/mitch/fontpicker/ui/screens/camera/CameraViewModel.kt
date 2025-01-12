@@ -12,7 +12,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -30,16 +29,17 @@ class CameraViewModel : ViewModel() {
     private val cameraProviderFuture = MutableStateFlow<ProcessCameraProvider?>(null)
 
     fun loadCameraProvider(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
+        viewModelScope.launch(Dispatchers.IO) {
             try {
+                Timber.d("Loading camera provider...")
                 val provider = ProcessCameraProvider.getInstance(context).get()
-                cameraProviderFuture.value = provider
                 withContext(Dispatchers.Main) {
-                    Timber.d("Camera provider loaded successfully")
+                    cameraProviderFuture.value = provider
+                    Timber.d("Camera provider loaded successfully.")
                     _uiState.value = CameraUiState.Success(message = "Camera initialized")
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to load camera provider")
+                Timber.e(e, "Failed to load camera provider.")
                 withContext(Dispatchers.Main) {
                     onError("Failed to load camera provider: ${e.message}")
                 }
@@ -53,23 +53,20 @@ class CameraViewModel : ViewModel() {
         } else {
             CameraSelector.LENS_FACING_BACK
         }
-        Timber.d("Camera flipped to ${if (lensFacing == CameraSelector.LENS_FACING_BACK) "BACK" else "FRONT"}")
+        Timber.d("Camera flipped to ${if (lensFacing == CameraSelector.LENS_FACING_BACK) "BACK" else "FRONT"}.")
     }
 
-    fun onCapturePhoto(
-        context: Context,
-        onPhotoCaptured: (Uri?) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) { // Ensure this runs off the main thread
+    fun onCapturePhoto(context: Context, onPhotoCaptured: (Uri?) -> Unit) {
+        viewModelScope.launch {
             try {
                 _uiState.value = CameraUiState.Loading
+                Timber.d("Starting photo capture...")
 
-                val photoUri = createPhotoUri(context)
+                val photoUri = withContext(Dispatchers.IO) { createPhotoUri(context) }
                 if (photoUri == null) {
-                    withContext(Dispatchers.Main) {
-                        onError("Failed to create photo file.")
-                        onPhotoCaptured(null)
-                    }
+                    Timber.e("Photo URI creation failed.")
+                    onError("Failed to create photo file.")
+                    onPhotoCaptured(null)
                     return@launch
                 }
 
@@ -79,12 +76,12 @@ class CameraViewModel : ViewModel() {
                     _uiState.value = CameraUiState.Success(photoUri = photoUri)
                     onPhotoCaptured(photoUri)
                     _uiState.value = CameraUiState.Success(message = "Camera ready")
+                    Timber.d("Photo capture completed: $photoUri")
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("Error capturing photo: ${e.message}")
-                    onPhotoCaptured(null)
-                }
+                Timber.e(e, "Error during photo capture.")
+                onError("Error capturing photo: ${e.message}")
+                onPhotoCaptured(null)
             }
         }
     }
@@ -103,45 +100,47 @@ class CameraViewModel : ViewModel() {
 
     fun createPhotoUri(context: Context): Uri? {
         return try {
-            runBlocking(Dispatchers.IO) {
-                val appPicturesDir = File(context.getExternalFilesDir(null), "pictures")
-                if (!appPicturesDir.exists()) {
-                    appPicturesDir.mkdirs()
-                }
-                val photoFile = File(appPicturesDir, "fp_${System.currentTimeMillis()}.jpg")
-                tempPhotoFile = photoFile
-
-                FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    photoFile
-                )
+            Timber.d("Creating photo URI...")
+            val appPicturesDir = File(context.getExternalFilesDir(null), "pictures")
+            if (!appPicturesDir.exists()) {
+                appPicturesDir.mkdirs()
+                Timber.d("Created pictures directory: ${appPicturesDir.path}")
             }
+            val photoFile = File(appPicturesDir, "fp_${System.currentTimeMillis()}.jpg")
+            tempPhotoFile = photoFile
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                photoFile
+            )
         } catch (e: Exception) {
+            Timber.e(e, "Error creating photo URI.")
             onError("Error creating photo URI: ${e.message}")
             null
         }
     }
 
     fun handleGalleryImageSelection(uri: Uri, context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                    // Process the image if needed here
+                Timber.d("Handling gallery image selection: $uri")
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        // Process the image if needed
+                        Timber.d("Processing selected gallery image.")
+                    }
                 }
 
                 withContext(Dispatchers.Main) {
                     _uiState.value = CameraUiState.Success(galleryUri = uri)
-                    Timber.d("Gallery image selected: $uri")
+                    Timber.d("Gallery image processed and UI state updated.")
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    onError("Error selecting gallery image: ${e.message}")
-                }
+                Timber.e(e, "Error selecting gallery image.")
+                onError("Error selecting gallery image: ${e.message}")
             }
         }
     }
-
 
     fun onOpenGallery() {
         _galleryPickerEvent.value = true
@@ -163,6 +162,9 @@ class CameraViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        cleanupTempPhoto()
+        viewModelScope.launch {
+            cleanupTempPhoto()
+            Timber.d("Cleanup performed in onCleared.")
+        }
     }
 }

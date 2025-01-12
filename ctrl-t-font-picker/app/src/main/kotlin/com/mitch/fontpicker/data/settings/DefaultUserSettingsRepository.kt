@@ -3,6 +3,7 @@ package com.mitch.fontpicker.data.settings
 import android.os.StrictMode
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import com.mitch.fontpicker.BuildConfig
 import com.mitch.fontpicker.data.userprefs.UserPreferencesLocalDataSource
 import com.mitch.fontpicker.data.userprefs.toDomainModel
 import com.mitch.fontpicker.data.userprefs.toProtoModel
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.Locale
 
 class DefaultUserSettingsRepository(
@@ -71,18 +73,27 @@ class DefaultUserSettingsRepository(
      */
     private suspend fun setAppLocale(locale: Locale?) {
         withContext(Dispatchers.Main) {
-            // temporarily allow disk reads and writes,
-            // since setApplicationLocales is a blocking operation;
-            // (returns old policy to restore afterwards)
-            val oldPolicy = StrictMode.allowThreadDiskWrites()
-            val localeList = if (locale == null) {
-                LocaleListCompat.getEmptyLocaleList()
-            } else {
-                LocaleListCompat.forLanguageTags(locale.toLanguageTag())
+            val oldPolicy = if (BuildConfig.DEBUG) {
+                // Allow thread disk writes temporarily if StrictMode is enabled
+                Timber.d("Temporarily allowing disk writes for locale change.")
+                StrictMode.allowThreadDiskWrites()
+            } else { null }
+
+            try {
+                val localeList = if (locale == null) {
+                    LocaleListCompat.getEmptyLocaleList()
+                } else {
+                    LocaleListCompat.forLanguageTags(locale.toLanguageTag())
+                }
+                AppCompatDelegate.setApplicationLocales(localeList)
+            } finally {
+                if (BuildConfig.DEBUG && oldPolicy != null) {
+                    // Restore old policy only if it was modified
+                    Timber.d("Restoring thread policy after locale change.")
+                    StrictMode.setThreadPolicy(oldPolicy)
+                }
             }
-            AppCompatDelegate.setApplicationLocales(localeList)
-            // restore old policy
-            StrictMode.setThreadPolicy(oldPolicy)
         }
     }
+
 }
