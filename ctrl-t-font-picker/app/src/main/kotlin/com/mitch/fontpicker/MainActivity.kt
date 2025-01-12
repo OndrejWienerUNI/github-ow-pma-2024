@@ -25,9 +25,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,11 +47,11 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.LocalPadding
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.navigation.FontPickerDestination
 import com.mitch.fontpicker.ui.navigation.FontPickerNavHost
+import com.mitch.fontpicker.ui.navigation.navigateTo
 import com.mitch.fontpicker.ui.rememberFontPickerAppState
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -60,31 +62,22 @@ class MainActivity : AppCompatActivity() {
     private var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         Timber.d("MainActivity onCreate started.")
         val dependenciesProvider = (application as FontPickerApplication).dependenciesProvider
 
         enableEdgeToEdge()
         Timber.d("Edge-to-edge enabled.")
 
-        lifecycleScope.launch {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                dependenciesProvider.userSettingsRepository.initLocaleIfNeeded()
-                Timber.d("Locale initialized if needed.")
-            }
-        }
-
-        super.onCreate(savedInstanceState)
-
+        // Initialize the PermissionsHandler
         permissionsHandler = PermissionsHandler(
             context = this,
-            activityResultRegistry = activityResultRegistry,
-            onPermissionGranted = { permission -> Timber.i("$permission granted.") },
-            onPermissionDenied = { permission -> Timber.e("$permission denied.") },
-            onAllPermissionsGranted = { Timber.i("All permissions granted.") }
+            activityResultRegistry = activityResultRegistry
         )
-
         Timber.d("PermissionsHandler initialized.")
 
+        // Initialize the ViewModel
         viewModel = ViewModelProvider(
             this,
             object : ViewModelProvider.AndroidViewModelFactory(application) {
@@ -94,7 +87,8 @@ class MainActivity : AppCompatActivity() {
                         @Suppress("UNCHECKED_CAST")
                         return MainActivityViewModel(
                             application = application,
-                            userSettingsRepository = dependenciesProvider.userSettingsRepository
+                            userSettingsRepository = dependenciesProvider.userSettingsRepository,
+                            permissionsHandler = permissionsHandler
                         ) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
@@ -103,70 +97,30 @@ class MainActivity : AppCompatActivity() {
         )[MainActivityViewModel::class.java]
         Timber.d("ViewModel initialized: $viewModel")
 
-        permissionsHandler.relaxStrictMode()
-        Timber.d("Strict mode relaxed.")
 
+        // Observe the UI state in the ViewModel
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect {
-                    Timber.d("UI state updated: $it")
-                    uiState = it
+                viewModel.uiState.collect { newState ->
+                    Timber.d("UI state updated: $newState")
+                    uiState = newState
                 }
             }
         }
 
+        // Set up the content
         setContent {
-            val themeInfo = themeInfo(uiState)
-            Timber.d("Theme info in setContent: $themeInfo")
-
-            DisposableEffect(themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
-                Timber.d("Applying edge-to-edge styles for theme.")
-                enableEdgeToEdge(
-                    statusBarStyle = SystemBarStyle.auto(
-                        Color.TRANSPARENT,
-                        Color.TRANSPARENT
-                    ) { themeInfo.isThemeDark },
-                    navigationBarStyle = SystemBarStyle.auto(
-                        LightScrim,
-                        DarkScrim
-                    ) { themeInfo.isThemeDark }
-                )
-                setAppTheme(
-                    uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager,
-                    isThemeDark = themeInfo.isThemeDark,
-                    shouldFollowSystem = themeInfo.shouldFollowSystem
-                )
-                onDispose { Timber.d("DisposableEffect disposed for theme.") }
-            }
+            Timber.d("Setting content.")
+            EnforceTheme(uiState)
 
             MainContent(
                 uiState = uiState,
                 dependenciesProvider = dependenciesProvider,
-                permissionsHandler = permissionsHandler
+                permissionsHandler = permissionsHandler,
+                viewModel = viewModel
             )
         }
-    }
 
-    private fun ensureAppDirectories(context: Context) {
-        Timber.d("Ensuring app directories.")
-        lifecycleScope.launch {
-            try {
-                val picturesDir = File(context.getExternalFilesDir("Pictures"), "FontPicker")
-                if (!picturesDir.exists() && picturesDir.mkdirs()) {
-                    Timber.i("Directory created: ${picturesDir.absolutePath}")
-                } else {
-                    Timber.i("Directory already exists: ${picturesDir.absolutePath}")
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Error ensuring directories.")
-            }
-        }
-    }
-
-    private fun proceedWithPermissions(context: Context) {
-        Timber.d("Proceeding with permissions.")
-        ensureAppDirectories(context)
-        permissionsHandler.restoreStrictMode()
     }
 }
 
@@ -174,17 +128,41 @@ class MainActivity : AppCompatActivity() {
 fun MainContent(
     uiState: MainActivityUiState,
     dependenciesProvider: DependenciesProvider,
-    permissionsHandler: PermissionsHandler
+    permissionsHandler: PermissionsHandler,
+    viewModel: MainActivityViewModel
 ) {
     Timber.d("MainContent Composable started with uiState: $uiState")
-    EnforceTheme(uiState)
+
+    val allPermissionsGranted by permissionsHandler.allPermissionsGranted.collectAsState()
+
+    // Ensure app directories only once when permissions are granted
+    LaunchedEffect(allPermissionsGranted) {
+        if (allPermissionsGranted) {
+            viewModel.ensureAppDirectories()
+        }
+    }
 
     CompositionLocalProvider(LocalPadding provides padding) {
         FontPickerTheme(isThemeDark = themeInfo(uiState).isThemeDark) {
             val appState = rememberFontPickerAppState(
                 networkMonitor = dependenciesProvider.networkMonitor
             )
-            Timber.d("App state initialized: $appState")
+
+            val startDestination = remember(allPermissionsGranted) {
+                if (allPermissionsGranted) {
+                    FontPickerDestination.Screen.Home.toString()
+                } else {
+                    FontPickerDestination.Screen.Permissions.toString()
+                }
+            }
+
+            // Navigation logic for dynamic navigation
+            LaunchedEffect(allPermissionsGranted) {
+                if (allPermissionsGranted && appState.navController.currentDestination?.route == "permissions") {
+                    Timber.d("Navigating to Home")
+                    appState.navController.navigateTo("home", "permissions", inclusive = true)
+                }
+            }
 
             Scaffold(
                 snackbarHost = { FontPickerSnackbarHost(appState.snackbarHostState) },
@@ -201,18 +179,11 @@ fun MainContent(
                 ) {
                     FontPickerNavHost(
                         onShowSnackbar = { event ->
-                            Timber.d("Snackbar event: $event")
                             appState.snackbarHostState.showSnackbar(event.toVisuals())
                         },
                         dependenciesProvider = dependenciesProvider,
                         navController = appState.navController,
-                        startDestination = if (permissionsHandler.isPermissionGrantedForAll()) {
-                            Timber.d("Navigating to Home screen.")
-                            FontPickerDestination.Screen.Home
-                        } else {
-                            Timber.d("Navigating to Permissions screen.")
-                            FontPickerDestination.Screen.Permissions
-                        },
+                        startDestination = startDestination,
                         permissionsHandler = permissionsHandler
                     )
                 }
@@ -247,29 +218,30 @@ fun EnforceTheme(uiState: MainActivityUiState) {
     val activity = LocalContext.current as? ComponentActivity
     val themeInfo = themeInfo(uiState)
 
-    DisposableEffect(activity, themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+    LaunchedEffect(themeInfo) {
         Timber.d("Applying theme: isThemeDark=${themeInfo.isThemeDark}, " +
                 "shouldFollowSystem=${themeInfo.shouldFollowSystem}")
-        activity?.enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                Color.TRANSPARENT,
-                Color.TRANSPARENT
-            ) { themeInfo.isThemeDark },
-            navigationBarStyle = SystemBarStyle.auto(
-                LightScrim,
-                DarkScrim
-            ) { themeInfo.isThemeDark }
-        )
 
         activity?.let {
+            // Apply edge-to-edge styles
+            it.enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(
+                    Color.TRANSPARENT,
+                    Color.TRANSPARENT
+                ) { themeInfo.isThemeDark },
+                navigationBarStyle = SystemBarStyle.auto(
+                    LightScrim,
+                    DarkScrim
+                ) { themeInfo.isThemeDark }
+            )
+
+            // Apply app theme
             setAppTheme(
                 uiModeManager = it.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
                 isThemeDark = themeInfo.isThemeDark,
                 shouldFollowSystem = themeInfo.shouldFollowSystem
             )
         }
-
-        onDispose { }
     }
 }
 

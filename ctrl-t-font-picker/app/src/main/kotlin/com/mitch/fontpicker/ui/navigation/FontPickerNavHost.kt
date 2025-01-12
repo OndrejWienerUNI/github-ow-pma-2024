@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.ui.designsystem.components.snackbars.SnackbarEvent
-import com.mitch.fontpicker.ui.navigation.FontPickerDestination.Screen
 import com.mitch.fontpicker.ui.screens.home.HomeRoute
 import com.mitch.fontpicker.ui.screens.home.HomeViewModel
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
@@ -47,46 +46,27 @@ fun FontPickerNavHost(
     onShowSnackbar: suspend (SnackbarEvent) -> SnackbarResult,
     dependenciesProvider: DependenciesProvider,
     navController: NavHostController,
-    startDestination: Screen,
+    startDestination: String,
     permissionsHandler: PermissionsHandler
 ) {
-    Timber.i("FontPickerNavHost initialized. StartDestination is $startDestination")
+    Timber.i("FontPickerNavHost initialized with startDestination: $startDestination")
 
     NavHost(
         navController = navController,
-        startDestination = when (startDestination) {
-            Screen.Home -> {
-                Timber.d("Setting start destination to Home")
-                "home"
-            }
-            Screen.Permissions -> {
-                Timber.d("Setting start destination to Permissions")
-                "permissions"
-            }
-        }
+        startDestination = startDestination
     ) {
         composable("permissions") {
-            Timber.i("Rendering PermissionsRoute")
             val viewModel: PermissionsViewModel = viewModel(
                 factory = PermissionsViewModelFactory(
-                    permissionsHandler = permissionsHandler,
-                    onPermissionsGranted = {
-                        Timber.i("Permissions granted callback triggered in PermissionsViewModel")
-                        navController.navigateTo("home", popUpToRoute = "permissions", inclusive = true)
-                    }
+                    permissionsHandler = permissionsHandler
                 )
             )
             PermissionsRoute(
-                viewModel = viewModel,
-                onPermissionsGranted = {
-                    Timber.i("PermissionsRoute: onPermissionsGranted triggered")
-                    navController.navigateTo("home", popUpToRoute = "permissions", inclusive = true)
-                }
+                viewModel = viewModel
             )
         }
 
         composable("home") {
-            Timber.i("Rendering HomeRoute")
             HomeRoute(
                 viewModel = viewModel(
                     factory = viewModelProviderFactory {
@@ -99,3 +79,4 @@ fun FontPickerNavHost(
         }
     }
 }
+

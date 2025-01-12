@@ -27,21 +27,21 @@ private val TEXT_BUTTON_SPACING = 24.dp
 
 @Composable
 fun PermissionsRoute(
-    viewModel: PermissionsViewModel,
-    onPermissionsGranted: () -> Unit
+    viewModel: PermissionsViewModel
 ) {
     Timber.d("Rendering PermissionsRoute")
 
+    // Observe the current permission index and whether all permissions are granted
     val currentPermissionIndex by viewModel.currentPermissionIndex.collectAsState()
     val allPermissionsGranted by viewModel.allPermissionsGranted.collectAsState()
 
-    Timber.d("PermissionsRoute: Current Permission Index = $currentPermissionIndex, " +
-            "All Permissions Granted = $allPermissionsGranted")
+    Timber.d(
+        "PermissionsRoute: Current Permission Index = $currentPermissionIndex, " +
+                "All Permissions Granted = $allPermissionsGranted"
+    )
 
-    if (allPermissionsGranted) {
-        Timber.i("All permissions granted, triggering onPermissionsGranted")
-        onPermissionsGranted()
-    } else if (currentPermissionIndex < PermissionsHandler.permissionsToRequest.size) {
+    // Render PermissionsScreen or handle the state for all permissions granted
+    if (!allPermissionsGranted) {
         PermissionsScreen(
             currentPermissionIndex = currentPermissionIndex,
             onRequestPermission = {
@@ -50,10 +50,10 @@ fun PermissionsRoute(
             }
         )
     } else {
-        Timber.w("PermissionsRoute: No valid permission index found!")
+        // Log and take any necessary actions for granted permissions
+        Timber.i("All permissions granted. Navigation or other actions can be triggered here.")
     }
 }
-
 
 @Composable
 fun PermissionsScreen(
@@ -61,6 +61,8 @@ fun PermissionsScreen(
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Timber.d("Rendering PermissionsScreen with currentPermissionIndex = $currentPermissionIndex")
+
     Box(
         modifier = modifier
             .fillMaxSize()
