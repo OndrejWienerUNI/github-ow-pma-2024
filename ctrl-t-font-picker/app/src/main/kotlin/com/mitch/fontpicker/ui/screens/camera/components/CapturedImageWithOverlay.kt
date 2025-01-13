@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,7 +21,7 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
-import kotlinx.coroutines.delay
+import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 import timber.log.Timber
 
 @Composable
@@ -44,18 +43,12 @@ fun CapturedImageWithOverlay(
             BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(FontPickerDesignSystem.colorScheme.tertiary) // Tertiary background by default
+                    .background(FontPickerDesignSystem.extendedColorScheme.pictureBackground)
             ) {
                 val containerAspectRatio = constraints.maxWidth.toFloat() / constraints.maxHeight.toFloat()
-
-                // Use AsyncImagePainter to load the image
                 val painter = rememberAsyncImagePainter(photoUri)
-                val state = painter.state // This is a StateFlow
-
-                // Collect the state flow as a Compose state
+                val state = painter.state
                 val currentState = state.collectAsState().value
-
-                // Default modifier for the image
                 var imageModifier = Modifier.fillMaxSize()
 
                 if (currentState is AsyncImagePainter.State.Success) {
@@ -63,18 +56,13 @@ fun CapturedImageWithOverlay(
                     val imageHeight = currentState.painter.intrinsicSize.height
                     if (imageWidth > 0 && imageHeight > 0) {
                         val imageAspectRatio = imageWidth / imageHeight
-                        val tertiaryBackground = FontPickerDesignSystem.colorScheme.tertiary
 
-                        if (imageAspectRatio < containerAspectRatio) {
-                            LaunchedEffect(Unit) {
-                                imageModifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(imageAspectRatio)
-                                    .background(tertiaryBackground)
-                                delay(100)
-                            }
+                        imageModifier = if (imageAspectRatio < containerAspectRatio) {
+                            Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(imageAspectRatio)
                         } else {
-                            imageModifier = Modifier
+                            Modifier
                                 .fillMaxHeight()
                                 .aspectRatio(imageAspectRatio)
                         }

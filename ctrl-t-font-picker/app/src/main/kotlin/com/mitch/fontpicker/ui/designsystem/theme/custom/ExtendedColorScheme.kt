@@ -15,7 +15,8 @@ data class ExtendedColorScheme(
     val onWarning: Color,
     val icOnBackground: Color,
     val icOnBackgroundPressed: Color,
-    val borders: Color
+    val borders: Color,
+    val pictureBackground: Color
 )
 
 val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
@@ -25,7 +26,8 @@ val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     onWarning = Color(0xFF1A1C1E),
     icOnBackground = Color.White,
     icOnBackgroundPressed = Color(0xFFC4C4C4),
-    borders = Color(0xFF727272)
+    borders = Color(0xFF727272),
+    pictureBackground = Color(0xFF000000)
 )
 
 val LightExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
@@ -35,7 +37,8 @@ val LightExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     onWarning = Color(0xFF424242),
     icOnBackground = Color(0xFF757575),
     icOnBackgroundPressed = Color(0xFF606060),
-    borders = Color(0xFFB4B4B4)
+    borders = Color(0xFFB4B4B4),
+    pictureBackground = Color(0xFF000000)
 )
 
 val LocalExtendedColorScheme: ProvidableCompositionLocal<ExtendedColorScheme> =
