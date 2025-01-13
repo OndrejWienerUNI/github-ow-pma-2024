@@ -20,8 +20,10 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
 import com.mitch.fontpicker.ui.screens.camera.CameraScreen
+import com.mitch.fontpicker.ui.screens.camera.CameraScreenRoute
 import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
+import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreenRoute
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
 import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import timber.log.Timber
@@ -59,10 +61,11 @@ fun HomeScreen(
     Timber.d("Rendering HomeScreen with UI State: $uiState")
     BackgroundWithTintedStatusBar()
 
-    // Never do this, its only done for previews
+    // Only for preview mode; otherwise, get your dependencies from the real application
     val dependenciesProvider = if (!isPreview)
         (LocalContext.current.applicationContext as FontPickerApplication).dependenciesProvider
-        else DefaultDependenciesProvider(LocalContext.current)
+    else
+        DefaultDependenciesProvider(LocalContext.current)
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -94,14 +97,18 @@ fun HomeScreen(
                 Timber.d("HorizontalPager: Rendering page $page")
                 when (page) {
                     0 -> {
-                        Timber.d("Rendering CameraScreen")
-                        CameraScreen(viewModel = CameraViewModel(dependenciesProvider),
-                            isPreview = isPreview)
+                        Timber.d("Rendering CameraScreenRoute")
+                        CameraScreenRoute(
+                            dependenciesProvider = dependenciesProvider,
+                            isPreview = isPreview
+                        )
                     }
+
                     1 -> {
-                        Timber.d("Rendering FavoritesScreen")
-                        FavoritesScreen(viewModel = FavoritesViewModel())
+                        Timber.d("Rendering FavoritesScreenRoute")
+                        FavoritesScreenRoute()
                     }
+
                     else -> {
                         Timber.w("HorizontalPager: Unknown page $page")
                     }

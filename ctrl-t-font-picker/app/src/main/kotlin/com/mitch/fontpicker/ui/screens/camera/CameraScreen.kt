@@ -23,7 +23,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mitch.fontpicker.di.DefaultDependenciesProvider
+import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
@@ -31,9 +33,26 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
+import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
 private val TOP_PADDING = 84.dp
+
+@Composable
+fun CameraScreenRoute(
+    dependenciesProvider: DependenciesProvider,
+    isPreview: Boolean
+) {
+    // Create the ViewModel with a short inline factory
+    val cameraViewModel: CameraViewModel = viewModel(
+        factory = viewModelProviderFactory {
+            CameraViewModel(dependenciesProvider)
+        }
+    )
+    Timber.d("Rendering CameraScreenRoute")
+    cameraViewModel.loadCameraProvider(LocalContext.current, LocalLifecycleOwner.current)
+    CameraScreen(viewModel = cameraViewModel, isPreview = isPreview)
+}
 
 @Composable
 fun CameraScreen(
@@ -47,11 +66,6 @@ fun CameraScreen(
     val preview by viewModel.preview.collectAsState()
 
     Timber.d("CameraScreen: Preview state = $preview, UI State = $uiState")
-
-    // Ensure camera provider is loaded with context and lifecycleOwner
-    LaunchedEffect(Unit) {
-        viewModel.loadCameraProvider(context, lifecycleOwner)
-    }
 
     // Dispose of the image state when the CameraScreen is removed from the composition tree
     DisposableEffect(Unit) {

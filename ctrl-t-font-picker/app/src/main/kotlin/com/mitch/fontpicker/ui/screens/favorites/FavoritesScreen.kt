@@ -11,9 +11,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
+import com.mitch.fontpicker.ui.util.viewModelProviderFactory
+import timber.log.Timber
+
+@Composable
+fun FavoritesScreenRoute() {
+    // Create the ViewModel with a short inline factory
+    val favoritesViewModel: FavoritesViewModel = viewModel(
+        factory = viewModelProviderFactory {
+            FavoritesViewModel()
+        }
+    )
+    Timber.d("Rendering FavoritesScreenRoute")
+    FavoritesScreen(viewModel = favoritesViewModel)
+}
 
 @Composable
 fun FavoritesScreen(viewModel: FavoritesViewModel) {

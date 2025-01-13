@@ -13,7 +13,6 @@ import com.mitch.fontpicker.ui.screens.home.HomeViewModel
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsHandler
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsRoute
 import com.mitch.fontpicker.ui.screens.permissions.PermissionsViewModel
-import com.mitch.fontpicker.ui.screens.permissions.PermissionsViewModelFactory
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
@@ -57,9 +56,9 @@ fun FontPickerNavHost(
     ) {
         composable("permissions") {
             val viewModel: PermissionsViewModel = viewModel(
-                factory = PermissionsViewModelFactory(
-                    permissionsHandler = permissionsHandler
-                )
+                factory = viewModelProviderFactory {
+                    PermissionsViewModel(permissionsHandler)
+                }
             )
             PermissionsRoute(
                 viewModel = viewModel

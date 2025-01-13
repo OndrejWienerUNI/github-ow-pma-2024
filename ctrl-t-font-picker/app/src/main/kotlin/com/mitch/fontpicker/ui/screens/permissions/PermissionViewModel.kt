@@ -74,15 +74,3 @@ class PermissionsViewModel(
         }
     }
 }
-
-class PermissionsViewModelFactory(
-    private val permissionsHandler: PermissionsHandler
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PermissionsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return PermissionsViewModel(permissionsHandler) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
