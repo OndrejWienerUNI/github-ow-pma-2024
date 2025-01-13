@@ -3,7 +3,7 @@ package com.mitch.fontpicker.ui.screens.camera
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mitch.fontpicker.di.DefaultDependenciesProvider
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
@@ -39,13 +40,17 @@ fun CameraScreen(
     viewModel: CameraViewModel,
     isPreview: Boolean = false
 ) {
-    val context = LocalContext.current as? androidx.activity.ComponentActivity
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val photoUri by viewModel.photoUri.collectAsState()
+    val preview by viewModel.preview.collectAsState()
 
-    // Ensure camera provider is loaded
+    Timber.d("CameraScreen: Preview state = $preview, UI State = $uiState")
+
+    // Ensure camera provider is loaded with context and lifecycleOwner
     LaunchedEffect(Unit) {
-        viewModel.loadCameraProvider(context ?: return@LaunchedEffect)
+        viewModel.loadCameraProvider(context, lifecycleOwner)
     }
 
     // Dispose of the image state when the CameraScreen is removed from the composition tree
@@ -57,7 +62,7 @@ fun CameraScreen(
 
     // Add a lifecycle observer for cleanup when the app is terminated
     DisposableEffect(context) {
-        val lifecycle = context?.lifecycle
+        val lifecycle = (context as? androidx.activity.ComponentActivity)?.lifecycle
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_DESTROY) {
                 viewModel.resetImageState()
@@ -70,22 +75,11 @@ fun CameraScreen(
         }
     }
 
-    // Photo capture launcher
-    val photoCaptureLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            viewModel.onPhotoCaptured()
-        } else {
-            Timber.w("Photo capture failed.")
-        }
-    }
-
     // Gallery picker launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.onGalleryImageSelected(context ?: return@let, it) }
+        uri?.let { viewModel.onGalleryImageSelected(context, it) }
     }
 
     // Trigger gallery picker if requested
@@ -100,16 +94,12 @@ fun CameraScreen(
         uiState = uiState,
         isPreview = isPreview,
         photoUri = photoUri,
-        onCapturePhoto = {
-            viewModel.createPhotoUri(context ?: return@CameraScreenContent)?.let { uri ->
-                photoCaptureLauncher.launch(uri)
-            }
-        },
-        onFlipCamera = viewModel::flipCamera,
-        onOpenGallery = viewModel::onOpenGallery
+        preview = preview,
+        onCapturePhoto = { viewModel.capturePhoto(context) },
+        onFlipCamera = { viewModel.flipCamera(context, lifecycleOwner) },
+        onOpenGallery = { viewModel.onOpenGallery() }
     )
 }
-
 
 @Composable
 private fun CameraScreenContent(
@@ -117,14 +107,16 @@ private fun CameraScreenContent(
     uiState: CameraUiState,
     isPreview: Boolean,
     photoUri: Uri?,
+    preview: Preview?,
     onCapturePhoto: () -> Unit,
     onFlipCamera: () -> Unit,
     onOpenGallery: () -> Unit
 ) {
-    // Ensure to trigger side effects (logging or any other actions) when error state changes
+    // Log UI state changes
     LaunchedEffect(uiState) {
+        Timber.d("CameraScreenContent: Current UI State: $uiState")
         if (uiState is CameraUiState.Error) {
-            Timber.d("Displaying error overlay: ${uiState.error}")
+            Timber.d("CameraScreenContent: Displaying error overlay: ${uiState.error}")
         }
     }
 
@@ -142,17 +134,18 @@ private fun CameraScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(3 / 4f)
+                    .aspectRatio(3f / 4f)
                     .clip(FontPickerDesignSystem.shapes.large)
             ) {
                 if (isPreview) {
+                    Timber.d("CameraScreenContent: Displaying CameraLiveViewPlaceholder.")
                     CameraLiveViewPlaceholder()
                 } else {
+                    Timber.d("CameraScreenContent: Displaying CameraLiveView.")
                     CameraLiveView(
+                        preview = preview,
                         modifier = Modifier.fillMaxSize(),
-                        lensFacing = if (uiState is CameraUiState.CameraReady)
-                            uiState.lensFacing else CameraSelector.LENS_FACING_BACK,
-                        isLoading = uiState is CameraUiState.Loading,
+                        isLoading = uiState is CameraUiState.Processing,
                         photoUri = photoUri
                     )
                 }
@@ -162,18 +155,22 @@ private fun CameraScreenContent(
                 onShoot = onCapturePhoto,
                 onGallery = onOpenGallery,
                 onFlip = onFlipCamera,
-                isLoading = uiState is CameraUiState.Loading
+                isLoading = uiState is CameraUiState.Processing
             )
             Spacer(modifier = Modifier.weight(1f))
         }
 
         // Handle errors: this will be displayed anytime the UI state is an error
         if (uiState is CameraUiState.Error) {
+            Timber.d("CameraScreenContent: Showing ErrorOverlay.")
             ErrorOverlay(
                 errorMessage = uiState.error,
                 closable = true,
                 verticalBias = 0.1f,
-                onClose = { viewModel.resetErrorState() }
+                onClose = {
+                    Timber.d("CameraScreenContent: ErrorOverlay closed.")
+                    viewModel.resetErrorState()
+                }
             )
         }
     }

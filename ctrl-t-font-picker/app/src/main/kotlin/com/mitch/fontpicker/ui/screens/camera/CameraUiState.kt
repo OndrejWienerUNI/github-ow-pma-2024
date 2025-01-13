@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.camera.core.CameraSelector
 
 sealed interface CameraUiState {
-    data object Loading : CameraUiState
+    data object Processing : CameraUiState
 
     data class Error(
         val error: String

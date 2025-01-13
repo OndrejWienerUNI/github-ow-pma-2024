@@ -3,8 +3,13 @@ package com.mitch.fontpicker.ui.screens.camera
 import android.content.Context
 import android.net.Uri
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.di.DependenciesProvider
@@ -33,35 +38,127 @@ class CameraViewModel(
     private val _isImageInUse = MutableStateFlow(false)
     val isImageInUse: StateFlow<Boolean> = _isImageInUse
 
-    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK // Default to back camera
+    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
     private var isProcessingImage = false
 
-    // Validates if the camera provider is available
-    fun loadCameraProvider(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
+    private val _preview = MutableStateFlow<Preview?>(null)
+    val preview: StateFlow<Preview?> = _preview
+
+    private var imageCapture: ImageCapture? = null
+
+
+    fun loadCameraProvider(context: Context, lifecycleOwner: LifecycleOwner) {
+        viewModelScope.launch {
+            Timber.d("Starting camera provider initialization.")
             try {
-                ProcessCameraProvider.getInstance(context).get() // Simply validate the provider
-                withContext(Dispatchers.Main) {
-                    Timber.d("Camera provider loaded successfully.")
-                    _uiState.value = CameraUiState.CameraReady(lensFacing)
-                }
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                cameraProviderFuture.addListener({
+                    try {
+                        val cameraProvider = cameraProviderFuture.get()
+                        Timber.d("CameraProvider obtained successfully.")
+
+                        // Initialize Preview use case
+                        val previewUseCase = Preview.Builder().build().also {
+                            _preview.value = it
+                            Timber.d("Preview use case initialized and set to _preview.")
+                        }
+
+                        // Initialize ImageCapture use case
+                        imageCapture = ImageCapture.Builder().build().also {
+                            Timber.d("ImageCapture use case initialized.")
+                        }
+
+                        // Select the camera by lensFacing
+                        val cameraSelector = CameraSelector.Builder()
+                            .requireLensFacing(lensFacing)
+                            .build()
+                        Timber.d("CameraSelector created with lensFacing: $lensFacing")
+
+                        // Bind use cases to lifecycle
+                        cameraProvider.unbindAll()
+                        Timber.d("Unbound all use cases.")
+
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            previewUseCase,
+                            imageCapture
+                        )
+                        Timber.d("Use cases bound to lifecycle successfully.")
+
+                        _uiState.value = CameraUiState.CameraReady(lensFacing)
+                        Timber.d("UI State updated to CameraReady.")
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to load and bind camera provider.")
+                        onError("Failed to load and bind camera provider: ${e.message}")
+                    }
+                }, ContextCompat.getMainExecutor(context))
             } catch (e: Exception) {
-                onError("Failed to load camera provider: ${e.message}")
+                Timber.e(e, "Error initializing camera provider future.")
+                onError("Error initializing camera provider: ${e.message}")
             }
         }
     }
 
-    fun flipCamera() {
+    fun flipCamera(context: Context, lifecycleOwner: LifecycleOwner) {
         lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
             CameraSelector.LENS_FACING_FRONT
         } else {
             CameraSelector.LENS_FACING_BACK
         }
         Timber.d("Camera flipped to ${if (lensFacing == CameraSelector.LENS_FACING_BACK) "BACK" else "FRONT"}.")
-        _uiState.value = CameraUiState.CameraReady(lensFacing)
+
+        viewModelScope.launch(Dispatchers.Main) {
+            Timber.d("Starting camera flipping process.")
+            try {
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                cameraProviderFuture.addListener({
+                    try {
+                        val cameraProvider = cameraProviderFuture.get()
+                        Timber.d("CameraProvider obtained for flipping.")
+
+                        // Reinitialize Preview use case
+                        val previewUseCase = Preview.Builder().build().also {
+                            _preview.value = it
+                            Timber.d("Preview use case re-initialized for flipping.")
+                        }
+
+                        // Reinitialize ImageCapture use case
+                        imageCapture = ImageCapture.Builder().build().also {
+                            Timber.d("ImageCapture use case re-initialized for flipping.")
+                        }
+
+                        // Select the new camera by lensFacing
+                        val cameraSelector = CameraSelector.Builder()
+                            .requireLensFacing(lensFacing)
+                            .build()
+                        Timber.d("CameraSelector created for flipping with lensFacing: $lensFacing")
+
+                        // Rebind use cases with the new lensFacing
+                        cameraProvider.unbindAll()
+                        Timber.d("Unbound all use cases for flipping.")
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            previewUseCase,
+                            imageCapture
+                        )
+                        Timber.d("Use cases rebound to lifecycle successfully after flipping.")
+
+                        _uiState.value = CameraUiState.CameraReady(lensFacing)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to flip camera.")
+                        onError("Failed to flip camera: ${e.message}")
+                    }
+                }, ContextCompat.getMainExecutor(context))
+            } catch (e: Exception) {
+                Timber.e(e, "Error during camera flipping.")
+                onError("Error during camera flipping: ${e.message}")
+            }
+        }
     }
 
-    fun createPhotoUri(context: Context): Uri? {
+    private fun createPhotoUri(context: Context): Uri? {
         return try {
             val picturesDir = dependenciesProvider.picturesDir
             if (!picturesDir.exists()) {
@@ -73,6 +170,42 @@ class CameraViewModel(
             Timber.e(e, "Error creating photo URI.")
             null
         }
+    }
+
+    fun capturePhoto(context: Context) {
+        val uri = createPhotoUri(context)
+        if (uri == null) {
+            Timber.e("Failed to create photo URI.")
+            onError("Unable to create photo URI.")
+            return
+        }
+
+        val imageCaptureUseCase = imageCapture
+        if (imageCaptureUseCase == null) {
+            Timber.e("ImageCapture use case is not initialized.")
+            onError("ImageCapture use case is not initialized.")
+            return
+        }
+
+        _photoUri.value = uri
+        _uiState.value = CameraUiState.Processing
+        Timber.d("Starting photo capture to URI: $uri")
+
+        imageCaptureUseCase.takePicture(
+            ImageCapture.OutputFileOptions.Builder(File(uri.path!!)).build(),
+            ContextCompat.getMainExecutor(context),
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    Timber.d("Photo captured successfully: $uri")
+                    onPhotoCaptured()
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    Timber.e(exception, "Photo capture failed.")
+                    onError("Photo capture failed: ${exception.message}")
+                }
+            }
+        )
     }
 
     fun onPhotoCaptured() {
@@ -103,7 +236,7 @@ class CameraViewModel(
                     Timber.d("Gallery image copied to pictures directory: $copiedUri")
                     Timber.d("Gallery image selected: $uri, ready for display.")
 
-                    _uiState.value = CameraUiState.Loading
+                    _uiState.value = CameraUiState.Processing
                     sendImageForProcessing(copiedUri)
                 } else {
                     Timber.e("Copied image's URI was not acquired. Cannot continue processing.")
@@ -172,7 +305,7 @@ class CameraViewModel(
         isProcessingImage = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _uiState.value = CameraUiState.Loading
+                _uiState.value = CameraUiState.Processing
                 Timber.d("Processing image: $uri")
                 delay(2000) // Simulate processing delay
                 withContext(Dispatchers.Main) {
@@ -223,3 +356,4 @@ class CameraViewModel(
         Timber.d("Error state reset to success.")
     }
 }
+
