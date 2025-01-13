@@ -188,8 +188,8 @@ class CameraViewModel(
         }
 
         _photoUri.value = uri
-        _uiState.value = CameraUiState.Processing
         Timber.d("Starting photo capture to URI: $uri")
+        _uiState.value = CameraUiState.ImageReady(uri)
 
         imageCaptureUseCase.takePicture(
             ImageCapture.OutputFileOptions.Builder(File(uri.path!!)).build(),
@@ -229,6 +229,7 @@ class CameraViewModel(
         viewModelScope.launch {
             try {
                 val copiedUri = copyImageToPicturesDir(context, uri)
+                _uiState.value = CameraUiState.ImageReady(uri)
 
                 if (copiedUri != null) {
                     _photoUri.value = copiedUri
