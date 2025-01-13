@@ -1,17 +1,24 @@
 package com.mitch.fontpicker.ui.screens.camera
 
 import android.net.Uri
+import androidx.camera.core.CameraSelector
 
 sealed interface CameraUiState {
     data object Loading : CameraUiState
 
     data class Error(
-        val error: String? = null
+        val error: String
+    ) : CameraUiState
+
+    data class CameraReady(
+        val lensFacing: Int = CameraSelector.LENS_FACING_BACK
+    ) : CameraUiState
+
+    data class ImageReady(
+        val imageUri: Uri
     ) : CameraUiState
 
     data class Success(
-        val photoUri: Uri? = null,      // For captured photos
-        val galleryUri: Uri? = null,   // For selected gallery images
-        val message: String? = null    // For general success messages
+        val message: String
     ) : CameraUiState
 }

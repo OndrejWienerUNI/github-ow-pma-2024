@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import androidx.camera.core.CameraSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -12,17 +13,21 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import coil3.compose.rememberAsyncImagePainter
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 private val LIVE_VIEW_CORNER_RADIUS = 16.dp
@@ -30,20 +35,57 @@ private val LIVE_VIEW_BORDER_WIDTH = 1.dp
 private const val ASPECT_RATIO = 3 / 4f
 
 @Composable
-@Suppress("UNUSED_PARAMETER")
 fun CameraLiveView(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(LIVE_VIEW_CORNER_RADIUS),
-    lensFacing: Int = CameraSelector.LENS_FACING_BACK,
+    lensFacing: Int,
     photoUri: Uri? = null,
-    isLoading: Boolean = false,
-    onCameraReady: (Boolean) -> Unit = {},
-    onError: (String) -> Unit = {}
+    isLoading: Boolean = false
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val previewView = remember { PreviewView(context) }
+    var hasError by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Define the preview instance once, outside bindCamera
+    val preview = remember {
+        androidx.camera.core.Preview.Builder().build().apply {
+            surfaceProvider = previewView.surfaceProvider
+        }
+    }
+
+    fun bindCamera() {
+        scope.launch {
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+
+                // Unbind all and rebind with the new lensFacing
+                val cameraSelector = CameraSelector.Builder()
+                    .requireLensFacing(lensFacing)
+                    .build()
+
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(
+                    lifecycleOwner,
+                    cameraSelector,
+                    preview
+                )
+                hasError = false // Clear error state if binding succeeds
+                Timber.d("Camera bound successfully with lensFacing: $lensFacing.")
+            } catch (e: Exception) {
+                Timber.e(e, "Error binding camera.")
+                hasError = true
+            }
+        }
+    }
+
+    // Rebind the camera whenever lensFacing changes
+    LaunchedEffect(lensFacing) {
+        Timber.d("Lens facing changed: $lensFacing")
+        bindCamera()
+    }
 
     Box(
         modifier = modifier
@@ -58,71 +100,37 @@ fun CameraLiveView(
                 else FontPickerDesignSystem.extendedColorScheme.borders,
                 shape = shape
             )
+            .animateContentSize()
     ) {
-        when {
-            photoUri != null -> {
-                // Show captured photo
-                androidx.compose.foundation.Image(
-                    painter = rememberAsyncImagePainter(photoUri),
-                    contentDescription = "Captured Photo",
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+        // Always keep the camera preview in the composition
+        AndroidView(
+            factory = {
+                previewView.apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
 
-            else -> {
-                // Show live camera feed
-                AndroidView(
-                    factory = {
-                        previewView.apply {
-                            layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+        if (photoUri != null && isLoading) {
+            CapturedImageWithOverlay(photoUri = photoUri)
         }
 
-        // Show loading overlay during photo capture
-        if (isLoading) {
+        // Show an error overlay if the camera fails
+        if (hasError) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(FontPickerDesignSystem.colorScheme.background.copy(alpha = 0.5f)),
+                    .background(FontPickerDesignSystem.colorScheme.background.copy(alpha = 0.8f)),
                 contentAlignment = Alignment.Center
             ) {
-                androidx.compose.material3.CircularProgressIndicator()
-            }
-        }
-
-        // Initialize the camera on mount
-        DisposableEffect(Unit) {
-            val cameraProvider = cameraProviderFuture.get()
-
-            try {
-                val preview = androidx.camera.core.Preview.Builder().build().apply {
-                    surfaceProvider = previewView.surfaceProvider
+                androidx.compose.material3.Button(onClick = { bindCamera() }) {
+                    androidx.compose.material3.Text("Retry")
                 }
-                val cameraSelector = CameraSelector.Builder()
-                    .requireLensFacing(lensFacing)
-                    .build()
-
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    preview
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Error handling surface.")
-            }
-
-            onDispose {
-                cameraProvider.unbindAll()
             }
         }
-
     }
 }

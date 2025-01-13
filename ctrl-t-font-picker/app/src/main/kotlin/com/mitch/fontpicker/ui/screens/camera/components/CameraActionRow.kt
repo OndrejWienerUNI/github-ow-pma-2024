@@ -28,6 +28,7 @@ import com.mitch.fontpicker.R
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val BUTTON_SIZE = 52.dp
@@ -39,7 +40,8 @@ private val ROW_PADDING_VERTICAL = 16.dp
 fun CameraActionRow(
     onShoot: () -> Unit,
     onGallery: () -> Unit,
-    onFlip: () -> Unit
+    onFlip: () -> Unit,
+    isLoading: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -51,8 +53,9 @@ fun CameraActionRow(
 
         // Gallery Button
         IconButton(
-            onClick = onGallery,
-            modifier = Modifier.size(BUTTON_SIZE) // Size of the entire button
+            onClick = { if (!isLoading) onGallery() },
+            modifier = Modifier.size(BUTTON_SIZE),
+            enabled = !isLoading // Disable when loading
         ) {
             Box(
                 modifier = Modifier
@@ -68,13 +71,14 @@ fun CameraActionRow(
             }
         }
 
-        // Shoot Button with Color Change
-        ShootButton(onShoot = onShoot)
+        // Shoot Button
+        ShootButton(onShoot = onShoot, isLoading = isLoading)
 
         // Flip Button
         IconButton(
-            onClick = onFlip,
-            modifier = Modifier.size(BUTTON_SIZE) // Size of the entire button
+            onClick = { if (!isLoading) onFlip() },
+            modifier = Modifier.size(BUTTON_SIZE),
+            enabled = !isLoading // Disable when loading
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_camera_flip),
@@ -85,13 +89,14 @@ fun CameraActionRow(
     }
 }
 
-
 @Composable
-private fun ShootButton(onShoot: () -> Unit) {
+private fun ShootButton(
+    onShoot: () -> Unit,
+    isLoading: Boolean // New parameter to control button state
+) {
     var isPressed by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Determine the icon tint based on the pressed state
     val iconTint = if (isPressed) {
         FontPickerDesignSystem.extendedColorScheme.icOnBackgroundPressed
     } else {
@@ -100,23 +105,23 @@ private fun ShootButton(onShoot: () -> Unit) {
 
     IconButton(
         onClick = {
-            if (!isPressed) { // Prevent overlapping presses
+            if (!isPressed && !isLoading) { // Prevent overlapping presses or triggering during loading
                 isPressed = true
                 onShoot()
 
-                // Reset the tint after a delay
                 coroutineScope.launch {
-                    kotlinx.coroutines.delay(200) // Hold pressed tint for 200ms
+                    delay(200) // Hold pressed tint for 200ms
                     isPressed = false
                 }
             }
         },
-        modifier = Modifier.size(SHOOT_BUTTON_SIZE)
+        modifier = Modifier.size(SHOOT_BUTTON_SIZE),
+        enabled = !isLoading // Disable button during loading
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_shoot_button),
             contentDescription = "Shoot Button",
-            tint = iconTint, // Tint changes dynamically based on state
+            tint = iconTint,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -133,7 +138,8 @@ private fun CameraActionRowPreview() {
             CameraActionRow(
                 onShoot = { /* No-op for preview */ },
                 onGallery = { /* No-op for preview */ },
-                onFlip = { /* No-op for preview */ }
+                onFlip = { /* No-op for preview */ },
+                isLoading = false
             )
         }
     }

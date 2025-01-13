@@ -8,9 +8,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mitch.fontpicker.FontPickerApplication
+import com.mitch.fontpicker.di.DefaultDependenciesProvider
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
@@ -24,7 +27,9 @@ import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import timber.log.Timber
 
 @Composable
-fun HomeRoute(viewModel: HomeViewModel) {
+fun HomeRoute(
+    viewModel: HomeViewModel
+) {
     Timber.d("Rendering HomeRoute")
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -53,6 +58,11 @@ fun HomeScreen(
 ) {
     Timber.d("Rendering HomeScreen with UI State: $uiState")
     BackgroundWithTintedStatusBar()
+
+    // Never do this, its only done for previews
+    val dependenciesProvider = if (!isPreview)
+        (LocalContext.current.applicationContext as FontPickerApplication).dependenciesProvider
+        else DefaultDependenciesProvider(LocalContext.current)
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -85,7 +95,8 @@ fun HomeScreen(
                 when (page) {
                     0 -> {
                         Timber.d("Rendering CameraScreen")
-                        CameraScreen(viewModel = CameraViewModel(), isPreview = isPreview)
+                        CameraScreen(viewModel = CameraViewModel(dependenciesProvider),
+                            isPreview = isPreview)
                     }
                     1 -> {
                         Timber.d("Rendering FavoritesScreen")

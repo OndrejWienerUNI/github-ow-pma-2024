@@ -1,9 +1,10 @@
 <!--suppress XmlUnusedNamespaceDeclaration -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Access the Pictures directory -->
-    <external-path name="pictures" path="Pictures/" />
-    <!-- Access the DCIM directory -->
-    <external-path name="dcim" path="DCIM/" />
-    <!-- Optional: To create a subdirectory under Pictures for temporary storage -->
-    <external-files-path name="app_pictures" path="Pictures/FontPicker/" />
+    <external-path
+        name="external_files"
+        path="." />
+    <files-path
+        name="app_files"
+        path="pictures/" />
 </paths>
+
