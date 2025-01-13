@@ -3,6 +3,7 @@ package com.mitch.fontpicker
 import android.annotation.SuppressLint
 import android.app.UiModeManager
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -61,7 +62,11 @@ class MainActivity : AppCompatActivity() {
     // Local state to store the current UI state
     private var uiState by mutableStateOf<MainActivityUiState>(MainActivityUiState.Loading)
 
+    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+
         super.onCreate(savedInstanceState)
 
         Timber.d("MainActivity onCreate started.")
