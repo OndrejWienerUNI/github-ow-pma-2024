@@ -35,7 +35,7 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
-import com.mitch.fontpicker.data.room.repository.FontDatabaseRepository
+import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
@@ -53,7 +53,7 @@ fun CameraRoute(
     val cameraController = remember { CameraController() }
     val storageController = remember { StorageController(dependenciesProvider) }
     val fontRecognitionApiController = remember { FontRecognitionApiController() }
-    val fontDatabaseRepository = remember { FontDatabaseRepository(dependenciesProvider) }
+    val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
 
     val cameraViewModel: CameraViewModel = viewModel(
         factory = viewModelProviderFactory {
@@ -230,7 +230,7 @@ fun CameraScreenPreview() {
         val cameraController = remember { CameraController() }
         val storageController = remember { StorageController(dependenciesProvider) }
         val fontRecognitionApiController = remember { FontRecognitionApiController() }
-        val fontDatabaseRepository = remember { FontDatabaseRepository(dependenciesProvider) }
+        val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
 
         // Create a “preview” VM
         val previewViewModel = remember {

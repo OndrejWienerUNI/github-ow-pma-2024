@@ -6,7 +6,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
-import com.mitch.fontpicker.data.room.repository.FontDatabaseRepository
+import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +23,7 @@ class CameraViewModel(
     private val cameraController: CameraController,
     private val storageController: StorageController,
     private val fontRecognitionApiController: FontRecognitionApiController,
-    private val fontDatabaseRepository: FontDatabaseRepository
+    private val fontDatabaseRepository: FontPickerDatabaseRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CameraUiState>(CameraUiState.CameraReady())
