@@ -9,6 +9,9 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
+const val PICTURES_DIR: String = "PICTURES_DIR"
+const val THUMBNAILS_DIR: String = "THUMBNAILS_DIR"
+
 /**
  * Handles creating photo files, copying gallery images,
  * and clearing the pictures directory.
@@ -61,13 +64,22 @@ class StorageController(
     /**
      * Clears the pictures directory (deletes all files).
      */
-    suspend fun clearPicturesDir() {
+    suspend fun clearDirectory(dirIndicator: String) {
         withContext(Dispatchers.IO) {
-            val picturesDir = dependenciesProvider.picturesDir
+            val dir = when (dirIndicator) {
+                PICTURES_DIR -> dependenciesProvider.picturesDir
+                THUMBNAILS_DIR -> dependenciesProvider.thumbnailsDir
+                else -> {
+                    Timber.e("Invalid directory indicator: $dirIndicator")
+                    throw IllegalArgumentException("Directory indicator isn't allowed " +
+                            "to be cleared: $dirIndicator. Only public constants defined " +
+                            "in StorageController are accepted.")
+                }
+            }
 
-            if (picturesDir.exists() && picturesDir.isDirectory) {
-                val files = picturesDir.listFiles()
-                Timber.d("Clearing directory: ${picturesDir.absolutePath}")
+            if (dir.exists() && dir.isDirectory) {
+                val files = dir.listFiles()
+                Timber.d("Clearing directory: ${dir.absolutePath}")
                 files?.forEach { file ->
                     try {
                         if (file.exists() && file.delete()) {
@@ -80,8 +92,9 @@ class StorageController(
                     }
                 }
             } else {
-                Timber.e("The directory does not exist or is not a directory: ${picturesDir.absolutePath}")
+                Timber.e("The directory does not exist or is not a directory: ${dir.absolutePath}")
             }
         }
     }
+
 }
