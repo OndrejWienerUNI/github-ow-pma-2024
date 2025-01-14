@@ -38,7 +38,7 @@ fun CapturedImageWithOverlay(
 
         AnimatedVisibility(
             visibleState = visibleState,
-            enter = fadeIn(animationSpec = tween(durationMillis = 300))
+            enter = fadeIn(animationSpec = tween(durationMillis = 200))
         ) {
             BoxWithConstraints(
                 modifier = modifier

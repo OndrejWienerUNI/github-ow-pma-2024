@@ -2,9 +2,7 @@ package com.mitch.fontpicker.ui.screens.camera.components
 
 import android.net.Uri
 import android.view.ViewGroup
-import androidx.camera.core.Preview
 import androidx.camera.view.PreviewView
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -26,7 +24,7 @@ private const val ASPECT_RATIO = 3f / 4f // Corrected aspect ratio
 
 @Composable
 fun CameraLiveView(
-    preview: Preview?,
+    cameraPreviewView: androidx.camera.core.Preview?,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(LIVE_VIEW_CORNER_RADIUS),
     photoUri: Uri? = null,
@@ -47,7 +45,6 @@ fun CameraLiveView(
                 else FontPickerDesignSystem.extendedColorScheme.borders,
                 shape = shape
             )
-            .animateContentSize()
     ) {
         // Camera Preview
         AndroidView(
@@ -58,18 +55,18 @@ fun CameraLiveView(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    if (preview != null) {
+                    if (cameraPreviewView != null) {
                         Timber.d("Setting SurfaceProvider for PreviewView in factory.")
-                        preview.surfaceProvider = this.surfaceProvider
+                        cameraPreviewView.surfaceProvider = this.surfaceProvider
                     } else {
                         Timber.e("Preview is null in factory. Cannot set SurfaceProvider.")
                     }
                 }
             },
             update = { view ->
-                if (preview != null) {
+                if (cameraPreviewView != null) {
                     Timber.d("Updating SurfaceProvider in update lambda.")
-                    preview.surfaceProvider = view.surfaceProvider
+                    cameraPreviewView.surfaceProvider = view.surfaceProvider
                 } else {
                     Timber.e("Preview is null in update. Cannot set SurfaceProvider.")
                 }

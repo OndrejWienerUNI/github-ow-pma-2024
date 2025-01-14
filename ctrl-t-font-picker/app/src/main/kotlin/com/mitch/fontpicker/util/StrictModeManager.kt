@@ -15,7 +15,8 @@ object StrictModeManager {
      * are ignored.
      */
     private val STACKTRACE_WHITELIST = listOf(
-        "com.mediatek.scnmodule.ScnModule.isGameApp"
+        "com.mediatek.scnmodule.ScnModule.isGameApp",
+        "androidx.core.content.FileProvider.parsePathStrategy"
     )
     private val executor = Executors.newSingleThreadExecutor()
     private val violationIdCounter = AtomicInteger(0)

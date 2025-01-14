@@ -2,10 +2,12 @@ package com.mitch.fontpicker.ui.screens.camera
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.OptIn
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalZeroShutterLag
+import androidx.camera.core.ImageCapture.CAPTURE_MODE_ZERO_SHUTTER_LAG
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -22,6 +24,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
+@Suppress("UNUSED")
 class CameraViewModel(
     private val dependenciesProvider: DependenciesProvider
 ) : ViewModel() {
@@ -41,12 +44,13 @@ class CameraViewModel(
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
     private var isProcessingImage = false
 
-    private val _preview = MutableStateFlow<Preview?>(null)
-    val preview: StateFlow<Preview?> = _preview
+    private val _preview = MutableStateFlow<androidx.camera.core.Preview?>(null)
+    val cameraPreviewView: StateFlow<androidx.camera.core.Preview?> = _preview
 
     private var imageCapture: ImageCapture? = null
 
 
+    @OptIn(ExperimentalZeroShutterLag::class)
     fun loadCameraProvider(context: Context, lifecycleOwner: LifecycleOwner) {
         viewModelScope.launch {
             Timber.d("Starting camera provider initialization.")
@@ -58,13 +62,17 @@ class CameraViewModel(
                         Timber.d("CameraProvider obtained successfully.")
 
                         // Initialize Preview use case
-                        val previewUseCase = Preview.Builder().build().also {
+                        val cameraPreviewViewUseCase = androidx.camera.core.Preview.Builder()
+                            .build().also {
                             _preview.value = it
                             Timber.d("Preview use case initialized and set to _preview.")
                         }
 
                         // Initialize ImageCapture use case
-                        imageCapture = ImageCapture.Builder().build().also {
+                        imageCapture = ImageCapture.Builder()
+                            .setCaptureMode(CAPTURE_MODE_ZERO_SHUTTER_LAG)
+                            .build()
+                            .also {
                             Timber.d("ImageCapture use case initialized.")
                         }
 
@@ -81,7 +89,7 @@ class CameraViewModel(
                         cameraProvider.bindToLifecycle(
                             lifecycleOwner,
                             cameraSelector,
-                            previewUseCase,
+                            cameraPreviewViewUseCase,
                             imageCapture
                         )
                         Timber.d("Use cases bound to lifecycle successfully.")
@@ -100,13 +108,15 @@ class CameraViewModel(
         }
     }
 
+    @OptIn(ExperimentalZeroShutterLag::class)
     fun flipCamera(context: Context, lifecycleOwner: LifecycleOwner) {
         lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
             CameraSelector.LENS_FACING_FRONT
         } else {
             CameraSelector.LENS_FACING_BACK
         }
-        Timber.d("Camera flipped to ${if (lensFacing == CameraSelector.LENS_FACING_BACK) "BACK" else "FRONT"}.")
+        Timber.d("Camera flipped to " +
+                "${if (lensFacing == CameraSelector.LENS_FACING_BACK) "BACK" else "FRONT"}.")
 
         viewModelScope.launch(Dispatchers.Main) {
             Timber.d("Starting camera flipping process.")
@@ -118,13 +128,15 @@ class CameraViewModel(
                         Timber.d("CameraProvider obtained for flipping.")
 
                         // Reinitialize Preview use case
-                        val previewUseCase = Preview.Builder().build().also {
+                        val previewUseCase = androidx.camera.core.Preview.Builder().build().also {
                             _preview.value = it
                             Timber.d("Preview use case re-initialized for flipping.")
                         }
 
                         // Reinitialize ImageCapture use case
-                        imageCapture = ImageCapture.Builder().build().also {
+                        imageCapture = ImageCapture.Builder()
+                            .setCaptureMode(CAPTURE_MODE_ZERO_SHUTTER_LAG)
+                            .build().also {
                             Timber.d("ImageCapture use case re-initialized for flipping.")
                         }
 
@@ -132,7 +144,8 @@ class CameraViewModel(
                         val cameraSelector = CameraSelector.Builder()
                             .requireLensFacing(lensFacing)
                             .build()
-                        Timber.d("CameraSelector created for flipping with lensFacing: $lensFacing")
+                        Timber.d("CameraSelector created " +
+                                "for flipping with lensFacing: $lensFacing")
 
                         // Rebind use cases with the new lensFacing
                         cameraProvider.unbindAll()
@@ -143,7 +156,8 @@ class CameraViewModel(
                             previewUseCase,
                             imageCapture
                         )
-                        Timber.d("Use cases rebound to lifecycle successfully after flipping.")
+                        Timber.d("Use cases rebound " +
+                                "to lifecycle successfully after flipping.")
 
                         _uiState.value = CameraUiState.CameraReady(lensFacing)
                     } catch (e: Exception) {
@@ -158,27 +172,30 @@ class CameraViewModel(
         }
     }
 
-    private fun createPhotoUri(context: Context): Uri? {
-        return try {
-            val picturesDir = dependenciesProvider.picturesDir
-            if (!picturesDir.exists()) {
-                throw IllegalStateException("Pictures directory does not exist. Ensure it's created on app start.")
-            }
-            val file = File(picturesDir, "fp_${System.currentTimeMillis()}.jpg")
-            FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-        } catch (e: Exception) {
-            Timber.e(e, "Error creating photo URI.")
-            null
-        }
+    private fun File.toContentUri(context: Context): Uri {
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            this
+        )
     }
 
-    fun capturePhoto(context: Context) {
-        val uri = createPhotoUri(context)
-        if (uri == null) {
-            Timber.e("Failed to create photo URI.")
-            onError("Unable to create photo URI.")
-            return
+    private suspend fun createPhotoFile(): File = withContext(Dispatchers.IO) {
+        // The directory you already manage in dependenciesProvider
+        val picturesDir = dependenciesProvider.picturesDir
+        if (!picturesDir.exists()) {
+            // Or consider picturesDir.mkdirs() if it might not exist
+            throw IllegalStateException("Pictures directory does not exist. Ensure it's created on app start.")
         }
+
+        // Create a unique file in that directory
+        val fileName = "fp_${System.currentTimeMillis()}.jpg"
+        File(picturesDir, fileName)
+    }
+
+    suspend fun capturePhoto(context: Context) {
+        val photoFile = createPhotoFile()
+        val contentUri = photoFile.toContentUri(context)
 
         val imageCaptureUseCase = imageCapture
         if (imageCaptureUseCase == null) {
@@ -187,16 +204,19 @@ class CameraViewModel(
             return
         }
 
-        _photoUri.value = uri
-        Timber.d("Starting photo capture to URI: $uri")
-        _uiState.value = CameraUiState.ImageReady(uri)
+        _photoUri.value = contentUri
+        Timber.d("Starting photo capture. File=$photoFile, contentUri=$contentUri")
+        _uiState.value = CameraUiState.ImageReady(contentUri)
+
+        // 4) Pass the *actual file* to CameraX
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
         imageCaptureUseCase.takePicture(
-            ImageCapture.OutputFileOptions.Builder(File(uri.path!!)).build(),
+            outputOptions,
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                    Timber.d("Photo captured successfully: $uri")
+                    Timber.d("Photo captured successfully: $contentUri")
                     onPhotoCaptured()
                 }
 
@@ -240,7 +260,8 @@ class CameraViewModel(
                     _uiState.value = CameraUiState.Processing
                     sendImageForProcessing(copiedUri)
                 } else {
-                    Timber.e("Copied image's URI was not acquired. Cannot continue processing.")
+                    Timber.e("Copied image's URI was not acquired. " +
+                            "Cannot continue processing.")
                     onError("Failed to prepare the selected image.")
                 }
             } catch (e: Exception) {
@@ -264,9 +285,11 @@ class CameraViewModel(
                 inputStream?.close()
 
                 Timber.d("Image copied to: ${destinationFile.absolutePath}")
-                FileProvider.getUriForFile(context, "${context.packageName}.provider", destinationFile)
+                FileProvider.getUriForFile(context, "${context.packageName}.provider",
+                    destinationFile)
             } catch (e: Exception) {
-                onError("Error copying image to the app's temporary directory. Images can't be processed without proper permissions.")
+                onError("Error copying image to the app's temporary directory. " +
+                        "Images can't be processed without proper permissions.")
                 Timber.e("Detailed exception:\n$e")
                 null
             }
@@ -292,7 +315,8 @@ class CameraViewModel(
                     }
                 }
             } else {
-                Timber.e("The directory does not exist or is not a directory: ${picturesDir.absolutePath}")
+                Timber.e("The directory does not exist or is not " +
+                        "a directory: ${picturesDir.absolutePath}")
             }
         }
     }

@@ -3,7 +3,6 @@ package com.mitch.fontpicker.ui.screens.camera
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +34,7 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 private val TOP_PADDING = 84.dp
@@ -63,9 +64,10 @@ fun CameraScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val photoUri by viewModel.photoUri.collectAsState()
-    val preview by viewModel.preview.collectAsState()
+    val cameraPreviewView by viewModel.cameraPreviewView.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
-    Timber.d("CameraScreen: Preview state = $preview, UI State = $uiState")
+    Timber.d("CameraScreen: Preview state = $cameraPreviewView, UI State = $uiState")
 
     // Dispose of the image state when the CameraScreen is removed from the composition tree
     DisposableEffect(Unit) {
@@ -108,8 +110,8 @@ fun CameraScreen(
         uiState = uiState,
         isPreview = isPreview,
         photoUri = photoUri,
-        preview = preview,
-        onCapturePhoto = { viewModel.capturePhoto(context) },
+        cameraPreviewView = cameraPreviewView,
+        onCapturePhoto = { coroutineScope.launch { viewModel.capturePhoto(context) } },
         onFlipCamera = { viewModel.flipCamera(context, lifecycleOwner) },
         onOpenGallery = { viewModel.onOpenGallery() }
     )
@@ -121,7 +123,7 @@ private fun CameraScreenContent(
     uiState: CameraUiState,
     isPreview: Boolean,
     photoUri: Uri?,
-    preview: Preview?,
+    cameraPreviewView: androidx.camera.core.Preview?,
     onCapturePhoto: () -> Unit,
     onFlipCamera: () -> Unit,
     onOpenGallery: () -> Unit
@@ -157,7 +159,7 @@ private fun CameraScreenContent(
                 } else {
                     Timber.d("CameraScreenContent: Displaying CameraLiveView.")
                     CameraLiveView(
-                        preview = preview,
+                        cameraPreviewView = cameraPreviewView,
                         modifier = Modifier.fillMaxSize(),
                         isLoading = uiState is CameraUiState.Processing,
                         photoUri = photoUri
