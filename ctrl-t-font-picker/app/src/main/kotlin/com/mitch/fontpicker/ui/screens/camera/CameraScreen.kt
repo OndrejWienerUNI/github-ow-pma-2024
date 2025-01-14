@@ -49,11 +49,22 @@ fun CameraRoute(
     dependenciesProvider: DependenciesProvider,
     isPreview: Boolean
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     // Create or remember all the controllers
-    val cameraController = remember { CameraController() }
-    val storageController = remember { StorageController(dependenciesProvider) }
-    val fontRecognitionApiController = remember { FontRecognitionApiController() }
-    val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
+    val cameraController = remember {
+        CameraController()
+    }
+    val storageController = remember {
+        StorageController(dependenciesProvider)
+    }
+    val fontRecognitionApiController = remember {
+        FontRecognitionApiController(dependenciesProvider, context)
+    }
+    val fontDatabaseRepository = remember {
+        FontPickerDatabaseRepository(dependenciesProvider)
+    }
 
     val cameraViewModel: CameraViewModel = viewModel(
         factory = viewModelProviderFactory {
@@ -69,8 +80,6 @@ fun CameraRoute(
 
     // Only load the camera if we're not in preview
     if (!isPreview) {
-        val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
         cameraViewModel.loadCameraProvider(context, lifecycleOwner)
     }
 
@@ -229,7 +238,7 @@ fun CameraScreenPreview() {
         // Create or mock your controllers
         val cameraController = remember { CameraController() }
         val storageController = remember { StorageController(dependenciesProvider) }
-        val fontRecognitionApiController = remember { FontRecognitionApiController() }
+        val fontRecognitionApiController = remember { FontRecognitionApiController(dependenciesProvider, context) }
         val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
 
         // Create a “preview” VM

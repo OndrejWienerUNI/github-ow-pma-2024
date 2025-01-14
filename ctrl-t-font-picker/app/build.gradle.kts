@@ -70,12 +70,13 @@ android {
             isDebuggable = true
             isMinifyEnabled = false
             applicationIdSuffix = FontPickerBuildType.Debug.applicationIdSuffix
+            secrets.propertiesFileName = "secrets.properties"
         }
         register("staging") {
             initWith(named("release").get())
             isDebuggable = true
             applicationIdSuffix = FontPickerBuildType.Staging.applicationIdSuffix
-            secrets.propertiesFileName = "secrets.staging.properties"
+            secrets.propertiesFileName = "secrets.properties"
             signingConfig = try {
                 signingConfigs.named("staging").get()
             } catch (e: Exception) {
@@ -90,7 +91,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            secrets.propertiesFileName = "secrets.release.properties"
+            secrets.propertiesFileName = "secrets.properties"
             signingConfig = try {
                 signingConfigs.named("release").get()
             } catch (e: Exception) {

@@ -36,7 +36,7 @@ class StorageController(
     suspend fun copyImageToPicturesDir(context: Context, sourceUri: Uri): Uri? {
         return withContext(Dispatchers.IO) {
             val picturesDir = dependenciesProvider.picturesDir
-            val fileName = "gallery_image_${System.currentTimeMillis()}.jpg"
+            val fileName = "gi_${System.currentTimeMillis()}.jpg"
             val destinationFile = File(picturesDir, fileName)
 
             try {

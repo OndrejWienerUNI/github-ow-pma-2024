@@ -92,12 +92,12 @@ class DefaultDependenciesProvider(
     }
 
     @Suppress("Unused")
-    private val httpClient: HttpClient by lazy {
+    override val httpClient: HttpClient by lazy {
         HttpClient {
             if (BuildConfig.DEBUG) {
                 install(Logging) {
                     logger = Logger.ANDROID
-                    level = LogLevel.BODY
+                    level = LogLevel.INFO
                 }
             }
             install(ContentNegotiation) {
