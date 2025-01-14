@@ -19,12 +19,8 @@ import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
-import com.mitch.fontpicker.ui.screens.camera.CameraScreen
-import com.mitch.fontpicker.ui.screens.camera.CameraScreenRoute
-import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
-import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreen
-import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreenRoute
-import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
+import com.mitch.fontpicker.ui.screens.camera.CameraRoute
+import com.mitch.fontpicker.ui.screens.favorites.FavoritesRoute
 import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import timber.log.Timber
 
@@ -98,7 +94,7 @@ fun HomeScreen(
                 when (page) {
                     0 -> {
                         Timber.d("Rendering CameraScreenRoute")
-                        CameraScreenRoute(
+                        CameraRoute(
                             dependenciesProvider = dependenciesProvider,
                             isPreview = isPreview
                         )
@@ -106,7 +102,7 @@ fun HomeScreen(
 
                     1 -> {
                         Timber.d("Rendering FavoritesScreenRoute")
-                        FavoritesScreenRoute()
+                        FavoritesRoute()
                     }
 
                     else -> {

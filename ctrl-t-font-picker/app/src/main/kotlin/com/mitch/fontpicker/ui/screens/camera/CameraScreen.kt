@@ -16,6 +16,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,8 +32,12 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
+import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
+import com.mitch.fontpicker.data.room.repository.FontDatabaseRepository
+import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
+import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -40,20 +45,41 @@ import timber.log.Timber
 private val TOP_PADDING = 84.dp
 
 @Composable
-fun CameraScreenRoute(
+fun CameraRoute(
     dependenciesProvider: DependenciesProvider,
     isPreview: Boolean
 ) {
-    // Create the ViewModel with a short inline factory
+    // Create or remember all the controllers
+    val cameraController = remember { CameraController() }
+    val storageController = remember { StorageController(dependenciesProvider) }
+    val fontRecognitionApiController = remember { FontRecognitionApiController() }
+    val fontDatabaseRepository = remember { FontDatabaseRepository(dependenciesProvider) }
+
     val cameraViewModel: CameraViewModel = viewModel(
         factory = viewModelProviderFactory {
-            CameraViewModel(dependenciesProvider)
+            CameraViewModel(
+                cameraController,
+                storageController,
+                fontRecognitionApiController,
+                fontDatabaseRepository)
         }
     )
-    Timber.d("Rendering CameraScreenRoute")
-    cameraViewModel.loadCameraProvider(LocalContext.current, LocalLifecycleOwner.current)
-    CameraScreen(viewModel = cameraViewModel, isPreview = isPreview)
+
+    Timber.d("Rendering CameraScreenRoute. isPreview = $isPreview")
+
+    // Only load the camera if we're not in preview
+    if (!isPreview) {
+        val context = LocalContext.current
+        val lifecycleOwner = LocalLifecycleOwner.current
+        cameraViewModel.loadCameraProvider(context, lifecycleOwner)
+    }
+
+    CameraScreen(
+        viewModel = cameraViewModel,
+        isPreview = isPreview
+    )
 }
+
 
 @Composable
 fun CameraScreen(
@@ -193,24 +219,30 @@ private fun CameraScreenContent(
 }
 
 
-
 @PreviewLightDark
 @Composable
-private fun CameraScreenPreview() {
+fun CameraScreenPreview() {
     FontPickerTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(FontPickerDesignSystem.colorScheme.background)
-        ) {
-            // Using mock ViewModel for the preview
-            val mockViewModel = CameraViewModel(
-                DefaultDependenciesProvider(LocalContext.current)
-            )
-            CameraScreen(
-                viewModel = mockViewModel,
-                isPreview = true
+        val context = LocalContext.current
+        val dependenciesProvider = DefaultDependenciesProvider(context)
+
+        // Create or mock your controllers
+        val cameraController = remember { CameraController() }
+        val storageController = remember { StorageController(dependenciesProvider) }
+        val fontRecognitionApiController = remember { FontRecognitionApiController() }
+        val fontDatabaseRepository = remember { FontDatabaseRepository(dependenciesProvider) }
+
+        // Create a “preview” VM
+        val previewViewModel = remember {
+            CameraViewModel(
+                cameraController = cameraController,
+                storageController = storageController,
+                fontRecognitionApiController = fontRecognitionApiController,
+                fontDatabaseRepository = fontDatabaseRepository
             )
         }
+
+        // Render the same screen but pass isPreview = true
+        CameraScreen(viewModel = previewViewModel, isPreview = true)
     }
 }

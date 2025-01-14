@@ -19,7 +19,7 @@ import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
 @Composable
-fun FavoritesScreenRoute() {
+fun FavoritesRoute() {
     // Create the ViewModel with a short inline factory
     val favoritesViewModel: FavoritesViewModel = viewModel(
         factory = viewModelProviderFactory {
