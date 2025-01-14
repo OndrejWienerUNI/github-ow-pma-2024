@@ -17,4 +17,5 @@ interface DependenciesProvider {
     val database: FontPickerDatabase
     val httpClient: HttpClient
     val picturesDir: File
+    val thumbnailsDir: File
 }

@@ -51,11 +51,16 @@ class MainActivityViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Timber.d("Ensuring app directories.")
-                val picturesDir = dependenciesProvider.picturesDir
-                if (!picturesDir.exists() && picturesDir.mkdirs()) {
-                    Timber.i("Directory created: ${picturesDir.absolutePath}")
-                } else {
-                    Timber.i("Directory already exists: ${picturesDir.absolutePath}")
+                val dirs = listOf(
+                    dependenciesProvider.picturesDir,
+                    dependenciesProvider.thumbnailsDir
+                )
+                dirs.forEach { dir ->
+                    if (!dir.exists() && dir.mkdirs()) {
+                        Timber.i("Directory created: ${dir.absolutePath}")
+                    } else {
+                        Timber.i("Directory already exists: ${dir.absolutePath}")
+                    }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error ensuring directories.")

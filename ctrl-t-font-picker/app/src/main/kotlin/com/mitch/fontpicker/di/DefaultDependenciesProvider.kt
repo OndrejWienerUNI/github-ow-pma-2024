@@ -83,6 +83,8 @@ class DefaultDependenciesProvider(
     override val picturesDir: File
         get() = File(context.getExternalFilesDir(null), "pictures")
 
+    override val thumbnailsDir: File
+        get() = File(context.getExternalFilesDir(null), "thumbnails")
 
     private val jsonSerializer: Json by lazy {
         Json {

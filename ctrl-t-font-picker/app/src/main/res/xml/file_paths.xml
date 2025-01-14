@@ -4,7 +4,10 @@
         name="external_files"
         path="." />
     <files-path
-        name="app_files"
+        name="picture_files"
         path="pictures/" />
+    <files-path
+        name="font_thumbnails"
+        path="thumbnails/" />
 </paths>
 
