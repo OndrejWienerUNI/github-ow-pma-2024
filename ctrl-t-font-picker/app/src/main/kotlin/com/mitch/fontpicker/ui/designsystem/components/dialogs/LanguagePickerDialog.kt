@@ -56,6 +56,9 @@ fun LanguagePickerDialog(
         title = {
             Text(text = stringResource(id = R.string.change_language))
         },
+        containerColor = FontPickerDesignSystem.colorScheme.surface,
+        textContentColor = FontPickerDesignSystem.colorScheme.onSurface,
+        titleContentColor = FontPickerDesignSystem.colorScheme.primary,
         text = {
             Column(modifier = Modifier.selectableGroup()) {
                 for (languagePreference in FontPickerLanguagePreference.entries) {

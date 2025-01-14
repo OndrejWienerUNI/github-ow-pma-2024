@@ -62,6 +62,9 @@ fun ThemePickerDialog(
         title = {
             Text(text = stringResource(id = R.string.change_theme))
         },
+        containerColor = FontPickerDesignSystem.colorScheme.surface,
+        textContentColor = FontPickerDesignSystem.colorScheme.onSurface,
+        titleContentColor = FontPickerDesignSystem.colorScheme.primary,
         text = {
             Column(modifier = Modifier.selectableGroup()) {
                 for (item in items) {
