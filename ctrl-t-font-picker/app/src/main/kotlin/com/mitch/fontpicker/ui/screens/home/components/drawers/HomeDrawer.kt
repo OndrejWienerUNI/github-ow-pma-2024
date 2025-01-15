@@ -35,9 +35,7 @@ fun HomeDrawer(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val drawerState = rememberDrawerState(
-        initialValue = DrawerValue.Closed
-    )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     // Animate the top bar's alpha based on the current page
@@ -61,7 +59,6 @@ fun HomeDrawer(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBars)
             ) {
-
                 content() // Main screen content
 
                 HomeDrawerTopBar(
@@ -81,29 +78,24 @@ fun HomeDrawer(
 }
 
 
-@Preview(name = "Home Drawer - Closed")
+@Preview(name = "HomeDrawerContentClosedPreview")
 @Composable
-private fun HomeDrawerClosedPreview() {
+fun HomeDrawerContentPreviewClosed() {
     FontPickerTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(FontPickerDesignSystem.colorScheme.background)
         ) {
-
-            val pagerState = rememberPagerState(
-                initialPage = 0,
-                pageCount = { 2 }
-            )
+            val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
 
             HomeDrawer(
                 uiState = HomeUiState.Success(
                     language = FontPickerLanguagePreference.English,
                     theme = FontPickerThemePreference.Light
                 ),
-                onChangeTheme = { /* Stub: handle theme change */ },
-                onChangeLanguage = { /* Stub: handle language change */ },
-                modifier = Modifier,
+                onChangeTheme = { /* Stub */ },
+                onChangeLanguage = { /* Stub */ },
                 currentPage = pagerState.currentPage
             ) {
                 Box(
@@ -121,9 +113,9 @@ private fun HomeDrawerClosedPreview() {
     }
 }
 
-@Preview(name = "Home Drawer - Opened")
+@Preview(name = "HomeDrawerContentOpenedPreview")
 @Composable
-private fun HomeDrawerOpenedPreview() {
+fun HomeDrawerContentPreviewOpen() {
     FontPickerTheme {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
 
@@ -135,8 +127,8 @@ private fun HomeDrawerOpenedPreview() {
                         language = FontPickerLanguagePreference.English,
                         theme = FontPickerThemePreference.Light
                     ),
-                    onChangeTheme = { /* Stub: handle theme change */ },
-                    onChangeLanguage = { /* Stub: handle language change */ }
+                    onChangeTheme = { /* Stub */ },
+                    onChangeLanguage = { /* Stub */ }
                 )
             },
             content = {
@@ -144,7 +136,10 @@ private fun HomeDrawerOpenedPreview() {
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Main Content", style = FontPickerDesignSystem.typography.bodyLarge)
+                    Text(
+                        text = "Main Content",
+                        style = FontPickerDesignSystem.typography.bodyLarge
+                    )
                 }
             }
         )

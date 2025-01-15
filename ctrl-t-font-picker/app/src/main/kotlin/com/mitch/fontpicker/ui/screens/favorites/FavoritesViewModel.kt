@@ -3,11 +3,16 @@ package com.mitch.fontpicker.ui.screens.favorites
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.R
+import com.mitch.fontpicker.data.images.BitmapToolkit
+import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class FavoritesViewModel : ViewModel() {
+class FavoritesViewModel(
+    private val fontsDatabaseRepository: FontsDatabaseRepository,
+    private val bitmapToolkit: BitmapToolkit
+) : ViewModel() {
     private val _uiState = MutableStateFlow<FavoritesUiState>(FavoritesUiState.Loading)
     val uiState: StateFlow<FavoritesUiState> = _uiState
 

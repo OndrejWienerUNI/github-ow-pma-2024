@@ -3,25 +3,34 @@ package com.mitch.fontpicker.ui.screens.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mitch.fontpicker.FontPickerApplication
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.di.DefaultDependenciesProvider
 import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
-import com.mitch.fontpicker.ui.screens.camera.CameraRoute
-import com.mitch.fontpicker.ui.screens.favorites.FavoritesRoute
+import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
+import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
+import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
+import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
+import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
 import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
+import com.mitch.fontpicker.ui.screens.home.components.pagers.HomePager
+import com.mitch.fontpicker.ui.screens.home.components.pagers.HomePagerPreview
+import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
 @Composable
@@ -52,64 +61,98 @@ fun HomeScreen(
     onChangeTheme: (FontPickerThemePreference) -> Unit,
     onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
     modifier: Modifier = Modifier,
-    isPreview: Boolean = false
 ) {
+    val isPreview = LocalInspectionMode.current
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val dependenciesProvider = DefaultDependenciesProvider(context)
+
+    // Create or remember all the controllers
+    val cameraController = remember { CameraController() }
+    val storageController = remember { StorageController(dependenciesProvider) }
+    val fontRecognitionApiController = remember {
+        FontRecognitionApiController(dependenciesProvider, context) }
+    val fontsDatabaseRepository = remember { dependenciesProvider.databaseRepository }
+    val bitmapToolkit = remember { BitmapToolkit(dependenciesProvider) }
+
+    val cameraViewModel: CameraViewModel = viewModel(
+        factory = viewModelProviderFactory {
+            CameraViewModel(
+                cameraController,
+                storageController,
+                fontRecognitionApiController,
+                fontsDatabaseRepository,
+                bitmapToolkit
+            )
+        }
+    )
+    cameraViewModel.loadCameraProvider(context, lifecycleOwner)
+
+    val favoritesViewModel: FavoritesViewModel = viewModel(
+        factory = viewModelProviderFactory {
+            FavoritesViewModel(
+                fontsDatabaseRepository,
+                bitmapToolkit
+            )
+        }
+    )
+
     Timber.d("Rendering HomeScreen with UI State: $uiState")
-    BackgroundWithTintedStatusBar()
-
-    // Only for preview mode; otherwise, get your dependencies from the real application
-    val dependenciesProvider = if (!isPreview)
-        (LocalContext.current.applicationContext as FontPickerApplication).dependenciesProvider
-    else
-        DefaultDependenciesProvider(LocalContext.current)
-
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { 2 }
     )
-    Timber.d("Pager state initialized with initialPage = 0 and pageCount = 2")
+
+    val horizontalPager: @Composable () -> Unit = if (isPreview) {
+        { HomePagerPreview(pagerState = pagerState) }
+    } else {
+        {
+            HomePager(
+                pagerState = pagerState,
+                cameraViewModel = cameraViewModel,
+                favoritesViewModel = favoritesViewModel
+            )
+        }
+    }
+
+    HomeScreenContent(
+        uiState = uiState,
+        onChangeTheme = onChangeTheme,
+        onChangeLanguage = onChangeLanguage,
+        modifier = modifier,
+        horizontalPager = horizontalPager
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    uiState: HomeUiState,
+    onChangeTheme: (FontPickerThemePreference) -> Unit,
+    onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
+    horizontalPager: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Timber.d("Rendering HomeScreenContent with UI State: $uiState")
+    BackgroundWithTintedStatusBar()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Drawer and main content
         Timber.d("Rendering HomeDrawer")
         HomeDrawer(
             uiState = uiState,
             onChangeTheme = {
-                Timber.d("HomeScreen: Theme change triggered with $it")
+                Timber.d("HomeScreenContent: Theme change triggered with $it")
                 onChangeTheme(it)
             },
             onChangeLanguage = {
-                Timber.d("HomeScreen: Language change triggered with $it")
+                Timber.d("HomeScreenContent: Language change triggered with $it")
                 onChangeLanguage(it)
             },
-            currentPage = pagerState.currentPage,
+            currentPage = 0, // Pager's current page should be managed outside if required
             modifier = modifier
         ) {
             Timber.d("Rendering HorizontalPager")
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                Timber.d("HorizontalPager: Rendering page $page")
-                when (page) {
-                    0 -> {
-                        Timber.d("Rendering CameraScreenRoute")
-                        CameraRoute(
-                            dependenciesProvider = dependenciesProvider,
-                            isPreview = isPreview
-                        )
-                    }
-
-                    1 -> {
-                        Timber.d("Rendering FavoritesScreenRoute")
-                        FavoritesRoute()
-                    }
-
-                    else -> {
-                        Timber.w("HorizontalPager: Unknown page $page")
-                    }
-                }
-            }
+            horizontalPager() // Call the provided pager composable
         }
     }
 }
@@ -124,14 +167,14 @@ private fun HomeScreenContentPreview() {
                 .fillMaxSize()
                 .background(FontPickerDesignSystem.colorScheme.background)
         ) {
-            HomeScreen(
+            HomeScreenContent(
                 uiState = HomeUiState.Success(
                     language = FontPickerLanguagePreference.English,
                     theme = FontPickerThemePreference.Light
                 ),
                 onChangeTheme = { /* Stub: handle theme change */ },
                 onChangeLanguage = { /* Stub: handle language change */ },
-                isPreview = true
+                horizontalPager = @Composable { HomePagerPreview() }
             )
         }
     }

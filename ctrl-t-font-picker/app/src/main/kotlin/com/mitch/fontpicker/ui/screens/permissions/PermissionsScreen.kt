@@ -17,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mitch.fontpicker.R
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
+import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import timber.log.Timber
 
 private val SCREEN_PADDING = 24.dp
@@ -31,7 +33,6 @@ fun PermissionsRoute(
 ) {
     Timber.d("Rendering PermissionsRoute")
 
-    // Observe the current permission index and whether all permissions are granted
     val currentPermissionIndex by viewModel.currentPermissionIndex.collectAsState()
     val allPermissionsGranted by viewModel.allPermissionsGranted.collectAsState()
 
@@ -40,29 +41,41 @@ fun PermissionsRoute(
                 "All Permissions Granted = $allPermissionsGranted"
     )
 
-    // Render PermissionsScreen or handle the state for all permissions granted
-    if (!allPermissionsGranted) {
-        PermissionsScreen(
-            currentPermissionIndex = currentPermissionIndex,
-            onRequestPermission = {
-                Timber.d("Request permission button clicked")
-                viewModel.requestPermission()
-            }
-        )
-    } else {
-        // Log and take any necessary actions for granted permissions
-        Timber.i("All permissions granted. Navigation or other actions can be triggered here.")
-    }
+    PermissionsScreen(
+        currentPermissionIndex = currentPermissionIndex,
+        allPermissionsGranted = allPermissionsGranted,
+        onRequestPermission = {
+            Timber.d("Request permission button clicked")
+            viewModel.requestPermission()
+        },
+    )
 }
 
 @Composable
 fun PermissionsScreen(
     currentPermissionIndex: Int,
+    allPermissionsGranted: Boolean,
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Timber.d("Rendering PermissionsScreen with currentPermissionIndex = $currentPermissionIndex")
+    if (!allPermissionsGranted) {
+        PermissionsScreenContent(
+            messageResId = PermissionsHandler.permissionsToRequest[currentPermissionIndex].second,
+            onRequestPermission = onRequestPermission,
+            modifier = modifier
+        )
+    } else {
+        Timber.i("All permissions granted. Navigation or other actions can be triggered here.")
+        // Add actions for granted permissions if needed
+    }
+}
 
+@Composable
+fun PermissionsScreenContent(
+    messageResId: Int,
+    onRequestPermission: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -73,9 +86,6 @@ fun PermissionsScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(SCREEN_PADDING)
         ) {
-            val (_, messageResId) = PermissionsHandler.permissionsToRequest[currentPermissionIndex]
-            Timber.d("Displaying permission message with messageResId = $messageResId")
-
             Text(
                 text = stringResource(id = messageResId),
                 style = FontPickerDesignSystem.typography.titleMedium,
@@ -98,5 +108,16 @@ fun PermissionsScreen(
                 Text(stringResource(id = R.string.grant_permission))
             }
         }
+    }
+}
+
+@Preview(name = "PermissionsScreenContentPreview")
+@Composable
+fun PermissionsScreenContentPreview() {
+    FontPickerTheme {
+        PermissionsScreenContent(
+            messageResId = R.string.grant_permission, // Replace with real or mock string resource
+            onRequestPermission = { /* Preview action */ }
+        )
     }
 }

@@ -17,30 +17,23 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mitch.fontpicker.data.images.BitmapToolkit
-import com.mitch.fontpicker.di.DefaultDependenciesProvider
-import com.mitch.fontpicker.di.DependenciesProvider
+import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
 import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
-import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
-import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
-import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
-import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
-import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -48,59 +41,20 @@ private val TOP_PADDING = 84.dp
 
 @Composable
 fun CameraRoute(
-    dependenciesProvider: DependenciesProvider,
-    isPreview: Boolean
+    viewModel: CameraViewModel,
 ) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    // Create or remember all the controllers
-    val cameraController = remember {
-        CameraController()
-    }
-    val storageController = remember {
-        StorageController(dependenciesProvider)
-    }
-    val fontRecognitionApiController = remember {
-        FontRecognitionApiController(dependenciesProvider, context)
-    }
-    val fontsDatabaseRepository = remember {
-        dependenciesProvider.databaseRepository
-    }
-    val bitmapToolkit = remember {
-        BitmapToolkit(dependenciesProvider)
-    }
-
-    val cameraViewModel: CameraViewModel = viewModel(
-        factory = viewModelProviderFactory {
-            CameraViewModel(
-                cameraController,
-                storageController,
-                fontRecognitionApiController,
-                fontsDatabaseRepository,
-                bitmapToolkit)
-        }
-    )
-
-    Timber.d("Rendering CameraScreenRoute. isPreview = $isPreview")
-
-    // Only load the camera if we're not in preview
-    if (!isPreview) {
-        cameraViewModel.loadCameraProvider(context, lifecycleOwner)
-    }
+    Timber.d("Rendering CameraScreenRoute.")
 
     CameraScreen(
-        viewModel = cameraViewModel,
-        isPreview = isPreview
+        viewModel = viewModel
     )
 }
 
-
 @Composable
 fun CameraScreen(
-    viewModel: CameraViewModel,
-    isPreview: Boolean = false
+    viewModel: CameraViewModel
 ) {
+    val isPreview = LocalInspectionMode.current
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
@@ -119,21 +73,17 @@ fun CameraScreen(
                 is CameraUiState.Success -> false
                 else -> true
             }
-            if (resetScreen){
+            if (resetScreen) {
                 viewModel.onBackHandler()
                 Timber.d("Back button pressed. Resetting image state.")
             }
         }
     }
 
-    // Dispose of the image state when the CameraScreen is removed from the composition tree
     DisposableEffect(Unit) {
-        onDispose {
-            viewModel.resetImageState()
-        }
+        onDispose { viewModel.resetImageState() }
     }
 
-    // Add a lifecycle observer for cleanup when the app is terminated
     DisposableEffect(context) {
         val lifecycle = (context as? androidx.activity.ComponentActivity)?.lifecycle
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -141,51 +91,53 @@ fun CameraScreen(
                 viewModel.resetImageState()
             }
         }
-
         lifecycle?.addObserver(observer)
-        onDispose {
-            lifecycle?.removeObserver(observer)
-        }
+        onDispose { lifecycle?.removeObserver(observer) }
     }
 
-    // Gallery picker launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let { viewModel.onGalleryImageSelected(context, it) }
     }
 
-    // Trigger gallery picker if requested
     val galleryPickerEvent by viewModel.galleryPickerEvent.collectAsState()
     if (galleryPickerEvent) {
         galleryLauncher.launch("image/*")
         viewModel.resetGalleryPickerEvent()
     }
 
+    // Call the UI content
     CameraScreenContent(
-        viewModel = viewModel,
         uiState = uiState,
         isPreview = isPreview,
         photoUri = photoUri,
         cameraPreviewView = cameraPreviewView,
         onCapturePhoto = { coroutineScope.launch { viewModel.capturePhoto(context) } },
         onFlipCamera = { viewModel.flipCamera(context, lifecycleOwner) },
-        onOpenGallery = { viewModel.onOpenGallery() }
+        onOpenGallery = { viewModel.onOpenGallery() },
+        onDismissError = { viewModel.resetErrorState() },
+        onDismissFontsDialog = { viewModel.onFontsDialogDismissed() },
+        onConfirmFontsDialog = { fonts ->
+            val likedFonts = fonts.filter { it.isLiked.value }
+            viewModel.onFontsDialogConfirmed(likedFonts)
+        }
     )
 }
 
 @Composable
 private fun CameraScreenContent(
-    viewModel: CameraViewModel,
     uiState: CameraUiState,
     isPreview: Boolean,
     photoUri: Uri?,
     cameraPreviewView: androidx.camera.core.Preview?,
     onCapturePhoto: () -> Unit,
     onFlipCamera: () -> Unit,
-    onOpenGallery: () -> Unit
+    onOpenGallery: () -> Unit,
+    onDismissError: () -> Unit,
+    onDismissFontsDialog: () -> Unit,
+    onConfirmFontsDialog: (List<FontDownloaded>) -> Unit
 ) {
-    // Log UI state changes
     LaunchedEffect(uiState) {
         Timber.d("CameraScreenContent: Current UI State: $uiState")
         if (uiState is CameraUiState.Error) {
@@ -219,10 +171,8 @@ private fun CameraScreenContent(
                     .clip(FontPickerDesignSystem.shapes.large)
             ) {
                 if (isPreview) {
-                    Timber.d("CameraScreenContent: Displaying CameraLiveViewPlaceholder.")
                     CameraLiveViewPlaceholder()
                 } else {
-                    Timber.d("CameraScreenContent: Displaying CameraLiveView.")
                     CameraLiveView(
                         cameraPreviewView = cameraPreviewView,
                         modifier = Modifier.fillMaxSize(),
@@ -231,6 +181,7 @@ private fun CameraScreenContent(
                     )
                 }
             }
+
             Spacer(modifier = Modifier.weight(1f))
             CameraActionRow(
                 onShoot = onCapturePhoto,
@@ -241,69 +192,48 @@ private fun CameraScreenContent(
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        // Handle errors: this will be displayed anytime the UI state is an error
         if (uiState is CameraUiState.Error) {
-            Timber.d("CameraScreenContent: Showing ErrorOverlay.")
             ErrorOverlay(
                 errorMessage = uiState.error,
                 closable = true,
                 verticalBias = 0.1f,
-                onClose = {
-                    Timber.d("CameraScreenContent: ErrorOverlay closed.")
-                    viewModel.resetErrorState()
-                }
+                onClose = onDismissError
             )
         }
 
         if (uiState is CameraUiState.OpeningFontsDialog) {
-            val downloadedFonts = uiState.downloadedFonts
             FontCardSelectionDialog(
-                fonts = downloadedFonts, // Directly pass the list of FontDownloaded
-                onDismiss = {
-                    Timber.d("CameraScreenContent: Fonts dialog dismissed.")
-                    viewModel.onFontsDialogDismissed()
-                },
+                fonts = uiState.downloadedFonts,
+                onDismiss = onDismissFontsDialog,
                 onConfirm = {
-                    Timber.d("CameraScreenContent: Fonts dialog confirmed.")
-
-                    // Filter liked fonts and pass only them
-                    val likedFonts = downloadedFonts.filter { it.isLiked.value }
-                    likedFonts.forEach {
-                        Timber.d("Liked Font: Name = ${it.title}, URL = ${it.url}, Image URLs = ${it.imageUrls}")
-                    }
-                    viewModel.onFontsDialogConfirmed(likedFonts)
+                    onConfirmFontsDialog(uiState.downloadedFonts)
                 }
             )
         }
     }
 }
 
-
 @PreviewLightDark
 @Composable
-fun CameraScreenPreview() {
+fun CameraScreenContentPreview() {
     FontPickerTheme {
-        val context = LocalContext.current
-        val dependenciesProvider = DefaultDependenciesProvider(context)
+        // Mock dependencies for preview
+        val mockUiState = CameraUiState.CameraReady()
+        val mockPhotoUri: Uri? = null
+        val mockCameraPreviewView: androidx.camera.core.Preview? = null
 
-        val cameraController = remember { CameraController() }
-        val storageController = remember { StorageController(dependenciesProvider) }
-        val fontRecognitionApiController = remember { FontRecognitionApiController(dependenciesProvider, context) }
-        val fontsDatabaseRepository = remember { dependenciesProvider.databaseRepository }
-        val bitmapToolkit = remember { BitmapToolkit(dependenciesProvider) }
-
-        // Create a “preview” VM
-        val previewViewModel = remember {
-            CameraViewModel(
-                cameraController = cameraController,
-                storageController = storageController,
-                fontRecognitionApiController = fontRecognitionApiController,
-                fontsDatabaseRepository = fontsDatabaseRepository,
-                bitmapToolkit = bitmapToolkit
-            )
-        }
-
-        // Render the same screen but pass isPreview = true
-        CameraScreen(viewModel = previewViewModel, isPreview = true)
+        // Render the UI
+        CameraScreenContent(
+            uiState = mockUiState,
+            isPreview = true,
+            photoUri = mockPhotoUri,
+            cameraPreviewView = mockCameraPreviewView,
+            onCapturePhoto = {},
+            onFlipCamera = {},
+            onOpenGallery = {},
+            onDismissError = {},
+            onDismissFontsDialog = {},
+            onConfirmFontsDialog = {}
+        )
     }
 }
