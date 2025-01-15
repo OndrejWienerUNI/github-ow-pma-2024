@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -82,8 +83,10 @@ class DefaultDependenciesProvider(
     }
 
     private val externalFilesDir: File by lazy {
-        context.getExternalFilesDir(null)
-            ?: throw IllegalStateException("Cannot access external files directory")
+        runBlocking(Dispatchers.IO) {
+            context.getExternalFilesDir(null)
+                ?: throw IllegalStateException("Cannot access external files directory")
+        }
     }
 
     override val picturesDir: File
