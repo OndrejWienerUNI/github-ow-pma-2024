@@ -16,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -25,10 +26,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.mitch.fontpicker.R
+import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.cards.FontCard
-import com.mitch.fontpicker.ui.designsystem.components.cards.FontCardData
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
 private val DIALOG_WIDTH_MAX = 400.dp
@@ -36,7 +37,7 @@ private val GRADIENT_HEIGHT = 20.dp
 
 @Composable
 fun FontCardSelectionDialog(
-    cards: List<FontCardData>,
+    fonts: List<FontDownloaded>,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     isThemeDark: Boolean = isSystemInDarkTheme()
@@ -66,14 +67,11 @@ fun FontCardSelectionDialog(
                         .padding(horizontal = padding.zero, vertical = padding.extraSmall),
                     verticalArrangement = Arrangement.spacedBy(padding.small)
                 ) {
-                    items(cards) { cardData ->
+                    items(fonts) { font ->
                         FontCard(
-                            name = cardData.name,
-                            images = cardData.images,
-                            likedInitial = cardData.liked,
-                            inSelection = true,
-                            onLikeClick = {  },
-                            onWebpageClick = {  },
+                            font = font,
+                            inSelectionDialog = true,
+                            onWebpageClick = { /* Handle Webpage Click */ },
                             isThemeDark = isThemeDark
                         )
                     }
@@ -143,20 +141,24 @@ fun FontCardSelectionDialog(
 
 @Composable
 @PreviewLightDark
-fun FontCardSelectionAlertDialogPreview() {
+fun FontCardSelectionDialogPreview() {
     val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
-    val sampleCards = List(5) {
-        FontCardData(
-            name = "Example Font $it",
-            images = listOf(sampleBitmap, sampleBitmap, sampleBitmap),
-            liked = false,
-            onLikeClick = {},
-            onWebpageClick = {}
+    val sampleFonts = List(5) {
+        FontDownloaded(
+            title = "Example Font ${it+1}",
+            url = "https://example.com/font/${it+1}",
+            imageUrls = listOf(
+                "https://example.com/image1.png",
+                "https://example.com/image2.png",
+                "https://example.com/image3.png"
+            ),
+            bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap),
+            isLiked = mutableStateOf(false)
         )
     }
     FontPickerTheme {
         FontCardSelectionDialog(
-            cards = sampleCards,
+            fonts = sampleFonts,
             onDismiss = {},
             onConfirm = {}
         )

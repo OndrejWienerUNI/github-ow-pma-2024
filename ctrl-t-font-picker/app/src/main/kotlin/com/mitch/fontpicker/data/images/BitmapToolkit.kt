@@ -190,11 +190,9 @@ class BitmapToolkit(
                 )
                 val canvas = Canvas(invertedBitmap)
                 canvas.drawBitmap(bitmap, 0f, 0f, paint)
-
-                Timber.d("Image inversion successful.")
                 invertedBitmap
             } catch (e: Exception) {
-                Timber.e(e, "Failed to invert image.")
+                Timber.e(e, "Failed to invert image - returning original bitmap.")
                 bitmap
             }
         }

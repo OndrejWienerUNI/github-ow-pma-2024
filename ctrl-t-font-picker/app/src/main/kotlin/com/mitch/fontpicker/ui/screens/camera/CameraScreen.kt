@@ -38,7 +38,6 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
-import com.mitch.fontpicker.ui.designsystem.components.cards.FontCardData
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
@@ -243,22 +242,20 @@ private fun CameraScreenContent(
         if (uiState is CameraUiState.OpeningFontsDialog) {
             val downloadedFonts = uiState.downloadedFonts
             FontCardSelectionDialog(
-                cards = downloadedFonts.map { font ->
-                    FontCardData(
-                        name = font.title,
-                        images = font.bitmaps,
-                        liked = false,
-                        onLikeClick = { /* Handle Like Click */ },
-                        onWebpageClick = { /* Handle Webpage Click */ }
-                    )
-                },
+                fonts = downloadedFonts, // Directly pass the list of FontDownloaded
                 onDismiss = {
                     Timber.d("CameraScreenContent: Fonts dialog dismissed.")
                     viewModel.onFontsDialogDismissed()
                 },
                 onConfirm = {
                     Timber.d("CameraScreenContent: Fonts dialog confirmed.")
-                        viewModel.onFontsDialogConfirmed(downloadedFonts)
+
+                    // Filter liked fonts and pass only them
+                    val likedFonts = downloadedFonts.filter { it.isLiked.value }
+                    likedFonts.forEach {
+                        Timber.d("Liked Font: Name = ${it.title}, URL = ${it.url}, Image URLs = ${it.imageUrls}")
+                    }
+                    viewModel.onFontsDialogConfirmed(likedFonts)
                 }
             )
         }

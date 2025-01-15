@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import com.mitch.fontpicker.BuildConfig
 import com.mitch.fontpicker.data.api.FontResult
-import com.mitch.fontpicker.data.api.WhatFontIsRepository
+import com.mitch.fontpicker.data.api.WhatFontIsApiRepository
 import com.mitch.fontpicker.di.DependenciesProvider
 import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ class FontRecognitionApiController(
 ) {
 
     private val fontRepository by lazy {
-        WhatFontIsRepository(
+        WhatFontIsApiRepository(
             httpClient = dependenciesProvider.httpClient,
             apiKey = BuildConfig.WHAT_FONT_IS_API_KEY
         )

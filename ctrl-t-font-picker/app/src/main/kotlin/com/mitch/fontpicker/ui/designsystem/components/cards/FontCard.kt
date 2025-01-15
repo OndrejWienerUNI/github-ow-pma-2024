@@ -23,10 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,12 +36,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.mitch.fontpicker.R
+import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
+import timber.log.Timber
 
 private val BORDER_THICKNESS = 1.dp
 private val HEART_ICON_BUTTON_SIZE = 40.dp
@@ -55,41 +53,27 @@ private val OVERLAY_CIRCLE_SIZE = 36.dp
 private val OVERLAY_ICON_SIZE = 22.dp
 private val TEXT_Y_OFFSET = (-0.5).dp
 
-
-data class FontCardData(
-    val name: String,
-    val images: List<Bitmap>,
-    val liked: Boolean,
-    val onLikeClick: () -> Unit,
-    val onWebpageClick: () -> Unit
-)
-
 @Composable
 fun FontCard(
-    name: String,
-    images: List<Bitmap>,
-    inSelection: Boolean,
-    likedInitial: Boolean,
-    onLikeClick: (Boolean) -> Unit,
+    font: FontDownloaded,
+    inSelectionDialog: Boolean,
     onWebpageClick: () -> Unit,
     isThemeDark: Boolean = isSystemInDarkTheme()
 ) {
-    // Manage local liked state
-    var liked by remember { mutableStateOf(likedInitial) }
+    // Use font.isLiked.value directly
+    val isLiked = font.isLiked.value
 
-    val processedImages = images.map { bitmap ->
+    val processedImages = font.bitmaps.map { bitmap ->
         if (isThemeDark) BitmapToolkit.invertImage(bitmap) else bitmap
     }
 
-    val heartIcon: ImageVector = if (liked) FontPickerIcons.Filled.Heart
-    else FontPickerIcons.Outlined.Heart
-
-    val heartColor: Color = if (liked)
+    val heartIcon: ImageVector = if (isLiked) FontPickerIcons.Filled.Heart else FontPickerIcons.Outlined.Heart
+    val heartColor: Color = if (isLiked)
         FontPickerDesignSystem.colorScheme.primary
     else
         FontPickerDesignSystem.extendedColorScheme.icOnBackground
 
-    val borderColor: Color = if (liked)
+    val borderColor: Color = if (isLiked)
         FontPickerDesignSystem.colorScheme.primary
     else
         FontPickerDesignSystem.extendedColorScheme.borders
@@ -103,9 +87,9 @@ fun FontCard(
                 color = FontPickerDesignSystem.colorScheme.surface,
                 shape = CardDefaults.shape
             )
-            .clickable(enabled = inSelection) {
-                liked = !liked
-                onLikeClick(liked)
+            .clickable(enabled = inSelectionDialog) {
+                font.isLiked.value = !isLiked // Update the state directly
+                Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
             },
         colors = CardDefaults.cardColors(
             containerColor = FontPickerDesignSystem.colorScheme.surface
@@ -125,7 +109,7 @@ fun FontCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = name,
+                        text = font.title,
                         style = FontPickerDesignSystem.typography.titleMedium,
                         color = FontPickerDesignSystem.colorScheme.onBackground,
                         maxLines = 1,
@@ -137,9 +121,10 @@ fun FontCard(
                     )
                     IconButton(
                         onClick = {
-                            if (!inSelection) {
-                                liked = !liked // Update local state
-                                onLikeClick(liked) // Notify parent of the new state
+                            if (!inSelectionDialog) {
+                                font.isLiked.value = !font.isLiked.value
+                                Timber.d("FontCard: Font '${font.title}' isLiked " +
+                                        "state changed to $isLiked")
                             }
                         },
                         modifier = Modifier
@@ -218,16 +203,19 @@ fun FontCard(
 @Preview
 @Composable
 fun FontCardPreviewLight() {
-    // Preview in light theme
     FontPickerTheme(isThemeDark = false) {
         val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+        val fontDownloaded = FontDownloaded(
+            title = "Example Font (Light Theme, disliked)",
+            url = "https://example.com/font",
+            imageUrls = listOf("https://example.com/font-image-1"),
+            bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap)
+        )
+
         FontCard(
-            name = "Example Font (Light Theme, disliked)",
-            images = listOf(sampleBitmap, sampleBitmap, sampleBitmap),
-            inSelection = true,
-            likedInitial = false,
-            onLikeClick = {},
-            onWebpageClick = {},
+            font = fontDownloaded,
+            inSelectionDialog = true,
+            onWebpageClick = { /* Webpage click action */ },
             isThemeDark = false
         )
     }
@@ -236,16 +224,19 @@ fun FontCardPreviewLight() {
 @Preview
 @Composable
 fun FontCardPreviewDark() {
-    // Preview in dark theme
     FontPickerTheme(isThemeDark = true) {
         val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+        val fontDownloaded = FontDownloaded(
+            title = "Example Font (Dark Theme, liked)",
+            url = "https://example.com/font",
+            imageUrls = listOf("https://example.com/font-image-1"),
+            bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap)
+        )
+
         FontCard(
-            name = "Example Font (Dark Theme, liked)",
-            images = listOf(sampleBitmap, sampleBitmap, sampleBitmap),
-            inSelection = false, // Test regular mode
-            likedInitial = true,
-            onLikeClick = {},
-            onWebpageClick = {},
+            font = fontDownloaded,
+            inSelectionDialog = false,
+            onWebpageClick = { /* Webpage click action */ },
             isThemeDark = true
         )
     }

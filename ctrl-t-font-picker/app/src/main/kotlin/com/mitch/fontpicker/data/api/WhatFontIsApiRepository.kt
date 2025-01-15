@@ -1,6 +1,8 @@
 package com.mitch.fontpicker.data.api
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
@@ -15,7 +17,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import timber.log.Timber
 
-class WhatFontIsRepository(
+class WhatFontIsApiRepository(
     private val httpClient: HttpClient,
     private val apiKey: String
 ) {
@@ -94,5 +96,6 @@ data class FontDownloaded(
     val title: String,
     val url: String,
     val imageUrls: List<String>,
-    val bitmaps: List<Bitmap>
+    val bitmaps: List<Bitmap>,
+    val isLiked: MutableState<Boolean> = mutableStateOf(false)
 )
