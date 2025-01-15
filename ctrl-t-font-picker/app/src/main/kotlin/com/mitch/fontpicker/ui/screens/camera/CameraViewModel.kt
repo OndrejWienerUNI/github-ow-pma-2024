@@ -496,10 +496,6 @@ class CameraViewModel(
                         else -> null
                     }?.forEach { font ->
                         font.bitmaps.forEach { bitmap ->
-//                            if (!bitmap.isRecycled) {
-//                                bitmap.recycle()
-//                                Timber.d("Bitmap recycled for font: ${font.title}")
-//                            }
                             BitmapToolkit.cleanUpBitmap(bitmap)
                         }
                     }
