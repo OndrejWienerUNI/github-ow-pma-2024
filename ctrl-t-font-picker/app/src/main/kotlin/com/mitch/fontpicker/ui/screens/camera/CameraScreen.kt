@@ -1,6 +1,7 @@
 package com.mitch.fontpicker.ui.screens.camera
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -36,7 +37,6 @@ import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
-import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
@@ -64,8 +64,8 @@ fun CameraRoute(
     val fontRecognitionApiController = remember {
         FontRecognitionApiController(dependenciesProvider, context)
     }
-    val fontDatabaseRepository = remember {
-        FontPickerDatabaseRepository(dependenciesProvider)
+    val fontsDatabaseRepository = remember {
+        dependenciesProvider.databaseRepository
     }
     val bitmapToolkit = remember {
         BitmapToolkit(dependenciesProvider)
@@ -77,7 +77,7 @@ fun CameraRoute(
                 cameraController,
                 storageController,
                 fontRecognitionApiController,
-                fontDatabaseRepository,
+                fontsDatabaseRepository,
                 bitmapToolkit)
         }
     )
@@ -109,6 +109,22 @@ fun CameraScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Timber.d("CameraScreen: Preview state = $cameraPreviewView, UI State = $uiState")
+
+    BackHandler(enabled = true) {
+        if (uiState is CameraUiState.OpeningFontsDialog) {
+            viewModel.onFontsDialogDismissed()
+        } else {
+            val resetScreen = when (uiState) {
+                is CameraUiState.CameraReady -> false
+                is CameraUiState.Success -> false
+                else -> true
+            }
+            if (resetScreen){
+                viewModel.onBackHandler()
+                Timber.d("Back button pressed. Resetting image state.")
+            }
+        }
+    }
 
     // Dispose of the image state when the CameraScreen is removed from the composition tree
     DisposableEffect(Unit) {
@@ -270,11 +286,10 @@ fun CameraScreenPreview() {
         val context = LocalContext.current
         val dependenciesProvider = DefaultDependenciesProvider(context)
 
-        // Create or mock your controllers
         val cameraController = remember { CameraController() }
         val storageController = remember { StorageController(dependenciesProvider) }
         val fontRecognitionApiController = remember { FontRecognitionApiController(dependenciesProvider, context) }
-        val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
+        val fontsDatabaseRepository = remember { dependenciesProvider.databaseRepository }
         val bitmapToolkit = remember { BitmapToolkit(dependenciesProvider) }
 
         // Create a “preview” VM
@@ -283,7 +298,7 @@ fun CameraScreenPreview() {
                 cameraController = cameraController,
                 storageController = storageController,
                 fontRecognitionApiController = fontRecognitionApiController,
-                fontDatabaseRepository = fontDatabaseRepository,
+                fontsDatabaseRepository = fontsDatabaseRepository,
                 bitmapToolkit = bitmapToolkit
             )
         }

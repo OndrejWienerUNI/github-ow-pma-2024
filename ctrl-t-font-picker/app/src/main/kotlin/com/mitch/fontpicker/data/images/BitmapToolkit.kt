@@ -25,6 +25,7 @@ class BitmapToolkit(
     private val dependenciesProvider: DependenciesProvider
 ) {
     // Instance-specific methods
+    @Suppress("MemberVisibilityCanBePrivate")
     suspend fun download(url: String, destination: File): Uri? {
         return withContext(Dispatchers.IO) {
             try {
@@ -63,47 +64,42 @@ class BitmapToolkit(
         targetWidth: Int? = null,
         targetHeight: Int? = null
     ): Bitmap? {
-        var originalBitmap: Bitmap? = null
-        var resizedBitmap: Bitmap? = null
-        var finalBitmap: Bitmap? = null
-
-        return try {
-            if (!tempDirectory.exists() || !tempDirectory.isDirectory) {
-                throw IllegalStateException("Temp directory is invalid: ${tempDirectory.absolutePath}")
-            }
-
-            val downloadedFile = download(url, tempDirectory)?.toFile() ?: return null
-
+        return withContext(Dispatchers.IO) {
+            // Perform disk-related operations in the IO thread pool
             try {
-                originalBitmap = BitmapFactory.decodeFile(downloadedFile.absolutePath)
-                    ?: throw IllegalArgumentException("Failed to decode downloaded image.")
-
-                resizedBitmap = if (targetWidth != null || targetHeight != null) {
-                    resize(originalBitmap, targetWidth, targetHeight)
-                } else {
-                    originalBitmap
+                if (!tempDirectory.exists() || !tempDirectory.isDirectory) {
+                    throw IllegalStateException("Temp directory is invalid: ${tempDirectory.absolutePath}")
                 }
 
-                finalBitmap = if (makeJpegCompatible) {
-                    makeJpegCompatible(resizedBitmap, backgroundColor)
-                } else {
-                    resizedBitmap
+                val downloadedFile = download(url, tempDirectory)?.toFile() ?: return@withContext null
+
+                try {
+                    val originalBitmap = BitmapFactory.decodeFile(downloadedFile.absolutePath)
+                        ?: throw IllegalArgumentException("Failed to decode downloaded image.")
+
+                    val resizedBitmap = if (targetWidth != null || targetHeight != null) {
+                        resize(originalBitmap, targetWidth, targetHeight)
+                    } else {
+                        originalBitmap
+                    }
+
+                    if (makeJpegCompatible) {
+                        makeJpegCompatible(resizedBitmap, backgroundColor)
+                    } else {
+                        resizedBitmap
+                    }
+                } finally {
+                    deleteTempFile(downloadedFile)
                 }
-            } finally {
-                deleteTempFile(downloadedFile)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to process image: $url")
+                null
             }
-
-            finalBitmap
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to process image: $url")
-            null
-        } finally {
-            if (finalBitmap != resizedBitmap) cleanUpBitmap(resizedBitmap)
-            if (resizedBitmap != originalBitmap) cleanUpBitmap(originalBitmap)
         }
     }
 
-    // Companion object for uninstantiated access
+
+    // Companion object for un-instantiated access
     companion object {
         fun encodeBinary(bitmap: Bitmap): ByteArray {
             return try {

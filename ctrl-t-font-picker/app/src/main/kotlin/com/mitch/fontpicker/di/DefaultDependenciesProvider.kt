@@ -4,10 +4,11 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
-import androidx.room.Room
 import com.mitch.fontpicker.BuildConfig
-import com.mitch.fontpicker.data.FontPickerDatabase
 import com.mitch.fontpicker.data.encrypted
+import com.mitch.fontpicker.data.room.FontsDatabase
+import com.mitch.fontpicker.data.room.FontsDatabaseInstance
+import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
 import com.mitch.fontpicker.data.settings.DefaultUserSettingsRepository
 import com.mitch.fontpicker.data.settings.UserSettingsRepository
 import com.mitch.fontpicker.data.userprefs.UserPreferencesLocalDataSource
@@ -72,12 +73,12 @@ class DefaultDependenciesProvider(
         CoroutineScope(SupervisorJob() + defaultDispatcher)
     }
 
-    override val database: FontPickerDatabase by lazy {
-        Room.databaseBuilder(
-            context,
-            FontPickerDatabase::class.java,
-            "fontpicker.db"
-        ).build()
+    override val database: FontsDatabase by lazy {
+        FontsDatabaseInstance.getDatabase(context)
+    }
+
+    override val databaseRepository: FontsDatabaseRepository by lazy {
+        FontsDatabaseRepository(database)
     }
 
     private val externalFilesDir: File by lazy {

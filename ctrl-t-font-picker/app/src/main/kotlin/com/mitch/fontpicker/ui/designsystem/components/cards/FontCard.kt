@@ -50,7 +50,7 @@ private val HEART_ICON_BUTTON_SIZE = 40.dp
 private val HEART_ICON_SIZE = 28.dp
 private val IMAGE_HEIGHT = 40.dp
 private val OVERLAY_CIRCLE_SIZE = 36.dp
-private val OVERLAY_ICON_SIZE = 22.dp
+private val OVERLAY_ICON_SIZE = 32.dp
 private val TEXT_Y_OFFSET = (-0.5).dp
 
 @Composable
@@ -104,7 +104,11 @@ fun FontCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = padding.extraSmall, end = padding.extraSmall),
+                        .padding(start = padding.extraSmall, end = padding.extraSmall)
+                        .clickable(enabled = inSelectionDialog) {
+                            font.isLiked.value = !isLiked // Update the state directly
+                            Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
+                        },
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -121,11 +125,9 @@ fun FontCard(
                     )
                     IconButton(
                         onClick = {
-                            if (!inSelectionDialog) {
-                                font.isLiked.value = !font.isLiked.value
-                                Timber.d("FontCard: Font '${font.title}' isLiked " +
-                                        "state changed to $isLiked")
-                            }
+                            font.isLiked.value = !font.isLiked.value
+                            Timber.d("FontCard: Font '${font.title}' isLiked " +
+                                    "state changed to $isLiked")
                         },
                         modifier = Modifier
                             .padding(padding.small)
@@ -149,11 +151,11 @@ fun FontCard(
                             bottom = padding.small,
                             top = padding.zero
                         )
-                        .clip(CardDefaults.shape)
                         .background(
                             color = if (isThemeDark) Color.Black else Color.White,
                             shape = CardDefaults.shape
-                        ),
+                        )
+                        .clip(CardDefaults.shape),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     processedImages.forEach { bitmap ->
@@ -170,11 +172,18 @@ fun FontCard(
                 }
             }
 
-            // Symbol overlay
-            Box(
+            IconButton(
+                onClick = {
+                    if (!inSelectionDialog) {
+                        onWebpageClick()
+                    } else {
+                        font.isLiked.value = !font.isLiked.value
+                        Timber.d("FontCard: Font '${font.title}' isLiked " +
+                                "state changed to ${font.isLiked.value}")
+                    }
+                },
                 modifier = Modifier
-                    .clickable { onWebpageClick() }
-                    .align(Alignment.BottomEnd)
+                    .align(Alignment.BottomEnd) // Align directly
                     .padding(padding.medium)
                     .size(OVERLAY_CIRCLE_SIZE)
                     .shadow(
@@ -186,13 +195,20 @@ fun FontCard(
                         color = FontPickerDesignSystem.colorScheme.tertiary,
                         shape = CircleShape
                     )
-                    .zIndex(1f),
-                contentAlignment = Alignment.Center
+                    .clip(CircleShape)
+                    .zIndex(1f) // Keep the overlay above other elements
             ) {
-                Image(
+                Icon(
                     painter = painterResource(id = R.drawable.what_font_is_symbol),
+                    tint = Color.Unspecified,
                     contentDescription = "WhatFontIs Font Recognition Provider Icon",
-                    modifier = Modifier.size(OVERLAY_ICON_SIZE)
+                    modifier = Modifier
+                        .size(OVERLAY_ICON_SIZE)
+                        .background(
+                            color = FontPickerDesignSystem.colorScheme.tertiary,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
                 )
             }
         }

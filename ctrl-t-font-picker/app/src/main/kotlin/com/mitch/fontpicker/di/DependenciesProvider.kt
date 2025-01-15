@@ -1,6 +1,7 @@
 package com.mitch.fontpicker.di
 
-import com.mitch.fontpicker.data.FontPickerDatabase
+import com.mitch.fontpicker.data.room.FontsDatabase
+import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
 import com.mitch.fontpicker.data.settings.UserSettingsRepository
 import com.mitch.fontpicker.util.network.NetworkMonitor
 import io.ktor.client.HttpClient
@@ -14,7 +15,8 @@ interface DependenciesProvider {
     val ioDispatcher: CoroutineDispatcher
     val defaultDispatcher: CoroutineDispatcher
     val coroutineScope: CoroutineScope
-    val database: FontPickerDatabase
+    val database: FontsDatabase
+    val databaseRepository: FontsDatabaseRepository
     val httpClient: HttpClient
     val picturesDir: File
     val thumbnailsDir: File

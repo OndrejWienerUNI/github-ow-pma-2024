@@ -9,8 +9,12 @@ import androidx.lifecycle.viewModelScope
 import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.data.api.FontResult
 import com.mitch.fontpicker.data.images.BitmapToolkit
+import com.mitch.fontpicker.data.room.model.BitmapData
+import com.mitch.fontpicker.data.room.model.Font
+import com.mitch.fontpicker.data.room.model.ImageUrl
+import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
+import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository.Companion.CATEGORY_FAVORITES_NAME
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
-import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import kotlinx.coroutines.Dispatchers
@@ -24,12 +28,12 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
-@Suppress("UNUSED")
+
 class CameraViewModel(
     private val cameraController: CameraController,
     private val storageController: StorageController,
     private val fontRecognitionApiController: FontRecognitionApiController,
-    private val fontDatabaseRepository: FontPickerDatabaseRepository,
+    private val fontsDatabaseRepository: FontsDatabaseRepository,
     private val bitmapToolkit: BitmapToolkit
 ) : ViewModel() {
 
@@ -43,6 +47,7 @@ class CameraViewModel(
     val galleryPickerEvent: StateFlow<Boolean> = _galleryPickerEvent
 
     private val _isImageInUse = MutableStateFlow(false)
+    @Suppress("UNUSED")
     val isImageInUse: StateFlow<Boolean> = _isImageInUse
 
     private var isProcessingImage = false
@@ -61,7 +66,8 @@ class CameraViewModel(
                     is CameraUiState.CameraReady,
                     is CameraUiState.Success -> {
                         _photoUri.value = null
-                        Timber.d("Photo URI reset due to state: $newState")
+                        _isImageInUse.value = false
+                        Timber.d("Photo URI reset due to state: $newState. Releasing resources.")
                     }
                     else -> {
                         // No action needed for other states
@@ -69,6 +75,12 @@ class CameraViewModel(
                 }
             }
         }
+    }
+
+    fun onBackHandler(){
+        _uiState.value = CameraUiState.Success(
+            "Back handler has interrupted camera operations. User hit back."
+        )
     }
 
     /**
@@ -272,33 +284,38 @@ class CameraViewModel(
         }
     }
 
+    private suspend fun setInitialLikedStates(downloadedFonts: List<FontDownloaded>) {
+        downloadedFonts.forEach { fontDownloaded ->
+            val font = fontsDatabaseRepository.fontBeforeInsertion(
+                title = fontDownloaded.title,
+                url = fontDownloaded.url
+            )
+            fontsDatabaseRepository.handleIdenticalInRecycleBin(font)
+            val shouldStartLiked = fontsDatabaseRepository.shouldStartAsLiked(font)
+            if (shouldStartLiked) {
+                fontDownloaded.isLiked.value = true
+                Timber.d("Set initial liked state for font '${fontDownloaded.title}' to true")
+            }
+        }
+    }
+
     /**
      * Process the fonts received from the font recognition API.
      *
      * @param fonts The list of FontResult objects received.
      */
     private fun processReceivedFonts(fonts: List<FontResult>) {
-        if (_uiState.value !is CameraUiState.FontsReceived) {
-            Timber.w("Attempted to process fonts in an invalid state: ${_uiState.value}")
-            return
-        }
-
         viewModelScope.launch {
-            val downloadedFonts = mutableListOf<FontDownloaded>()
             try {
                 _uiState.value = CameraUiState.DownloadingThumbnails(fonts)
                 Timber.d("Starting to process received fonts.")
 
-                withContext(Dispatchers.IO) {
-                    fonts.forEach { font ->
-                        val downloadedFont = convertFontResultToDownloaded(font)
-                        if (downloadedFont != null) {
-                            downloadedFonts.add(downloadedFont)
-                        }
-                    }
-                }
+                val downloadedFonts = downloadThumbnails(fonts)
 
                 if (downloadedFonts.isNotEmpty()) {
+                    // Set the initial liked state for each downloaded font
+                    setInitialLikedStates(downloadedFonts)
+
                     _uiState.value = CameraUiState.OpeningFontsDialog(downloadedFonts)
                     Timber.d("Fonts processed successfully. Opening fonts dialog.")
                 } else {
@@ -309,18 +326,6 @@ class CameraViewModel(
                 Timber.e(e, "Error during fonts processing.")
                 markThumbnailsAsNotInUse()
             }
-        }
-    }
-
-    /**
-     * Called after we've finished processing the image, to clear state.
-     */
-    private fun resetImageAfterLoading() {
-        if (_uiState.value is CameraUiState.CameraReady) {
-            _photoUri.value = null
-            _isImageInUse.value = false
-            Timber.d("Image reset after loading phase.")
-            markImageAsNotInUse()
         }
     }
 
@@ -360,65 +365,42 @@ class CameraViewModel(
         Timber.d("Error state reset to success.")
     }
 
-    // Example DB usage: Adding/Removing Favorite Fonts
-    fun addFavoriteFont(fontName: String) {
+    private fun addFavoriteFont(fontDownloaded: FontDownloaded) {
         viewModelScope.launch {
-            fontDatabaseRepository.addFavoriteFont(fontName)
-        }
-    }
-
-    fun removeFavoriteFont(fontName: String) {
-        viewModelScope.launch {
-            fontDatabaseRepository.removeFavoriteFont(fontName)
-        }
-    }
-
-    private fun downloadThumbnails(fonts: List<FontResult>) {
-        viewModelScope.launch {
-            _uiState.value = CameraUiState.DownloadingThumbnails(fonts)
-
-            val downloadedFonts = mutableListOf<FontDownloaded>()
-
-            withContext(Dispatchers.IO) {
-                fonts.forEach { font ->
-                    try {
-                        val imageUrlBitmapPairs = listOf(font.imageUrl0, font.imageUrl1, font.imageUrl2).mapNotNull { imageUrl ->
-                            val bitmap = bitmapToolkit.downloadAndProcess(
-                                url = imageUrl,
-                                makeJpegCompatible = true,
-                                tempDirectory = storageController.thumbnailsDir,
-                                targetHeight = 120,
-                            )
-                            if (bitmap != null) {
-                                imageUrl to bitmap
-                            } else {
-                                null
-                            }
-                        }
-
-                        if (imageUrlBitmapPairs.isNotEmpty()) {
-                            val (imageUrls, bitmaps) = imageUrlBitmapPairs.unzip()
-                            val downloadedFont = FontDownloaded(
-                                title = font.title,
-                                url = font.url,
-                                imageUrls = imageUrls,
-                                bitmaps = bitmaps
-                            )
-                            downloadedFonts.add(downloadedFont)
-                        } else {
-                            Timber.e("No thumbnails downloaded for font: ${font.title}")
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Error downloading thumbnails for font: ${font.title}")
-                    }
+            try {
+                // Get or create the "Favorites" category
+                val favoritesCategoryId = withContext(Dispatchers.IO) {
+                    fontsDatabaseRepository.getOrCreateCategoryByName(CATEGORY_FAVORITES_NAME)
                 }
-            }
 
-            if (downloadedFonts.isNotEmpty()) {
-                _uiState.value = CameraUiState.OpeningFontsDialog(downloadedFonts)
-            } else {
-                onError("Failed to download thumbnails for all fonts.")
+                val font = Font(
+                    title = fontDownloaded.title,
+                    url = fontDownloaded.url,
+                    categoryId = favoritesCategoryId
+                )
+
+                val imageUrls = fontDownloaded.imageUrls.map { url ->
+                    ImageUrl(fontId = 0, url = url)
+                }
+
+                val bitmapDataList = fontDownloaded.bitmaps.map { bitmap ->
+                    BitmapData(fontId = 0, bitmap = BitmapToolkit.encodeBinary(bitmap))
+                }
+
+                withContext(Dispatchers.IO) {
+                    fontsDatabaseRepository.insertFontWithAssets(font, imageUrls, bitmapDataList)
+                }
+
+                Timber.d("Successfully added font '${font.title}' to Favorites.")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to add font '${fontDownloaded.title}' to Favorites.")
             }
+        }
+    }
+
+    private suspend fun downloadThumbnails(fonts: List<FontResult>): List<FontDownloaded> {
+        return fonts.mapNotNull { fontResult ->
+            convertFontResultToDownloaded(fontResult)
         }
     }
 
@@ -462,6 +444,8 @@ class CameraViewModel(
             Timber.d("Fonts dialog dismissed. Returning to CameraReady state.")
         } finally {
             markThumbnailsAsNotInUse()
+            fontsDatabaseRepository.dismissRecycling()
+            fontsDatabaseRepository.dismissRestoration()
         }
     }
 
@@ -474,21 +458,24 @@ class CameraViewModel(
             try {
                 _uiState.value = CameraUiState.SavingFavoriteFonts(selectedFonts)
 
-                selectedFonts.forEach { font ->
-                    fontDatabaseRepository.addFavoriteFont(font.title) // placeholder
+                selectedFonts.forEach { fontDownloaded ->
+                    addFavoriteFont(fontDownloaded) // Add each selected font to Favorites
                 }
 
-                Timber.d("Fonts dialog confirmed. Fonts saved.")
+                Timber.d("Fonts dialog confirmed. Fonts saved to Favorites.")
+                fontsDatabaseRepository.attemptRecycling()
+                fontsDatabaseRepository.attemptRestoration()
             } catch (e: Exception) {
                 onError("Failed to confirm fonts selection: ${e.message}")
                 Timber.e(e, "Error confirming fonts dialog.")
+                fontsDatabaseRepository.dismissRecycling()
+                fontsDatabaseRepository.dismissRestoration()
             } finally {
                 markThumbnailsAsNotInUse()
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             }
         }
     }
-
 
     /**
      * Clears the thumbnails directory and releases bitmaps.
@@ -509,10 +496,11 @@ class CameraViewModel(
                         else -> null
                     }?.forEach { font ->
                         font.bitmaps.forEach { bitmap ->
-                            if (!bitmap.isRecycled) {
-                                bitmap.recycle()
-                                Timber.d("Bitmap recycled for font: ${font.title}")
-                            }
+//                            if (!bitmap.isRecycled) {
+//                                bitmap.recycle()
+//                                Timber.d("Bitmap recycled for font: ${font.title}")
+//                            }
+                            BitmapToolkit.cleanUpBitmap(bitmap)
                         }
                     }
 
