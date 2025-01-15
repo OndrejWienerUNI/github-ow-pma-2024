@@ -29,7 +29,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FontPicker"
-        tools:targetApi="34">
+        tools:targetApi="34"
+        android:enableOnBackInvokedCallback="true">
 
         <!-- Main activity -->
         <activity
