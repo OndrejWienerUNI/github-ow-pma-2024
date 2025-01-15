@@ -26,11 +26,18 @@ import timber.log.Timber
 
 @Composable
 fun CapturedImageWithOverlay(
-    photoUri: Uri,
+    photoUri: Uri?,
     showContent: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    if (showContent) {
+    // Conditionally create the painter only if showContent is true and photoUri is not null
+    val painter = if (showContent && photoUri != null) {
+        rememberAsyncImagePainter(photoUri)
+    } else {
+        null
+    }
+
+    if (showContent && painter != null) {
         Timber.d("Displaying captured/selected image and overlay.")
         val visibleState = remember {
             MutableTransitionState(false).apply { targetState = true }
@@ -45,15 +52,15 @@ fun CapturedImageWithOverlay(
                     .fillMaxSize()
                     .background(FontPickerDesignSystem.extendedColorScheme.pictureBackground)
             ) {
-                val containerAspectRatio = constraints.maxWidth.toFloat() / constraints.maxHeight.toFloat()
-                val painter = rememberAsyncImagePainter(photoUri)
-                val state = painter.state
-                val currentState = state.collectAsState().value
+                val containerAspectRatio =
+                    constraints.maxWidth.toFloat() / constraints.maxHeight.toFloat()
                 var imageModifier = Modifier.fillMaxSize()
 
-                if (currentState is AsyncImagePainter.State.Success) {
-                    val imageWidth = currentState.painter.intrinsicSize.width
-                    val imageHeight = currentState.painter.intrinsicSize.height
+                // Ensure that painter state checks are valid
+                val state = painter.state.collectAsState().value
+                if (state is AsyncImagePainter.State.Success) {
+                    val imageWidth = state.painter.intrinsicSize.width
+                    val imageHeight = state.painter.intrinsicSize.height
                     if (imageWidth > 0 && imageHeight > 0) {
                         val imageAspectRatio = imageWidth / imageHeight
 
@@ -84,5 +91,7 @@ fun CapturedImageWithOverlay(
                 )
             }
         }
+    } else {
+        Timber.d("Hiding overlay as showContent is false or photoUri is null.")
     }
 }

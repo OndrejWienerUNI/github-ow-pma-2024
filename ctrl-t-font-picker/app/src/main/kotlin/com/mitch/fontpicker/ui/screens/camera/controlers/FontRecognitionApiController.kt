@@ -8,6 +8,7 @@ import com.mitch.fontpicker.BuildConfig
 import com.mitch.fontpicker.data.api.FontResult
 import com.mitch.fontpicker.data.api.WhatFontIsRepository
 import com.mitch.fontpicker.di.DependenciesProvider
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -56,7 +57,12 @@ class FontRecognitionApiController(
 
             Timber.d("Font recognition successful. Fonts found: ${fontResults.size}")
             Result.success(fontResults)
+        } catch (e: HttpRequestTimeoutException) {
+            // Handle timeout error gracefully
+            Timber.e("Request timed out while identifying the font.")
+            Result.failure(Exception("Request timed out. Please try again."))
         } catch (e: Exception) {
+            // Handle all other errors
             Timber.e(e, "Error during image processing.")
             Result.failure(e)
         }

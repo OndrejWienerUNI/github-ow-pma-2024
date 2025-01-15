@@ -10,15 +10,19 @@ import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Fill
+import compose.icons.evaicons.Outline
 import compose.icons.evaicons.fill.AlertTriangle
 import compose.icons.evaicons.fill.CheckmarkCircle2
 import compose.icons.evaicons.fill.CloseCircle
+import compose.icons.evaicons.fill.Heart
+import compose.icons.evaicons.outline.Heart
 
 object FontPickerIcons {
     object Filled {
         val Success: ImageVector = EvaIcons.Fill.CheckmarkCircle2
         val Warning: ImageVector = EvaIcons.Fill.AlertTriangle
         val Error: ImageVector = EvaIcons.Fill.CloseCircle
+        val Heart: ImageVector = EvaIcons.Fill.Heart
     }
 
     object Outlined {
@@ -28,5 +32,6 @@ object FontPickerIcons {
         val Translate: ImageVector = Icons.Outlined.Translate
         val Palette: ImageVector = Icons.Outlined.Palette
         val Close: ImageVector = Icons.Outlined.Close
+        val Heart: ImageVector = EvaIcons.Outline.Heart
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.di.DefaultDependenciesProvider
 import com.mitch.fontpicker.di.DependenciesProvider
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
@@ -36,6 +37,8 @@ import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveViewPlaceholder
 import com.mitch.fontpicker.data.room.repository.FontPickerDatabaseRepository
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
+import com.mitch.fontpicker.ui.designsystem.components.cards.FontCardData
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
@@ -65,6 +68,9 @@ fun CameraRoute(
     val fontDatabaseRepository = remember {
         FontPickerDatabaseRepository(dependenciesProvider)
     }
+    val bitmapToolkit = remember {
+        BitmapToolkit(dependenciesProvider)
+    }
 
     val cameraViewModel: CameraViewModel = viewModel(
         factory = viewModelProviderFactory {
@@ -72,7 +78,8 @@ fun CameraRoute(
                 cameraController,
                 storageController,
                 fontRecognitionApiController,
-                fontDatabaseRepository)
+                fontDatabaseRepository,
+                bitmapToolkit)
         }
     )
 
@@ -182,6 +189,14 @@ private fun CameraScreenContent(
                 .fillMaxSize()
                 .padding(horizontal = padding.medium)
         ) {
+            val isLoading = when (uiState) {
+                is CameraUiState.Processing -> true
+                is CameraUiState.CameraReady -> false
+                is CameraUiState.Success -> false
+                is CameraUiState.Error -> false
+                else -> null
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,7 +211,7 @@ private fun CameraScreenContent(
                     CameraLiveView(
                         cameraPreviewView = cameraPreviewView,
                         modifier = Modifier.fillMaxSize(),
-                        isLoading = uiState is CameraUiState.Processing,
+                        isLoading = isLoading,
                         photoUri = photoUri
                     )
                 }
@@ -206,7 +221,7 @@ private fun CameraScreenContent(
                 onShoot = onCapturePhoto,
                 onGallery = onOpenGallery,
                 onFlip = onFlipCamera,
-                isLoading = uiState is CameraUiState.Processing
+                isLoading = isLoading
             )
             Spacer(modifier = Modifier.weight(1f))
         }
@@ -221,6 +236,29 @@ private fun CameraScreenContent(
                 onClose = {
                     Timber.d("CameraScreenContent: ErrorOverlay closed.")
                     viewModel.resetErrorState()
+                }
+            )
+        }
+
+        if (uiState is CameraUiState.OpeningFontsDialog) {
+            val downloadedFonts = uiState.downloadedFonts
+            FontCardSelectionDialog(
+                cards = downloadedFonts.map { font ->
+                    FontCardData(
+                        name = font.title,
+                        images = font.bitmaps,
+                        liked = false,
+                        onLikeClick = { /* Handle Like Click */ },
+                        onWebpageClick = { /* Handle Webpage Click */ }
+                    )
+                },
+                onDismiss = {
+                    Timber.d("CameraScreenContent: Fonts dialog dismissed.")
+                    viewModel.onFontsDialogDismissed()
+                },
+                onConfirm = {
+                    Timber.d("CameraScreenContent: Fonts dialog confirmed.")
+                        viewModel.onFontsDialogConfirmed(downloadedFonts)
                 }
             )
         }
@@ -240,6 +278,7 @@ fun CameraScreenPreview() {
         val storageController = remember { StorageController(dependenciesProvider) }
         val fontRecognitionApiController = remember { FontRecognitionApiController(dependenciesProvider, context) }
         val fontDatabaseRepository = remember { FontPickerDatabaseRepository(dependenciesProvider) }
+        val bitmapToolkit = remember { BitmapToolkit(dependenciesProvider) }
 
         // Create a “preview” VM
         val previewViewModel = remember {
@@ -247,7 +286,8 @@ fun CameraScreenPreview() {
                 cameraController = cameraController,
                 storageController = storageController,
                 fontRecognitionApiController = fontRecognitionApiController,
-                fontDatabaseRepository = fontDatabaseRepository
+                fontDatabaseRepository = fontDatabaseRepository,
+                bitmapToolkit = bitmapToolkit
             )
         }
 

@@ -41,8 +41,15 @@ fun CameraActionRow(
     onShoot: () -> Unit,
     onGallery: () -> Unit,
     onFlip: () -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean?
 ) {
+    // Maintain a remembered state that only updates when isLoading is not null
+    val isLoadingNonNull = remember { mutableStateOf(false) }
+
+    if (isLoading != null) {
+        isLoadingNonNull.value = isLoading
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,12 +57,11 @@ fun CameraActionRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         // Gallery Button
         IconButton(
-            onClick = { if (!isLoading) onGallery() },
+            onClick = { if (!isLoadingNonNull.value) onGallery() },
             modifier = Modifier.size(BUTTON_SIZE),
-            enabled = !isLoading // Disable when loading
+            enabled = !isLoadingNonNull.value // Disable when loading
         ) {
             Box(
                 modifier = Modifier
@@ -72,13 +78,13 @@ fun CameraActionRow(
         }
 
         // Shoot Button
-        ShootButton(onShoot = onShoot, isLoading = isLoading)
+        ShootButton(onShoot = onShoot, isLoading = isLoadingNonNull.value)
 
         // Flip Button
         IconButton(
-            onClick = { if (!isLoading) onFlip() },
+            onClick = { if (!isLoadingNonNull.value) onFlip() },
             modifier = Modifier.size(BUTTON_SIZE),
-            enabled = !isLoading // Disable when loading
+            enabled = !isLoadingNonNull.value // Disable when loading
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_camera_flip),
@@ -92,7 +98,7 @@ fun CameraActionRow(
 @Composable
 private fun ShootButton(
     onShoot: () -> Unit,
-    isLoading: Boolean // New parameter to control button state
+    isLoading: Boolean
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -126,6 +132,7 @@ private fun ShootButton(
         )
     }
 }
+
 
 
 @PreviewLightDark

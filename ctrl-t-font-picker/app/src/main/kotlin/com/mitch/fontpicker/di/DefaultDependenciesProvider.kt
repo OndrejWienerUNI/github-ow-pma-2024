@@ -80,11 +80,16 @@ class DefaultDependenciesProvider(
         ).build()
     }
 
+    private val externalFilesDir: File by lazy {
+        context.getExternalFilesDir(null)
+            ?: throw IllegalStateException("Cannot access external files directory")
+    }
+
     override val picturesDir: File
-        get() = File(context.getExternalFilesDir(null), "pictures")
+        get() = File(externalFilesDir, "pictures")
 
     override val thumbnailsDir: File
-        get() = File(context.getExternalFilesDir(null), "thumbnails")
+        get() = File(externalFilesDir, "thumbnails")
 
     private val jsonSerializer: Json by lazy {
         Json {

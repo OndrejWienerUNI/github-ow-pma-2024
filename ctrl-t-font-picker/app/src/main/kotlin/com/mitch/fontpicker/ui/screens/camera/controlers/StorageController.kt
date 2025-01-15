@@ -9,38 +9,74 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 
-const val PICTURES_DIR: String = "PICTURES_DIR"
-const val THUMBNAILS_DIR: String = "THUMBNAILS_DIR"
-
 /**
- * Handles creating photo files, copying gallery images,
- * and clearing the pictures directory.
+ * Handles file operations such as creating files, copying images, and clearing directories.
  */
 class StorageController(
     private val dependenciesProvider: DependenciesProvider
 ) {
+    val picturesDir: File
+        get() = dependenciesProvider.picturesDir
 
-    /**
-     * Creates a new unique file in the pictures directory.
-     */
-    suspend fun createPhotoFile(): File = withContext(Dispatchers.IO) {
-        val picturesDir = dependenciesProvider.picturesDir
-        if (!picturesDir.exists()) {
-            throw IllegalStateException("Pictures directory does not exist. Ensure it's created on app start.")
+    val thumbnailsDir: File
+        get() = dependenciesProvider.thumbnailsDir
+
+    private fun checkDirectory(directory: File) {
+        val validDirectories = listOf(dependenciesProvider.picturesDir, dependenciesProvider.thumbnailsDir)
+
+        if (directory !in validDirectories) {
+            Timber.e("Invalid directory provided: ${directory.absolutePath}")
+            throw IllegalArgumentException("Unsupported directory: ${directory.absolutePath}. " +
+                    "Only the application's pictures or thumbnails directories are allowed.")
         }
-        val fileName = "fp_${System.currentTimeMillis()}.jpg"
-        File(picturesDir, fileName)
+
+        if (!directory.exists() || !directory.isDirectory) {
+            Timber.e("Directory does not exist or is not valid: ${directory.absolutePath}")
+            throw IllegalStateException("Directory is missing or invalid: ${directory.absolutePath}. " +
+                    "Ensure it is created during app initialization.")
+        }
     }
 
     /**
-     * Copies an image from the given [sourceUri] to our pictures directory,
-     * returning a [Uri] for the newly created file.
+     * Creates a new unique file in the specified directory.
+     *
+     * @param directory The directory, e.g. [picturesDir] or [thumbnailsDir].
+     * @return The created [File].
      */
-    suspend fun copyImageToPicturesDir(context: Context, sourceUri: Uri): Uri? {
+    suspend fun newFile(directory: File): File = withContext(Dispatchers.IO) {
+        checkDirectory(directory)
+        val prefix: String = when (directory) {
+            picturesDir -> "pd"
+            thumbnailsDir -> "td"
+            else -> {
+                "uncategorized"
+            }
+        }
+        val fileName = "${prefix}_n_${System.currentTimeMillis()}.jpg"
+        return@withContext File(directory, fileName)
+    }
+
+    /**
+     * Copies an image from the given [sourceUri] to the specified directory,
+     * returning a [Uri] for the newly created file.
+     *
+     * @param context The application context.
+     * @param sourceUri The source URI of the image to copy.
+     * @param directory The directory, e.g. [picturesDir] or [thumbnailsDir].
+     * @return The [Uri] of the copied image, or null if the operation fails.
+     */
+    suspend fun copyImageToDirectory(context: Context, sourceUri: Uri, directory: File): Uri? {
         return withContext(Dispatchers.IO) {
-            val picturesDir = dependenciesProvider.picturesDir
-            val fileName = "gi_${System.currentTimeMillis()}.jpg"
-            val destinationFile = File(picturesDir, fileName)
+            checkDirectory(directory)
+            val prefix: String = when (directory) {
+                picturesDir -> "pd"
+                thumbnailsDir -> "td"
+                else -> {
+                    "uncategorized"
+                }
+            }
+            val fileName = "${prefix}_c_${System.currentTimeMillis()}.jpg"
+            val destinationFile = File(directory, fileName)
 
             try {
                 context.contentResolver.openInputStream(sourceUri).use { inputStream ->
@@ -55,31 +91,23 @@ class StorageController(
                     destinationFile
                 )
             } catch (e: Exception) {
-                Timber.e(e, "Error copying image to the app's temporary directory.")
+                Timber.e(e, "Error copying image to the directory.")
                 null
             }
         }
     }
 
     /**
-     * Clears the pictures directory (deletes all files).
+     * Clears all files in the specified directory.
+     *
+     * @param directory The directory, e.g. [picturesDir] or [thumbnailsDir].
      */
-    suspend fun clearDirectory(dirIndicator: String) {
+    suspend fun clearDirectory(directory: File) {
         withContext(Dispatchers.IO) {
-            val dir = when (dirIndicator) {
-                PICTURES_DIR -> dependenciesProvider.picturesDir
-                THUMBNAILS_DIR -> dependenciesProvider.thumbnailsDir
-                else -> {
-                    Timber.e("Invalid directory indicator: $dirIndicator")
-                    throw IllegalArgumentException("Directory indicator isn't allowed " +
-                            "to be cleared: $dirIndicator. Only public constants defined " +
-                            "in StorageController are accepted.")
-                }
-            }
-
-            if (dir.exists() && dir.isDirectory) {
-                val files = dir.listFiles()
-                Timber.d("Clearing directory: ${dir.absolutePath}")
+            checkDirectory(directory)
+            if (directory.exists() && directory.isDirectory) {
+                val files = directory.listFiles()
+                Timber.d("Clearing directory: ${directory.absolutePath}")
                 files?.forEach { file ->
                     try {
                         if (file.exists() && file.delete()) {
@@ -91,10 +119,7 @@ class StorageController(
                         Timber.e(e, "Error deleting file: ${file.absolutePath}")
                     }
                 }
-            } else {
-                Timber.e("The directory does not exist or is not a directory: ${dir.absolutePath}")
             }
         }
     }
-
 }

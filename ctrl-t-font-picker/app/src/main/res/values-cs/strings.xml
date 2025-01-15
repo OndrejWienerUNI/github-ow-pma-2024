@@ -9,6 +9,7 @@
     <string name="change_theme">Změnit režim</string>
     <string name="cancel">Zrušit</string>
     <string name="save">Uložit</string>
+    <string name="confirm">Potvrdit</string>
     <string name="dismiss_snackbar_content_description">Zavřít</string>
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Obrazovka kamery</string>
@@ -33,5 +34,7 @@
     <string name="open_settings">Otevřít nastavení</string>
     <string name="grant_permission">Povolit přístup</string>
     <string name="permissions_granted">All permissions granted!</string>
+
+    <string name="select_received_fonts">Přidejte fonty k oblíbeným</string>
 
 </resources>

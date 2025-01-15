@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
@@ -20,7 +22,6 @@ import timber.log.Timber
 
 private val LIVE_VIEW_CORNER_RADIUS = 16.dp
 private val LIVE_VIEW_BORDER_WIDTH = 1.dp
-private const val ASPECT_RATIO = 3f / 4f // Corrected aspect ratio
 
 @Composable
 fun CameraLiveView(
@@ -28,20 +29,29 @@ fun CameraLiveView(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(LIVE_VIEW_CORNER_RADIUS),
     photoUri: Uri? = null,
-    isLoading: Boolean = false
+    isLoading: Boolean? = false,
+    aspectRatio: Float = 3f / 4f
 ) {
-    Timber.d("CameraLiveView Composable called with isLoading: $isLoading and photoUri: $photoUri")
+    // Maintain a remembered state that only updates when isLoading is not null
+    val isLoadingNonNull = remember { mutableStateOf(false) }
+
+    if (isLoading != null) {
+        isLoadingNonNull.value = isLoading
+    }
+
+    Timber.d("CameraLiveView Composable called " +
+            "with isLoadingNonNull: $isLoadingNonNull and photoUri: $photoUri")
 
     Box(
         modifier = modifier
-            .aspectRatio(ASPECT_RATIO)
+            .aspectRatio(aspectRatio)
             .background(
                 color = FontPickerDesignSystem.colorScheme.background,
                 shape = shape
             )
             .border(
                 width = LIVE_VIEW_BORDER_WIDTH,
-                color = if (isLoading) FontPickerDesignSystem.colorScheme.primary
+                color = if (isLoadingNonNull.value) FontPickerDesignSystem.colorScheme.primary
                 else FontPickerDesignSystem.extendedColorScheme.borders,
                 shape = shape
             )
@@ -75,7 +85,7 @@ fun CameraLiveView(
         )
 
         // Display captured photo overlay if a photo is being processed
-        if (photoUri != null && isLoading) {
+        if (photoUri != null && isLoadingNonNull.value) {
             Timber.d("Displaying CapturedImageWithOverlay for URI: $photoUri")
             CapturedImageWithOverlay(photoUri = photoUri)
         }

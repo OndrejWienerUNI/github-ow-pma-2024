@@ -1,5 +1,6 @@
 package com.mitch.fontpicker.data.api
 
+import android.graphics.Bitmap
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.headers
@@ -84,7 +85,14 @@ class WhatFontIsRepository(
 data class FontResult(
     @SerialName("title") val title: String,
     @SerialName("url") val url: String,
-    @SerialName("image") val image: String,
-    @SerialName("image1") val image1: String,
-    @SerialName("image2") val image2: String
+    @SerialName("image") val imageUrl0: String,
+    @SerialName("image1") val imageUrl1: String,
+    @SerialName("image2") val imageUrl2: String
+)
+
+data class FontDownloaded(
+    val title: String,
+    val url: String,
+    val imageUrls: List<String>,
+    val bitmaps: List<Bitmap>
 )

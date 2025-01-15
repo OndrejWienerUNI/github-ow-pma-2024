@@ -9,6 +9,7 @@
     <string name="change_theme">Change theme</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="confirm">Confirm</string>
     <string name="dismiss_snackbar_content_description">Dismiss message</string>
     <string name="menu">Menu</string>
     <string name="screen_desc_camera">Camera screen</string>
@@ -33,5 +34,7 @@
     <string name="open_settings">Open Settings</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="permissions_granted">All permissions granted!</string>
+
+    <string name="select_received_fonts">Add fonts to favorites</string>
 
 </resources>
