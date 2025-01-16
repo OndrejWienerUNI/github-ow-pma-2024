@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.mitch.fontpicker.R
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
@@ -125,7 +128,11 @@ fun ThemePickerDialog(
                 borderColorPressed = FontPickerDesignSystem.colorScheme.primary,
                 enabled = tempTheme != selectedTheme
             )
-        }
+        },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .width((minOf(LocalConfiguration.current.screenWidthDp, 500) * 0.9).dp)
+            .padding(padding.medium)
     )
 }
 
