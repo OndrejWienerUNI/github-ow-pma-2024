@@ -8,6 +8,7 @@ import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
 import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -22,9 +23,11 @@ class FavoritesViewModel(
     private val _uiState = MutableStateFlow<FontCardListUiState>(FontCardListUiState.Loading)
     val uiState: StateFlow<FontCardListUiState> = _uiState
 
-    init {
-        observeFavorites()
+    // Make load delay accessible from the outside
+    @Suppress("MemberVisibilityCanBePrivate")
+    var screenLoadDelay: Long = 1000
 
+    init {
         viewModelScope.launch {
             _uiState.collect { newState ->
                 Timber.d("FavoritesUiState changed to: $newState")
@@ -32,7 +35,18 @@ class FavoritesViewModel(
         }
     }
 
-    fun observeFavorites() {
+    fun startObservingFavorites(lastToFirst: Boolean = false) {
+        viewModelScope.launch {
+            // Keep the loading state for one second
+            _uiState.value = FontCardListUiState.Loading
+            delay(screenLoadDelay)
+            Timber.d("Initial delay completed. Starting to observe favorites.")
+            observeFavorites(lastToFirst)
+        }
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun observeFavorites(lastToFirst: Boolean = false) {
         viewModelScope.launch {
             try {
                 Timber.d("Fetching favorites with assets.")
@@ -63,7 +77,9 @@ class FavoritesViewModel(
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")
-                        _uiState.value = FontCardListUiState.Success(fontPreviews = fontPreviews)
+                        // Apply reversal if lastToFirst is true
+                        val orderedPreviews = if (lastToFirst) fontPreviews.reversed() else fontPreviews
+                        _uiState.value = FontCardListUiState.Success(fontPreviews = orderedPreviews)
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe favorites data.")
@@ -87,3 +103,4 @@ class FavoritesViewModel(
         }
     }
 }
+

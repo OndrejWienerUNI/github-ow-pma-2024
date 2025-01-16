@@ -8,13 +8,13 @@ import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository
 import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
-
 
 class RecycleBinViewModel(
     private val fontsDatabaseRepository: FontsDatabaseRepository
@@ -23,9 +23,14 @@ class RecycleBinViewModel(
     private val _uiState = MutableStateFlow<FontCardListUiState>(FontCardListUiState.Loading)
     val uiState: StateFlow<FontCardListUiState> = _uiState
 
-    init {
-        observeRecycleBin()
+    private val _isRecycleBinEmpty = MutableStateFlow(true) // Initially assume the recycle bin is empty
+    val isRecycleBinEmpty: StateFlow<Boolean> = _isRecycleBinEmpty
 
+    // Make load delay accessible from the outside
+    @Suppress("MemberVisibilityCanBePrivate")
+    var screenLoadDelay: Long = 1000
+
+    init {
         viewModelScope.launch {
             _uiState.collect { newState ->
                 Timber.d("RecycleBinUiState changed to: $newState")
@@ -33,12 +38,23 @@ class RecycleBinViewModel(
         }
     }
 
-    fun observeRecycleBin() {
+    fun startObservingRecycleBin(lastToFirst: Boolean = false) {
+        viewModelScope.launch {
+            // Keep the loading state for one second
+            _uiState.value = FontCardListUiState.Loading
+            delay(screenLoadDelay)
+            Timber.d("Initial delay completed. Starting to observe recycle bin.")
+            observeRecycleBin(lastToFirst)
+        }
+    }
+
+    @Suppress("MemberVisibilityCanBePrivate")
+    fun observeRecycleBin(lastToFirst: Boolean = false) {
         viewModelScope.launch {
             try {
                 Timber.d("Fetching recycle bin with assets.")
                 fontsDatabaseRepository.getRecycleBinWithAssets()
-                    .map { fontWithAssets: List<FontsDatabaseRepository.Companion.FontWithAssets> ->
+                    .map { fontWithAssets ->
                         Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
                         fontWithAssets.map { asset ->
                             val bitmaps = asset.bitmapData.firstOrNull()?.map { bitmapData ->
@@ -64,7 +80,10 @@ class RecycleBinViewModel(
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")
-                        _uiState.value = FontCardListUiState.Success(fontPreviews = fontPreviews)
+                        _isRecycleBinEmpty.value = fontPreviews.isEmpty()
+                        // Apply reversal if lastToFirst is true
+                        val orderedPreviews = if (lastToFirst) fontPreviews.reversed() else fontPreviews
+                        _uiState.value = FontCardListUiState.Success(fontPreviews = orderedPreviews)
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe recycle bin data.")

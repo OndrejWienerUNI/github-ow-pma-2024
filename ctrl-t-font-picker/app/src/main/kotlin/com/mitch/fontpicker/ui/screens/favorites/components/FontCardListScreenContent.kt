@@ -4,13 +4,14 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -28,8 +29,7 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import timber.log.Timber
 import java.util.UUID
 
-
-private val GRADIENT_HEIGHT_TOP = 14.dp
+private val GRADIENT_HEIGHT_TOP = 10.dp
 private val GRADIENT_HEIGHT_BOTTOM = 32.dp
 
 @Composable
@@ -56,11 +56,18 @@ fun FontCardListScreenContent(
             Box(modifier = Modifier.fillMaxSize()) {
 
                 LazyColumn(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .padding(horizontal = padding.medium, vertical = padding.zero),
-                    verticalArrangement = Arrangement.spacedBy(padding.medium)
+                    modifier = modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(padding.medium),
+                    flingBehavior = ScrollableDefaults.flingBehavior(),
+                            contentPadding = PaddingValues(
+                        horizontal = padding.medium, vertical = padding.zero
+                    )
                 ) {
+                    item {
+                        // zero height item add the top to add double padding before first item
+                        Box(modifier = Modifier.height(0.dp))
+                    }
+
                     items(uiState.fontPreviews, key = { it.id ?: UUID.randomUUID().toString() }) { fontPreview ->
 
                     Timber.d("Rendering LazyColumn item: ${fontPreview.title}, " +
@@ -88,6 +95,11 @@ fun FontCardListScreenContent(
                             )
                         )
                     }
+
+                    item {
+                        // zero height item add the top to add double padding after last item
+                        Box(modifier = Modifier.height(0.dp))
+                    }
                 }
                 // Gradient overlay at the top
                 Box(
@@ -98,7 +110,6 @@ fun FontCardListScreenContent(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     FontPickerDesignSystem.colorScheme.background.copy(alpha = 1f),
-                                    FontPickerDesignSystem.colorScheme.background.copy(alpha = 0.7f),
                                     FontPickerDesignSystem.colorScheme.background.copy(alpha = 0f)
                                 )
                             )

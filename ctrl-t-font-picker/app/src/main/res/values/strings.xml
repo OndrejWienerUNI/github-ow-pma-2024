@@ -37,4 +37,8 @@
 
     <string name="select_received_fonts">Add fonts to favorites</string>
 
+    <string name="wipe_recycle_bin_title">Wipe recycle bin</string>
+    <string name="wipe_recycle_bin_confirmation">Do you really wish
+        to\u00A0permanently delete everything inside the recycle\u00A0bin?</string>
+
 </resources>

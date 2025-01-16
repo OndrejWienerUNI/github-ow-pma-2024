@@ -10,10 +10,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
+import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
+import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 
 private val BUTTON_PADDING = 40.dp
 private val BUTTON_WIDTH = 100.dp
@@ -24,23 +26,35 @@ private val ICON_SIZE = 40.dp
 @Composable
 fun WipeRecycleBinButton(
     onClick: () -> Unit,
+    recycleBinEmpty: Boolean,
     modifier: Modifier = Modifier
 ) {
+
+    val buttonColors = if (recycleBinEmpty) {
+        ButtonDefaults.buttonColors(
+            containerColor = FontPickerDesignSystem.colorScheme.tertiary,
+            contentColor = FontPickerDesignSystem.colorScheme.onTertiary
+        )
+    } else {
+        ButtonDefaults.buttonColors(
+            containerColor = FontPickerDesignSystem.extendedColorScheme.redAccent,
+            contentColor = FontPickerDesignSystem.extendedColorScheme.onRedAccent
+        )
+    }
+
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFD50000)
-    ),
-        shape = RoundedCornerShape(50), // Big pill shape
+        enabled = !recycleBinEmpty,
+        colors = buttonColors,
+        shape = RoundedCornerShape(50),
         elevation = ButtonDefaults.elevatedButtonElevation(BUTTON_ELEVATION),
         modifier = modifier
-            .padding(BUTTON_PADDING) // Padding around the button
-            .size(BUTTON_WIDTH, BUTTON_WIDTH/2f)
+            .padding(BUTTON_PADDING)
+            .size(BUTTON_WIDTH, BUTTON_WIDTH / 2f)
     ) {
         Icon(
             imageVector = FontPickerIcons.Outlined.Trash,
             contentDescription = "Wipe Recycle Bin",
-            tint = Color.White,
             modifier = Modifier
                 .size(ICON_SIZE)
                 .padding(horizontal = ICON_PADDING, vertical = ICON_PADDING)
@@ -52,9 +66,23 @@ fun WipeRecycleBinButton(
 @Preview
 @Composable
 fun WipeRecycleBinButtonPreview() {
-    Box {
-        WipeRecycleBinButton(
-            onClick = {},
-        )
+    FontPickerTheme {
+        Box {
+            // Preview for a non-empty recycle bin
+            WipeRecycleBinButton(
+                onClick = {},
+                recycleBinEmpty = false
+            )
+        }
+    }
+
+    FontPickerTheme {
+        Box {
+            // Preview for an empty recycle bin
+            WipeRecycleBinButton(
+                onClick = {},
+                recycleBinEmpty = true
+            )
+        }
     }
 }

@@ -2,8 +2,10 @@ package com.mitch.fontpicker.ui.screens.favorites
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mitch.fontpicker.data.api.FontDownloaded
@@ -28,10 +30,12 @@ fun FavoritesRoute(
             Timber.d("onToggleLike called for font: ${font.title} with id: ${font.id}")
             viewModel.toggleLike(font)
         },
+        onRenderStart = {
+            viewModel.startObservingFavorites(lastToFirst = true)
+        },
         onRetry = {
-            Timber.d("Retrying to load favorites.")
-            viewModel.observeFavorites()
-        }
+            viewModel.startObservingFavorites(lastToFirst = true)
+        },
     )
 }
 
@@ -39,9 +43,21 @@ fun FavoritesRoute(
 fun FavoritesScreen(
     uiState: FontCardListUiState,
     onToggleLike: (FontDownloaded) -> Unit,
+    onRenderStart: () -> Unit,
     onRetry: () -> Unit
 ) {
     Timber.d("FavoritesScreen rendering with uiState: $uiState")
+
+    // Persist state across configuration changes or process recreation
+    val hasRendered = rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (!hasRendered.value) {
+            Timber.d("Starting to observe favorites on initial screen load.")
+            onRenderStart()
+            hasRendered.value = true
+        }
+    }
 
     FavoritesScreenContent(
         uiState = uiState,
