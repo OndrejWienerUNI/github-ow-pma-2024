@@ -42,10 +42,10 @@ fun RecycleBinRoute(
             viewModel.restoreFont(font)
         },
         onRenderStart = {
-            viewModel.startObservingRecycleBin(lastToFirst = true)
+            viewModel.startObservingRecycleBin()
         },
         onRetry = {
-            viewModel.startObservingRecycleBin(lastToFirst = true)
+            viewModel.startObservingRecycleBin()
         },
         recycleBinEmpty = viewModel.isRecycleBinEmpty.collectAsState().value,
         onWipeRecycleBin = {

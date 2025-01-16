@@ -2,12 +2,15 @@ package com.mitch.fontpicker.ui.designsystem.components.dialogs
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,7 +36,8 @@ import com.mitch.fontpicker.ui.designsystem.components.cards.FontCard
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
 private val DIALOG_WIDTH_MAX = 400.dp
-private val GRADIENT_HEIGHT = 20.dp
+private val GRADIENT_HEIGHT = 8.dp
+private val TITLE_OFFSET_Y = (-2).dp
 
 @Composable
 fun FontCardSelectionDialog(
@@ -52,7 +56,9 @@ fun FontCardSelectionDialog(
                 text = stringResource(R.string.select_received_fonts),
                 style = FontPickerDesignSystem.typography.titleMedium,
                 color = FontPickerDesignSystem.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = padding.extraSmall)
+                modifier = Modifier
+                    .padding(bottom = padding.extraSmall)
+                    .offset(y = TITLE_OFFSET_Y)
             )
         },
         text = {
@@ -62,11 +68,16 @@ fun FontCardSelectionDialog(
                     .padding(horizontal = padding.zero)
             ) {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = padding.zero, vertical = padding.small),
-                    verticalArrangement = Arrangement.spacedBy(padding.small)
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(padding.medium),
+                    flingBehavior = ScrollableDefaults.flingBehavior(),
+                    contentPadding = PaddingValues(
+                        horizontal = padding.zero, vertical = padding.small
+                    )
                 ) {
+                    // zero height item add the top to add double padding before first item
+                    item {}
+
                     items(fonts) { font ->
                         FontCard(
                             font = font,
@@ -76,6 +87,9 @@ fun FontCardSelectionDialog(
                             onLikeClick = { /* Handle Webpage Click in Favorites / Recycle Bin */ }
                         )
                     }
+
+                    // zero height item add the top to add double padding after last item
+                    item {}
                 }
 
                 // Gradient overlay at the top
@@ -87,7 +101,6 @@ fun FontCardSelectionDialog(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     FontPickerDesignSystem.colorScheme.surface.copy(alpha = 1f),
-                                    FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0.7f),
                                     FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0f)
                                 )
                             )
@@ -104,7 +117,6 @@ fun FontCardSelectionDialog(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
                                     FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0f),
-                                    FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0.7f),
                                     FontPickerDesignSystem.colorScheme.surface.copy(alpha = 1f)
                                 )
                             )

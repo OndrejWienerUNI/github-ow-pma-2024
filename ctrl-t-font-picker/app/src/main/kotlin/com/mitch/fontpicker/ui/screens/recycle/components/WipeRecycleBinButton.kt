@@ -19,7 +19,7 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 
 private val BUTTON_PADDING = 40.dp
 private val BUTTON_WIDTH = 100.dp
-private val BUTTON_ELEVATION = 4.dp
+private val BUTTON_ELEVATION = 3.dp
 private val ICON_PADDING = 0.dp
 private val ICON_SIZE = 40.dp
 

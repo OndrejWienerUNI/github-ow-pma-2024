@@ -38,18 +38,18 @@ class RecycleBinViewModel(
         }
     }
 
-    fun startObservingRecycleBin(lastToFirst: Boolean = false) {
+    fun startObservingRecycleBin() {
         viewModelScope.launch {
             // Keep the loading state for one second
             _uiState.value = FontCardListUiState.Loading
             delay(screenLoadDelay)
             Timber.d("Initial delay completed. Starting to observe recycle bin.")
-            observeRecycleBin(lastToFirst)
+            observeRecycleBin()
         }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun observeRecycleBin(lastToFirst: Boolean = false) {
+    fun observeRecycleBin() {
         viewModelScope.launch {
             try {
                 Timber.d("Fetching recycle bin with assets.")
@@ -81,9 +81,7 @@ class RecycleBinViewModel(
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")
                         _isRecycleBinEmpty.value = fontPreviews.isEmpty()
-                        // Apply reversal if lastToFirst is true
-                        val orderedPreviews = if (lastToFirst) fontPreviews.reversed() else fontPreviews
-                        _uiState.value = FontCardListUiState.Success(fontPreviews = orderedPreviews)
+                        _uiState.value = FontCardListUiState.Success(fontPreviews = fontPreviews)
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe recycle bin data.")

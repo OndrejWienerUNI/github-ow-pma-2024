@@ -31,10 +31,10 @@ fun FavoritesRoute(
             viewModel.toggleLike(font)
         },
         onRenderStart = {
-            viewModel.startObservingFavorites(lastToFirst = true)
+            viewModel.startObservingFavorites()
         },
         onRetry = {
-            viewModel.startObservingFavorites(lastToFirst = true)
+            viewModel.startObservingFavorites()
         },
     )
 }

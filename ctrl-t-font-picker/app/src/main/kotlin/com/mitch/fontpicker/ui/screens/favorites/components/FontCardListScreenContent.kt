@@ -37,6 +37,7 @@ fun FontCardListScreenContent(
     uiState: FontCardListUiState,
     onToggleLike: (FontDownloaded) -> Unit,
     onRetry: () -> Unit,
+    lastToFirst: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -55,11 +56,14 @@ fun FontCardListScreenContent(
 
             Box(modifier = Modifier.fillMaxSize()) {
 
+                val displayedFonts = if (lastToFirst) uiState.fontPreviews.reversed()
+                    else uiState.fontPreviews
+
                 LazyColumn(
                     modifier = modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(padding.medium),
                     flingBehavior = ScrollableDefaults.flingBehavior(),
-                            contentPadding = PaddingValues(
+                    contentPadding = PaddingValues(
                         horizontal = padding.medium, vertical = padding.zero
                     )
                 ) {
@@ -68,9 +72,11 @@ fun FontCardListScreenContent(
                         Box(modifier = Modifier.height(0.dp))
                     }
 
-                    items(uiState.fontPreviews, key = { it.id ?: UUID.randomUUID().toString() }) { fontPreview ->
+                    items(
+                        displayedFonts, key = { it.id ?: UUID.randomUUID().toString() }
+                    ) { fontPreview ->
 
-                    Timber.d("Rendering LazyColumn item: ${fontPreview.title}, " +
+                        Timber.d("Rendering LazyColumn item: ${fontPreview.title}, " +
                                 "ID=${fontPreview.id}")
                         FontCard(
                             font = fontPreview,
@@ -82,7 +88,8 @@ fun FontCardListScreenContent(
                             },
                             onWebpageClick = {
                                 Timber.d("FontCard onWebpageClick triggered " +
-                                        "for font: ${fontPreview.title} with URL: ${fontPreview.url}")
+                                        "for font: ${fontPreview.title} " +
+                                        "with URL: ${fontPreview.url}")
                                 fontPreview.url.let { url ->
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                     context.startActivity(intent)
@@ -90,8 +97,8 @@ fun FontCardListScreenContent(
                             },
                             isThemeDark = isSystemInDarkTheme(),
                             modifier = Modifier.animateItem(
-                                fadeInSpec = tween(durationMillis = 1000),
-                                fadeOutSpec = tween(durationMillis = 1000)
+                                fadeInSpec = tween(durationMillis = 1000, delayMillis = 200),
+                                fadeOutSpec = tween(durationMillis = 1000, delayMillis = 200)
                             )
                         )
                     }
