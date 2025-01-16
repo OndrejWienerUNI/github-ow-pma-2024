@@ -41,5 +41,7 @@
     <string name="wipe_recycle_bin_title">Vysipat koš</string>
     <string name="wipe_recycle_bin_confirmation">Opravdu si\u00A0přejete nevratně vymazat
         vše v\u00A0kolši?</string>
+    <string name="recycle_bin_disclaimer">Fonty odebrané z\u00A0oblíbených budou automaticky
+        smazány po\u00A0dnech.</string>
 
 </resources>

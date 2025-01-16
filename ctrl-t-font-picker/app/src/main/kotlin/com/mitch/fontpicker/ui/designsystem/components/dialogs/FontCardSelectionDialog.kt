@@ -75,8 +75,7 @@ fun FontCardSelectionDialog(
                         horizontal = padding.zero, vertical = padding.small
                     )
                 ) {
-                    // zero height item add the top to add double padding before first item
-                    item {}
+                    item { /** zero height item for spacing **/ }
 
                     items(fonts) { font ->
                         FontCard(
@@ -88,8 +87,7 @@ fun FontCardSelectionDialog(
                         )
                     }
 
-                    // zero height item add the top to add double padding after last item
-                    item {}
+                    item { /** zero height item for spacing **/ }
                 }
 
                 // Gradient overlay at the top

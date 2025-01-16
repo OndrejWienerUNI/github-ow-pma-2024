@@ -40,5 +40,7 @@
     <string name="wipe_recycle_bin_title">Wipe recycle bin</string>
     <string name="wipe_recycle_bin_confirmation">Do you really wish
         to\u00A0permanently delete everything inside the recycle\u00A0bin?</string>
+    <string name="recycle_bin_disclaimer">Disliked fonts get automatically
+        deleted after\u00A07\u00A0days.</string>
 
 </resources>

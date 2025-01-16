@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -14,17 +15,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mitch.fontpicker.R
 import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.WipeRecycleBinDialog
+import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListScreenContent
 import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListUiState
 import com.mitch.fontpicker.ui.screens.recycle.components.WipeRecycleBinButton
 import timber.log.Timber
+
+private val WIPE_BUTTON_PADDING_VERTICAL = 48.dp
 
 @Composable
 fun RecycleBinRoute(
@@ -104,6 +111,8 @@ fun RecycleBinScreenContent(
             uiState = uiState,
             onToggleLike = onRestore,
             onRetry = onRetry,
+            lastToFirst = true,
+            listEndText = stringResource(R.string.recycle_bin_disclaimer),
             modifier = Modifier.align(Alignment.TopCenter)
         )
 
@@ -113,6 +122,7 @@ fun RecycleBinScreenContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .zIndex(1f)
+                .padding(horizontal = padding.medium, vertical = WIPE_BUTTON_PADDING_VERTICAL)
         )
     }
 

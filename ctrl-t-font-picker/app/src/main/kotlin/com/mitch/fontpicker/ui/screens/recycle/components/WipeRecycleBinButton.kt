@@ -16,8 +16,8 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
+import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
-private val BUTTON_PADDING = 40.dp
 private val BUTTON_WIDTH = 100.dp
 private val BUTTON_ELEVATION = 3.dp
 private val ICON_PADDING = 0.dp
@@ -49,7 +49,6 @@ fun WipeRecycleBinButton(
         shape = RoundedCornerShape(50),
         elevation = ButtonDefaults.elevatedButtonElevation(BUTTON_ELEVATION),
         modifier = modifier
-            .padding(BUTTON_PADDING)
             .size(BUTTON_WIDTH, BUTTON_WIDTH / 2f)
     ) {
         Icon(
@@ -71,7 +70,8 @@ fun WipeRecycleBinButtonPreview() {
             // Preview for a non-empty recycle bin
             WipeRecycleBinButton(
                 onClick = {},
-                recycleBinEmpty = false
+                recycleBinEmpty = false,
+                modifier = Modifier.padding(horizontal = padding.medium, vertical = 100.dp)
             )
         }
     }
@@ -81,7 +81,8 @@ fun WipeRecycleBinButtonPreview() {
             // Preview for an empty recycle bin
             WipeRecycleBinButton(
                 onClick = {},
-                recycleBinEmpty = true
+                recycleBinEmpty = true,
+                modifier = Modifier.padding(horizontal = padding.medium, vertical = 100.dp)
             )
         }
     }

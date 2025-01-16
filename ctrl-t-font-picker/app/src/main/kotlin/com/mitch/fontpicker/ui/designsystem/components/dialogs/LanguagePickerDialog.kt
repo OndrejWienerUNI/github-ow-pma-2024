@@ -15,7 +15,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -104,22 +103,24 @@ fun LanguagePickerDialog(
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
-                Text(text = stringResource(id = R.string.cancel))
-            }
+            StyledDialogButton(
+                text = stringResource(id = R.string.cancel),
+                onClick = onDismiss,
+                textColor = FontPickerDesignSystem.colorScheme.primary,
+                borderColorPressed = FontPickerDesignSystem.colorScheme.primary
+            )
         },
         confirmButton = {
-            TextButton(
+            StyledDialogButton(
+                text = stringResource(id = R.string.save),
                 onClick = {
                     onConfirm(tempLanguage)
                     onDismiss()
                 },
+                textColor = FontPickerDesignSystem.colorScheme.primary,
+                borderColorPressed = FontPickerDesignSystem.colorScheme.primary,
                 enabled = tempLanguage != selectedLanguage
-            ) {
-                Text(text = stringResource(id = R.string.save))
-            }
+            )
         }
     )
 }

@@ -2,7 +2,8 @@ package com.mitch.fontpicker.ui.screens.favorites.components
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -13,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ fun FontCardListScreenContent(
     onToggleLike: (FontDownloaded) -> Unit,
     onRetry: () -> Unit,
     lastToFirst: Boolean = false,
+    listEndText: String = "",
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -57,7 +59,7 @@ fun FontCardListScreenContent(
             Box(modifier = Modifier.fillMaxSize()) {
 
                 val displayedFonts = if (lastToFirst) uiState.fontPreviews.reversed()
-                    else uiState.fontPreviews
+                else uiState.fontPreviews
 
                 LazyColumn(
                     modifier = modifier.fillMaxSize(),
@@ -67,14 +69,12 @@ fun FontCardListScreenContent(
                         horizontal = padding.medium, vertical = padding.zero
                     )
                 ) {
-                    item {
-                        // zero height item add the top to add double padding before first item
-                        Box(modifier = Modifier.height(0.dp))
-                    }
+                    item { /** zero height item for spacing **/ }
 
-                    items(
-                        displayedFonts, key = { it.id ?: UUID.randomUUID().toString() }
-                    ) { fontPreview ->
+                    itemsIndexed(
+                        items = displayedFonts,
+                        key = { _, fontPreview -> fontPreview.id ?: UUID.randomUUID().toString() }
+                    ) { index, fontPreview ->
 
                         Timber.d("Rendering LazyColumn item: ${fontPreview.title}, " +
                                 "ID=${fontPreview.id}")
@@ -97,17 +97,38 @@ fun FontCardListScreenContent(
                             },
                             isThemeDark = isSystemInDarkTheme(),
                             modifier = Modifier.animateItem(
-                                fadeInSpec = tween(durationMillis = 1000, delayMillis = 200),
-                                fadeOutSpec = tween(durationMillis = 1000, delayMillis = 200)
+                                fadeInSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow),
+                                fadeOutSpec = spring(
+                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                    stiffness = Spring.StiffnessMedium)
                             )
                         )
+
+                        if (index == displayedFonts.lastIndex && listEndText.isNotBlank()) {
+                            ListEndText(
+                                text = listEndText.trim(),
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow),
+                                    fadeOutSpec = spring(
+                                        dampingRatio = Spring.DampingRatioNoBouncy,
+                                        stiffness = Spring.StiffnessMedium)
+                                )
+                            )
+                        }
                     }
 
-                    item {
-                        // zero height item add the top to add double padding after last item
-                        Box(modifier = Modifier.height(0.dp))
+                    if (displayedFonts.isEmpty()) {
+                        item { ListEndText(text = listEndText.trim()) }
                     }
+
+                    item { /** zero height item for spacing **/ }
                 }
+
+
                 // Gradient overlay at the top
                 Box(
                     modifier = Modifier

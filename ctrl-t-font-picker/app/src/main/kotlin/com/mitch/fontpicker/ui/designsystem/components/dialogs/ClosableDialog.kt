@@ -2,12 +2,11 @@ package com.mitch.fontpicker.ui.designsystem.components.dialogs
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.AlertDialogDefaults
@@ -28,8 +27,15 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -134,19 +140,81 @@ fun ClosableDialog(
                 }
 
                 if (dismissButton != null && confirmButton != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = padding.medium,
+                                bottom = padding.zero,
+                                start = padding.zero,
+                                end = padding.zero
+                            )
                     ) {
-                        dismissButton()
-                        Spacer(Modifier.width(10.dp))
-                        confirmButton()
+                        var dismissButtonWidth by remember { mutableIntStateOf(0) }
+                        var confirmButtonWidth by remember { mutableIntStateOf(0) }
+
+                        val maxWidthDp = maxWidth
+
+                        val totalButtonWidth = with(LocalDensity.current) {
+                            dismissButtonWidth.toDp() + confirmButtonWidth.toDp()
+                        }
+
+                        val isStacked = totalButtonWidth > maxWidthDp - 20.dp
+
+                        if (!isStacked) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .onSizeChanged { size ->
+                                            dismissButtonWidth = size.width
+                                        }
+
+                                ) {
+                                    dismissButton()
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .onSizeChanged { size ->
+                                            confirmButtonWidth = size.width
+                                        }
+                                ) {
+                                    confirmButton()
+                                }
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .onSizeChanged { size ->
+                                            confirmButtonWidth = size.width
+                                        }
+                                ) {
+                                    confirmButton()
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .onSizeChanged { size ->
+                                            dismissButtonWidth = size.width
+                                        }
+                                ) {
+                                    dismissButton()
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Preview
 @Composable
@@ -184,10 +252,16 @@ private fun ClosableDialogWithHeroIconPreview() {
             )
         },
         title = {
-            Text(text = "Basic dialog title")
+            Text(
+                text = "Basic dialog title",
+                textAlign = TextAlign.Center
+            )
         },
         body = {
-            Text(text = "A dialog is a type of modal window that appears")
+            Text(
+                text = "A dialog is a type of modal window that appears",
+                textAlign = TextAlign.Center
+            )
         },
         confirmButton = {
             TextButton(onClick = { }) {
@@ -201,3 +275,48 @@ private fun ClosableDialogWithHeroIconPreview() {
         }
     )
 }
+
+@Preview
+@Composable
+private fun ClosableDialogWithHeroIconAndStyledButtonsPreview() {
+    ClosableDialog(
+        onDismiss = { },
+        icon = {
+            Icon(
+                imageVector = FontPickerIcons.Outlined.Translate,
+                contentDescription = null
+            )
+        },
+        title = {
+            Text(
+                text = "Basic dialog title",
+                textAlign = TextAlign.Center
+            )
+        },
+        body = {
+            Text(
+                text = "A dialog is a type of modal window that appears",
+                textAlign = TextAlign.Center
+            )
+        },
+        confirmButton = {
+            StyledDialogButton(
+                text = "Confirm",
+                onClick = { /* Handle confirm click */ },
+                textColor = FontPickerDesignSystem.colorScheme.primary,
+                borderColorPressed = FontPickerDesignSystem.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        dismissButton = {
+            StyledDialogButton(
+                text = "Dismiss",
+                onClick = { /* Handle dismiss click */ },
+                textColor = FontPickerDesignSystem.colorScheme.primary,
+                borderColorPressed = FontPickerDesignSystem.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    )
+}
+

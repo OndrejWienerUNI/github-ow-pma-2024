@@ -3,7 +3,6 @@ package com.mitch.fontpicker.ui.designsystem.components.dialogs
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -43,21 +42,21 @@ fun WipeRecycleBinDialog(
                 textAlign = TextAlign.Center
             )
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(id = R.string.cancel),
-                    color = FontPickerDesignSystem.extendedColorScheme.redAccent
-                )
-            }
-        },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(id = R.string.confirm),
-                    color = FontPickerDesignSystem.extendedColorScheme.redAccent
-                )
-            }
+            StyledDialogButton(
+                text = stringResource(id = R.string.confirm),
+                onClick = onConfirm,
+                textColor = FontPickerDesignSystem.extendedColorScheme.redAccent,
+                borderColorPressed = FontPickerDesignSystem.extendedColorScheme.redAccent
+            )
+        },
+        dismissButton = {
+            StyledDialogButton(
+                text = stringResource(id = R.string.cancel),
+                onClick = onConfirm,
+                textColor = FontPickerDesignSystem.extendedColorScheme.redAccent,
+                borderColorPressed = FontPickerDesignSystem.extendedColorScheme.redAccent
+            )
         },
         containerColor = FontPickerDesignSystem.colorScheme.surface
     )
