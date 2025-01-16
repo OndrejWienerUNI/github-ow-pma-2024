@@ -26,20 +26,25 @@ class RecyclingAndRestorationUtils(
         Timber.d("Deleted all fonts from the Recycle Bin.")
     }
 
-    suspend fun deleteRecycledFont(font: Font) {
-        val fontId = font.id
-        if (font.categoryId == recycleBinCategoryId) {
-            database.fontDao().deleteFontById(fontId)
-            Timber.d("Deleted font with ID $fontId from Recycle Bin.")
+    suspend fun deleteRecycledFont(fontId: Int) {
+        val font: Font? = database.fontDao().getFontById(fontId)
+        if (font != null) {
+            if (font.categoryId == recycleBinCategoryId) {
+                database.fontDao().deleteFontById(fontId)
+                Timber.d("Deleted font with ID $fontId from Recycle Bin.")
+            } else {
+                Timber.d("Font with ID $fontId is not in the Recycle Bin. Did not delete.")
+            }
         } else {
-            Timber.d("Font with ID $fontId is not in the Recycle Bin. Did not delete.")
+            Timber.d("No font found based on id '$fontId' in permanent deletion attempt.")
         }
         markedForRestoration.remove(font)
     }
 
-    suspend fun moveToRecycleBin(font: Font) {
-        Timber.i("Attempting to move font to Recycle Bin: $font")
-        val updatedFont = database.fontDao().getFontById(font.id)
+    suspend fun moveToRecycleBin(fontId: Int) {
+        Timber.i("Attempting to move font to Recycle Bin: fonID=$fontId")
+        val font: Font? = database.fontDao().getFontById(fontId)
+        val updatedFont = font
             ?.copy(categoryId = recycleBinCategoryId)
 
         if (updatedFont != null) {
@@ -49,14 +54,14 @@ class RecyclingAndRestorationUtils(
             markedForRecycling.remove(font)
             Timber.i("Font '${font.title}' successfully moved to Recycle Bin.")
         } else {
-            Timber.i("Failed to find font with ID: ${font.id} in the database.")
+            Timber.i("Failed to find font with ID: $fontId in the database.")
         }
     }
 
-    suspend fun moveToFavorites(font: Font) {
-        Timber.i("Attempting to move font to Favorites: $font")
-        val updatedFont = database.fontDao().getFontById(font.id)
-            ?.copy(categoryId = favoritesCategoryId)
+    suspend fun moveToFavorites(fontId: Int) {
+        Timber.i("Attempting to move font to Favorites: fonID=$fontId")
+        val font: Font? = database.fontDao().getFontById(fontId)
+        val updatedFont = font?.copy(categoryId = favoritesCategoryId)
 
         if (updatedFont != null) {
             Timber.i("Updated font for Favorites: $updatedFont")
@@ -65,7 +70,7 @@ class RecyclingAndRestorationUtils(
             markedForRestoration.remove(font)
             Timber.i("Font '${font.title}' successfully moved to Favorites.")
         } else {
-            Timber.i("Failed to find font with ID: ${font.id} in the database.")
+            Timber.i("Failed to find font with ID: $fontId in the database.")
         }
     }
 
@@ -95,7 +100,7 @@ class RecyclingAndRestorationUtils(
         val fontsToRecycle = markedForRecycling.toList()
         fontsToRecycle.forEach { font ->
             if (font.categoryId == favoritesCategoryId) {
-                moveToRecycleBin(font)
+                moveToRecycleBin(font.id)
                 Timber.d("Moved font '${font.title}' to the Recycle Bin.")
             }
         }
@@ -106,7 +111,7 @@ class RecyclingAndRestorationUtils(
         val fontsToRestore = markedForRestoration.toList()
         fontsToRestore.forEach { font ->
             if (font.categoryId == recycleBinCategoryId) {
-                moveToFavorites(font)
+                moveToFavorites(font.id)
                 Timber.d("Restored font '${font.title}' to Favorites.")
             }
         }

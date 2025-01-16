@@ -97,5 +97,6 @@ data class FontDownloaded(
     val url: String,
     val imageUrls: List<String>,
     val bitmaps: List<Bitmap>,
-    val isLiked: MutableState<Boolean> = mutableStateOf(false)
+    val isLiked: MutableState<Boolean> = mutableStateOf(false),
+    val id: Int? = null
 )

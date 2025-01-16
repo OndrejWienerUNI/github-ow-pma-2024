@@ -15,14 +15,18 @@ import compose.icons.evaicons.fill.AlertTriangle
 import compose.icons.evaicons.fill.CheckmarkCircle2
 import compose.icons.evaicons.fill.CloseCircle
 import compose.icons.evaicons.fill.Heart
+import compose.icons.evaicons.fill.Trash
 import compose.icons.evaicons.outline.Heart
+import compose.icons.evaicons.outline.Trash
 
+@Suppress("unused")
 object FontPickerIcons {
     object Filled {
         val Success: ImageVector = EvaIcons.Fill.CheckmarkCircle2
         val Warning: ImageVector = EvaIcons.Fill.AlertTriangle
         val Error: ImageVector = EvaIcons.Fill.CloseCircle
         val Heart: ImageVector = EvaIcons.Fill.Heart
+        val Trash: ImageVector = EvaIcons.Fill.Trash
     }
 
     object Outlined {
@@ -33,5 +37,6 @@ object FontPickerIcons {
         val Palette: ImageVector = Icons.Outlined.Palette
         val Close: ImageVector = Icons.Outlined.Close
         val Heart: ImageVector = EvaIcons.Outline.Heart
+        val Trash: ImageVector = EvaIcons.Outline.Trash
     }
 }

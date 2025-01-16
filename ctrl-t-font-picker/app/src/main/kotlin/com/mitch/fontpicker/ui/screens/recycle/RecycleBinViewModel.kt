@@ -1,4 +1,4 @@
-package com.mitch.fontpicker.ui.screens.favorites
+package com.mitch.fontpicker.ui.screens.recycle
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +15,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class FavoritesViewModel(
+
+class RecycleBinViewModel(
     private val fontsDatabaseRepository: FontsDatabaseRepository
 ) : ViewModel() {
 
@@ -23,20 +24,20 @@ class FavoritesViewModel(
     val uiState: StateFlow<FontCardListUiState> = _uiState
 
     init {
-        observeFavorites()
+        observeRecycleBin()
 
         viewModelScope.launch {
             _uiState.collect { newState ->
-                Timber.d("FavoritesUiState changed to: $newState")
+                Timber.d("RecycleBinUiState changed to: $newState")
             }
         }
     }
 
-    fun observeFavorites() {
+    fun observeRecycleBin() {
         viewModelScope.launch {
             try {
-                Timber.d("Fetching favorites with assets.")
-                fontsDatabaseRepository.getFavoritesWithAssets()
+                Timber.d("Fetching recycle bin with assets.")
+                fontsDatabaseRepository.getRecycleBinWithAssets()
                     .map { fontWithAssets: List<FontsDatabaseRepository.Companion.FontWithAssets> ->
                         Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
                         fontWithAssets.map { asset ->
@@ -57,7 +58,7 @@ class FavoritesViewModel(
                                 url = asset.font.url,
                                 imageUrls = imageUrls,
                                 bitmaps = bitmaps,
-                                isLiked = mutableStateOf(asset.font.categoryId == fontsDatabaseRepository.favoritesCategoryId)
+                                isLiked = mutableStateOf(false) // Fonts in recycle bin are not liked
                             )
                         }
                     }
@@ -66,23 +67,52 @@ class FavoritesViewModel(
                         _uiState.value = FontCardListUiState.Success(fontPreviews = fontPreviews)
                     }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to observe favorites data.")
+                Timber.e(e, "Failed to observe recycle bin data.")
                 _uiState.value = FontCardListUiState.Error(error = e.message)
             }
         }
     }
 
-    fun toggleLike(font: FontDownloaded) {
+    fun restoreFont(font: FontDownloaded) {
         viewModelScope.launch {
             try {
                 font.id?.let { fontId ->
-                    Timber.d("Toggling like for font: ${font.title} (id=$fontId)")
-                    fontsDatabaseRepository.moveToRecycleBin(fontId)
-                    Timber.d("Font '${font.title}' moved to Recycle Bin.")
-                    observeFavorites() // Refresh the data
-                } ?: Timber.e("Cannot toggle like for font with null ID: ${font.title}")
+                    Timber.d("Restoring font: ${font.title} (id=$fontId)")
+                    fontsDatabaseRepository.moveToFavorites(fontId)
+                    Timber.d("Font '${font.title}' restored to Favorites.")
+                    observeRecycleBin() // Refresh the data
+                } ?: Timber.e("Cannot restore font with null ID: ${font.title}")
             } catch (e: Exception) {
-                Timber.e(e, "Failed to toggle like for font '${font.title}'.")
+                Timber.e(e, "Failed to restore font '${font.title}'.")
+            }
+        }
+    }
+
+    @Suppress("UNUSED")
+    fun deleteFont(font: FontDownloaded) {
+        viewModelScope.launch {
+            try {
+                font.id?.let { fontId ->
+                    Timber.d("Deleting font: ${font.title} (id=$fontId) from Recycle Bin.")
+                    fontsDatabaseRepository.deleteRecycledFont(fontId)
+                    Timber.d("Font '${font.title}' deleted from Recycle Bin.")
+                    observeRecycleBin() // Refresh the data
+                } ?: Timber.e("Cannot delete font with null ID: ${font.title}")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to delete font '${font.title}'.")
+            }
+        }
+    }
+
+    fun wipeRecycleBin() {
+        viewModelScope.launch {
+            try {
+                Timber.d("Wiping all fonts from the recycle bin.")
+                fontsDatabaseRepository.wipeRecycleBin()
+                Timber.d("Recycle Bin cleared.")
+                observeRecycleBin() // Refresh the data
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to wipe recycle bin.")
             }
         }
     }

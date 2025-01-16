@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,25 +46,42 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import timber.log.Timber
 
 private val BORDER_THICKNESS = 1.dp
-private val HEART_ICON_BUTTON_SIZE = 40.dp
-private val HEART_ICON_SIZE = 28.dp
+private val HEART_ICON_BUTTON_SIZE = 38.dp
+private val HEART_ICON_SIZE = 30.dp
 private val IMAGE_HEIGHT = 40.dp
 private val OVERLAY_CIRCLE_SIZE = 36.dp
 private val OVERLAY_ICON_SIZE = 32.dp
-private val TEXT_Y_OFFSET = (-0.5).dp
 
 @Composable
 fun FontCard(
     font: FontDownloaded,
     inSelectionDialog: Boolean,
+    onLikeClick:  (FontDownloaded) -> Unit,
     onWebpageClick: () -> Unit,
-    isThemeDark: Boolean = isSystemInDarkTheme()
+    isThemeDark: Boolean = isSystemInDarkTheme(),
+    modifier: Modifier = Modifier
 ) {
+    Timber.d("Rendering FontCard: Title=${font.title}, " +
+            "ID=${font.id}, isLiked=${font.isLiked.value}, Bitmap Count=${font.bitmaps.size}")
+
+    font.bitmaps.forEachIndexed { index, bitmap ->
+        Timber.d("Bitmap $index: Width=${bitmap.width}, Height=${bitmap.height}, " +
+                "Config=${bitmap.config}, ByteCount=${bitmap.byteCount}")
+    }
+
     // Use font.isLiked.value directly
     val isLiked = font.isLiked.value
 
-    val processedImages = font.bitmaps.map { bitmap ->
-        if (isThemeDark) BitmapToolkit.invertImage(bitmap) else bitmap
+    // Preprocess images based on theme
+    val processedImages = remember(isThemeDark) {
+        font.bitmaps.map { bitmap ->
+            if (isThemeDark) {
+                Timber.d("Inverting image due to dark theme")
+                BitmapToolkit.invertImage(bitmap)
+            } else {
+                bitmap
+            }
+        }
     }
 
     val heartIcon: ImageVector = if (isLiked) FontPickerIcons.Filled.Heart else FontPickerIcons.Outlined.Heart
@@ -79,7 +96,7 @@ fun FontCard(
         FontPickerDesignSystem.extendedColorScheme.borders
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .padding(padding.zero)
             .fillMaxWidth()
             .border(BorderStroke(BORDER_THICKNESS, borderColor), shape = CardDefaults.shape)
@@ -90,6 +107,7 @@ fun FontCard(
             .clickable(enabled = inSelectionDialog) {
                 font.isLiked.value = !isLiked // Update the state directly
                 Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
+                onLikeClick(font)
             },
         colors = CardDefaults.cardColors(
             containerColor = FontPickerDesignSystem.colorScheme.surface
@@ -104,10 +122,15 @@ fun FontCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = padding.extraSmall, end = padding.extraSmall)
+                        .padding(
+                            horizontal = padding.small,
+                            vertical = padding.small
+                        )
                         .clickable(enabled = inSelectionDialog) {
-                            font.isLiked.value = !isLiked // Update the state directly
-                            Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
+                            font.isLiked.value = !isLiked
+                            Timber.d("FontCard: Font '${font.title}' like state " +
+                                    "changed to ${font.isLiked.value}")
+                            onLikeClick(font)
                         },
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
@@ -119,27 +142,9 @@ fun FontCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
-                            .padding(padding.medium)
-                            .offset(y = TEXT_Y_OFFSET)
+                            .padding(horizontal = padding.small)
                             .weight(1f)
                     )
-                    IconButton(
-                        onClick = {
-                            font.isLiked.value = !font.isLiked.value
-                            Timber.d("FontCard: Font '${font.title}' isLiked " +
-                                    "state changed to $isLiked")
-                        },
-                        modifier = Modifier
-                            .padding(padding.small)
-                            .size(HEART_ICON_BUTTON_SIZE)
-                    ) {
-                        Icon(
-                            modifier = Modifier.size(HEART_ICON_SIZE),
-                            imageVector = heartIcon,
-                            contentDescription = null,
-                            tint = heartColor
-                        )
-                    }
                 }
 
                 Column(
@@ -174,12 +179,37 @@ fun FontCard(
 
             IconButton(
                 onClick = {
+                    font.isLiked.value = !font.isLiked.value
+                    Timber.d("FontCard: Font '${font.title}' isLiked " +
+                            "state changed to $isLiked")
+                    onLikeClick(font)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd) // Align directly
+                    .padding(
+                        horizontal = padding.medium,
+                        vertical = padding.extraSmall
+                    )
+                    .size(HEART_ICON_BUTTON_SIZE)
+                    .zIndex(1f)
+            ) {
+                Icon(
+                    modifier = Modifier.size(HEART_ICON_SIZE),
+                    imageVector = heartIcon,
+                    contentDescription = null,
+                    tint = heartColor
+                )
+            }
+
+            IconButton(
+                onClick = {
                     if (!inSelectionDialog) {
                         onWebpageClick()
                     } else {
                         font.isLiked.value = !font.isLiked.value
                         Timber.d("FontCard: Font '${font.title}' isLiked " +
                                 "state changed to ${font.isLiked.value}")
+                        onLikeClick(font)
                     }
                 },
                 modifier = Modifier
@@ -231,6 +261,7 @@ fun FontCardPreviewLight() {
         FontCard(
             font = fontDownloaded,
             inSelectionDialog = true,
+            onLikeClick = { /* Like click action */ },
             onWebpageClick = { /* Webpage click action */ },
             isThemeDark = false
         )
@@ -251,7 +282,8 @@ fun FontCardPreviewDark() {
 
         FontCard(
             font = fontDownloaded,
-            inSelectionDialog = false,
+            inSelectionDialog = true,
+            onLikeClick = { /* Like click action */ },
             onWebpageClick = { /* Webpage click action */ },
             isThemeDark = true
         )

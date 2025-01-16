@@ -1,99 +1,90 @@
 package com.mitch.fontpicker.ui.screens.favorites
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
+import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
+import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
-import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
-import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
+import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListScreenContent
+import com.mitch.fontpicker.ui.screens.favorites.components.FontCardListUiState
 import timber.log.Timber
+
 
 @Composable
 fun FavoritesRoute(
     viewModel: FavoritesViewModel
 ) {
-    Timber.d("Rendering CameraScreenRoute.")
+    Timber.d("Rendering FavoritesRoute.")
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Timber.d("Current uiState: $uiState")
+
     FavoritesScreen(
-        viewModel = viewModel
+        uiState = uiState,
+        onToggleLike = { font ->
+            Timber.d("onToggleLike called for font: ${font.title} with id: ${font.id}")
+            viewModel.toggleLike(font)
+        },
+        onRetry = {
+            Timber.d("Retrying to load favorites.")
+            viewModel.observeFavorites()
+        }
     )
 }
 
 @Composable
 fun FavoritesScreen(
-    viewModel: FavoritesViewModel
+    uiState: FontCardListUiState,
+    onToggleLike: (FontDownloaded) -> Unit,
+    onRetry: () -> Unit
 ) {
-//    val isPreview = LocalInspectionMode.current
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FavoritesScreenContent(uiState = uiState)
+    Timber.d("FavoritesScreen rendering with uiState: $uiState")
+
+    FavoritesScreenContent(
+        uiState = uiState,
+        onToggleLike = onToggleLike,
+        onRetry = onRetry
+    )
 }
 
 @Composable
 fun FavoritesScreenContent(
-    uiState: FavoritesUiState,
-    modifier: Modifier = Modifier
-) {
-    when (uiState) {
-        is FavoritesUiState.Loading -> LoadingScreen()
-        is FavoritesUiState.Success -> {
-            LazyColumn(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(horizontal = padding.medium),
-                verticalArrangement = Arrangement.spacedBy(padding.small),
-            ) {
-                items(uiState.fontPreviews) { fontPreview ->
-                    Text(
-                        text = stringResource(id = fontPreview),
-                        style = FontPickerDesignSystem.typography.bodyLarge,
-                        color = FontPickerDesignSystem.colorScheme.onBackground,
-                        modifier = Modifier.padding(padding.extraSmall)
-                    )
-                }
-            }
-        }
-        is FavoritesUiState.Error -> {
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(horizontal = padding.medium),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = uiState.error ?: "Unknown Error",
-                    style = FontPickerDesignSystem.typography.bodyLarge,
-                    color = FontPickerDesignSystem.colorScheme.error
-                )
-            }
-        }
-    }
+    uiState: FontCardListUiState,
+    onToggleLike: (FontDownloaded) -> Unit,
+    onRetry: () -> Unit
+){
+    FontCardListScreenContent(
+        uiState = uiState,
+        onToggleLike = onToggleLike,
+        onRetry = onRetry
+    )
 }
+
 
 @PreviewLightDark
 @Composable
 fun FavoritesScreenContentPreview() {
     FontPickerTheme {
-        val mockUiState = FavoritesUiState.Success(
-            fontPreviews = listOf(
-                android.R.string.ok,
-                android.R.string.cancel,
-                android.R.string.untitled
+        val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+        val mockFonts = List(5) {
+            FontDownloaded(
+                title = "Mock Font ${it + 1}",
+                url = "https://example.com/font/${it + 1}",
+                imageUrls = emptyList(),
+                bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap),
+                isLiked = mutableStateOf(false)
             )
-        )
+        }
+
+        val mockUiState = FontCardListUiState.Success(fontPreviews = mockFonts)
+        Timber.d("Previewing FavoritesScreenContent with mock fonts: $mockFonts")
         FavoritesScreenContent(
-            uiState = mockUiState
+            uiState = mockUiState,
+            onToggleLike = { Timber.d("Mock onToggleLike called for font: ${it.title}") },
+            onRetry = { Timber.d("Mock onRetry triggered.") }
         )
     }
 }

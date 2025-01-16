@@ -64,15 +64,16 @@ fun FontCardSelectionDialog(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = padding.zero, vertical = padding.extraSmall),
+                        .padding(horizontal = padding.zero, vertical = padding.small),
                     verticalArrangement = Arrangement.spacedBy(padding.small)
                 ) {
                     items(fonts) { font ->
                         FontCard(
                             font = font,
                             inSelectionDialog = true,
-                            onWebpageClick = { /* Handle Webpage Click */ },
-                            isThemeDark = isThemeDark
+                            onWebpageClick = { /* Handle URL Click in Favorites / Recycle Bin */ },
+                            isThemeDark = isThemeDark,
+                            onLikeClick = { /* Handle Webpage Click in Favorites / Recycle Bin */ }
                         )
                     }
                 }

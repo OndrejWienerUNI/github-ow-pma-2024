@@ -17,6 +17,8 @@ import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesRoute
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesScreenContentPreview
 import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
+import com.mitch.fontpicker.ui.screens.recycle.RecycleBinRoute
+import com.mitch.fontpicker.ui.screens.recycle.RecycleBinViewModel
 import timber.log.Timber
 
 @Composable
@@ -24,6 +26,7 @@ fun HomePager(
     pagerState: PagerState,
     cameraViewModel: CameraViewModel,
     favoritesViewModel: FavoritesViewModel,
+    recycleBinViewModel: RecycleBinViewModel,
     modifier: Modifier = Modifier
 ) {
     HorizontalPager(
@@ -38,6 +41,9 @@ fun HomePager(
             )
             1 -> FavoritesRoute(
                 viewModel = favoritesViewModel
+            )
+            2 -> RecycleBinRoute(
+                viewModel = recycleBinViewModel
             )
             else -> Timber.w("HomePager: Unknown page $page")
         }

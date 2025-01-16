@@ -14,7 +14,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 
 // Place this on top of a screen to ensure background consistency and a tinted status bar
 @Composable
-fun BackgroundWithTintedStatusBar() {
+fun BackgroundWithDimmedStatusBar() {
     Box(
         modifier = Modifier
             .fillMaxSize()

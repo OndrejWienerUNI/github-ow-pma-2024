@@ -7,6 +7,8 @@ import com.mitch.fontpicker.data.room.model.Font
 import com.mitch.fontpicker.data.room.model.ImageUrl
 import com.mitch.fontpicker.data.room.util.ComparisonUtils
 import com.mitch.fontpicker.data.room.util.RecyclingAndRestorationUtils
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
@@ -16,13 +18,18 @@ class FontsDatabaseRepository(private val database: FontsDatabase) {
     companion object {
         const val CATEGORY_FAVORITES_NAME = "Favorites"
         const val CATEGORY_RECYCLE_BIN_NAME = "Recycle Bin"
+        data class FontWithAssets(
+            val font: Font,
+            val imageUrls: Flow<List<ImageUrl>>,
+            val bitmapData: Flow<List<BitmapData>>
+        )
     }
 
-    private val favoritesCategoryId: Int by lazy {
+    val favoritesCategoryId: Int by lazy {
         runBlocking { getOrCreateCategoryByName(CATEGORY_FAVORITES_NAME) }
     }
 
-    private val recycleBinCategoryId: Int by lazy {
+    val recycleBinCategoryId: Int by lazy {
         runBlocking { getOrCreateCategoryByName(CATEGORY_RECYCLE_BIN_NAME) }
     }
 
@@ -31,6 +38,35 @@ class FontsDatabaseRepository(private val database: FontsDatabase) {
 
     fun fontBeforeInsertion(title: String, url: String): Font {
         return Font(title = title, url = url, categoryId = favoritesCategoryId)
+    }
+
+    @Suppress("UNUSED")
+    suspend fun getFontWithAssets(fontId: Int): FontWithAssets? {
+        val font = database.fontDao().getFontById(fontId) ?: return null
+        val imageUrls = database.imageUrlDao().getImageUrlsForFont(fontId)
+        val bitmapData = database.bitmapDataDao().getBitmapDataForFont(fontId)
+
+        return FontWithAssets(font, imageUrls, bitmapData)
+    }
+
+    fun getFavoritesWithAssets(): Flow<List<FontWithAssets>> {
+        return database.fontDao().getFontsByCategory(favoritesCategoryId).map { fonts ->
+            fonts.map { font ->
+                val imageUrls = database.imageUrlDao().getImageUrlsForFont(font.id)
+                val bitmapData = database.bitmapDataDao().getBitmapDataForFont(font.id)
+                FontWithAssets(font, imageUrls, bitmapData)
+            }
+        }
+    }
+
+    fun getRecycleBinWithAssets(): Flow<List<FontWithAssets>> {
+        return database.fontDao().getFontsByCategory(recycleBinCategoryId).map { fonts ->
+            fonts.map { font ->
+                val imageUrls = database.imageUrlDao().getImageUrlsForFont(font.id)
+                val bitmapData = database.bitmapDataDao().getBitmapDataForFont(font.id)
+                FontWithAssets(font, imageUrls, bitmapData)
+            }
+        }
     }
 
     suspend fun shouldStartAsLiked(newFont: Font): Boolean {
@@ -172,16 +208,16 @@ class FontsDatabaseRepository(private val database: FontsDatabase) {
         }
     }
 
-    private suspend fun moveToFavorites(font: Font) {
-        recyclingAndRestorationUtils.moveToFavorites(font)
+    suspend fun moveToFavorites(fontId: Int) {
+        recyclingAndRestorationUtils.moveToFavorites(fontId)
     }
 
-    private suspend fun moveToRecycleBin(font: Font) {
-        recyclingAndRestorationUtils.moveToRecycleBin(font)
+    suspend fun moveToRecycleBin(fontId: Int) {
+        recyclingAndRestorationUtils.moveToRecycleBin(fontId)
     }
 
-    suspend fun deleteRecycledFont(font: Font) {
-        recyclingAndRestorationUtils.deleteRecycledFont(font)
+    suspend fun deleteRecycledFont(fontId: Int) {
+        recyclingAndRestorationUtils.deleteRecycledFont(fontId)
     }
 
     suspend fun wipeRecycleBin() {

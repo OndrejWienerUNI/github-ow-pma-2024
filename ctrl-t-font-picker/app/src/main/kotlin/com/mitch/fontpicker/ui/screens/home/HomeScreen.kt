@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,7 +22,7 @@ import com.mitch.fontpicker.domain.models.FontPickerLanguagePreference
 import com.mitch.fontpicker.domain.models.FontPickerThemePreference
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
-import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithTintedStatusBar
+import com.mitch.fontpicker.ui.designsystem.components.backgrounds.BackgroundWithDimmedStatusBar
 import com.mitch.fontpicker.ui.screens.camera.CameraViewModel
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
@@ -30,6 +31,7 @@ import com.mitch.fontpicker.ui.screens.favorites.FavoritesViewModel
 import com.mitch.fontpicker.ui.screens.home.components.drawers.HomeDrawer
 import com.mitch.fontpicker.ui.screens.home.components.pagers.HomePager
 import com.mitch.fontpicker.ui.screens.home.components.pagers.HomePagerPreview
+import com.mitch.fontpicker.ui.screens.recycle.RecycleBinViewModel
 import com.mitch.fontpicker.ui.util.viewModelProviderFactory
 import timber.log.Timber
 
@@ -92,17 +94,25 @@ fun HomeScreen(
     val favoritesViewModel: FavoritesViewModel = viewModel(
         factory = viewModelProviderFactory {
             FavoritesViewModel(
-                fontsDatabaseRepository,
-                bitmapToolkit
+                fontsDatabaseRepository
+            )
+        }
+    )
+
+    val recycleBinViewModel: RecycleBinViewModel = viewModel(
+        factory = viewModelProviderFactory {
+            RecycleBinViewModel(
+                fontsDatabaseRepository
             )
         }
     )
 
     Timber.d("Rendering HomeScreen with UI State: $uiState")
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { 2 }
-    )
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
+
+    val currentPage by remember {
+        derivedStateOf { pagerState.currentPage }
+    }
 
     val horizontalPager: @Composable () -> Unit = if (isPreview) {
         { HomePagerPreview(pagerState = pagerState) }
@@ -111,7 +121,8 @@ fun HomeScreen(
             HomePager(
                 pagerState = pagerState,
                 cameraViewModel = cameraViewModel,
-                favoritesViewModel = favoritesViewModel
+                favoritesViewModel = favoritesViewModel,
+                recycleBinViewModel = recycleBinViewModel
             )
         }
     }
@@ -121,7 +132,8 @@ fun HomeScreen(
         onChangeTheme = onChangeTheme,
         onChangeLanguage = onChangeLanguage,
         modifier = modifier,
-        horizontalPager = horizontalPager
+        horizontalPager = horizontalPager,
+        currentPage = currentPage
     )
 }
 
@@ -131,10 +143,13 @@ fun HomeScreenContent(
     onChangeTheme: (FontPickerThemePreference) -> Unit,
     onChangeLanguage: (FontPickerLanguagePreference) -> Unit,
     horizontalPager: @Composable () -> Unit,
+    currentPage: Int,
     modifier: Modifier = Modifier,
 ) {
+
     Timber.d("Rendering HomeScreenContent with UI State: $uiState")
-    BackgroundWithTintedStatusBar()
+
+    BackgroundWithDimmedStatusBar()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Timber.d("Rendering HomeDrawer")
@@ -148,7 +163,7 @@ fun HomeScreenContent(
                 Timber.d("HomeScreenContent: Language change triggered with $it")
                 onChangeLanguage(it)
             },
-            currentPage = 0, // Pager's current page should be managed outside if required
+            currentPage = currentPage, // Pager's current page should be managed outside if required
             modifier = modifier
         ) {
             Timber.d("Rendering HorizontalPager")
@@ -174,7 +189,8 @@ private fun HomeScreenContentPreview() {
                 ),
                 onChangeTheme = { /* Stub: handle theme change */ },
                 onChangeLanguage = { /* Stub: handle language change */ },
-                horizontalPager = @Composable { HomePagerPreview() }
+                horizontalPager = @Composable { HomePagerPreview() },
+                currentPage = 0
             )
         }
     }
