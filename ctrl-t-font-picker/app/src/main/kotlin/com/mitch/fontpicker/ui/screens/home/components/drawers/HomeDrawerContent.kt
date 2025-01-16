@@ -64,7 +64,7 @@ fun HomeDrawerContent(
                 .width(drawerWidth)
                 .fillMaxHeight()
                 .background(
-                    color = FontPickerDesignSystem.colorScheme.surface,
+                    color = FontPickerDesignSystem.colorScheme.background,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(
                         topEnd = DRAWER_CORNER_RADIUS,
                         bottomEnd = DRAWER_CORNER_RADIUS

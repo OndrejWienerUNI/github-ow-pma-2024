@@ -18,7 +18,8 @@ data class ExtendedColorScheme(
     val icOnBackground: Color,
     val icOnBackgroundPressed: Color,
     val borders: Color,
-    val pictureBackground: Color
+    val pictureBackground: Color,
+    val cardSurface: Color
 )
 
 val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
@@ -31,7 +32,8 @@ val DarkExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     icOnBackground = Color(0xFFFFFFFF),
     icOnBackgroundPressed = Color(0xFFC4C4C4),
     borders = Color(0xFF727272),
-    pictureBackground = Color(0xFF000000)
+    pictureBackground = Color(0xFF000000),
+    cardSurface = Color(0xFF000000)
 )
 
 val LightExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
@@ -44,7 +46,8 @@ val LightExtendedColorScheme: ExtendedColorScheme = ExtendedColorScheme(
     icOnBackground = Color(0xFF757575),
     icOnBackgroundPressed = Color(0xFF606060),
     borders = Color(0xFFB4B4B4),
-    pictureBackground = Color(0xFF000000)
+    pictureBackground = Color(0xFF000000),
+    cardSurface = Color(0xFFFFFFFF)
 )
 
 val LocalExtendedColorScheme: ProvidableCompositionLocal<ExtendedColorScheme> =

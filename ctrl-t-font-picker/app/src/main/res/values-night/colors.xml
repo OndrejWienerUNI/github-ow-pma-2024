@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash screen and app background color for the dark theme -->
+    <!-- Manually match this with yur color scheme -->
+    <color name="background">#111117</color>
+</resources>

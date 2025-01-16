@@ -32,7 +32,7 @@ fun HomePager(
     HorizontalPager(
         state = pagerState,
         modifier = modifier.background(
-            color = FontPickerDesignSystem.colorScheme.surface,
+            color = FontPickerDesignSystem.colorScheme.background,
             shape = CardDefaults.shape)
     ) { page ->
         when (page) {

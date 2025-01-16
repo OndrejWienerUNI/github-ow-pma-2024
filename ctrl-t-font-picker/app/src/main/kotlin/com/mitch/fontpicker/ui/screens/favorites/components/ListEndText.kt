@@ -51,8 +51,8 @@ fun ListEndText(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                FontPickerDesignSystem.colorScheme.surface.copy(alpha = 1f),
-                                FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0f)
+                                FontPickerDesignSystem.colorScheme.background.copy(alpha = 1f),
+                                FontPickerDesignSystem.colorScheme.background.copy(alpha = 0f)
                             )
                         )
                     )
@@ -76,8 +76,8 @@ fun ListEndText(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                FontPickerDesignSystem.colorScheme.surface.copy(alpha = 0f),
-                                FontPickerDesignSystem.colorScheme.surface.copy(alpha = 1f)
+                                FontPickerDesignSystem.colorScheme.background.copy(alpha = 0f),
+                                FontPickerDesignSystem.colorScheme.background.copy(alpha = 1f)
                             )
                         )
                     )

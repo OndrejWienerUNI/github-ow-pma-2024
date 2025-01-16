@@ -19,7 +19,8 @@ val ColSkyBlue = Color(0xFF13CDF6)
 val ColLightGray = Color(0xFF999999)
 val ColDarkGray = Color(0xFF6E6E6E)
 val ColWhiteSmoke = Color(0xFFF5F5F5)
-val ColOnyx = Color(0xFF0F0F15)
+val ColOnyx = Color(0xFF111117)
+val ColOnyxLighter = Color(0xFF2F2F38)
 
 
 val DarkColorScheme: ColorScheme = darkColorScheme(
@@ -28,7 +29,7 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
     secondary = ColSkyBlue,
     tertiary = ColLightGray,
     background = ColOnyx,
-    surface = ColOnyx,
+    surface = ColOnyxLighter,
     onPrimary = Color.Black,
     onPrimaryContainer = Color.Black,
     onSecondary = Color.Black,
@@ -43,7 +44,7 @@ val LightColorScheme: ColorScheme = lightColorScheme(
     secondary = ColCerulean,
     tertiary = ColDarkGray,
     background = ColWhiteSmoke,
-    surface = ColWhiteSmoke,
+    surface = Color.White,
     onPrimary = Color.White,
     onPrimaryContainer = Color.White,
     onSecondary = Color.White,

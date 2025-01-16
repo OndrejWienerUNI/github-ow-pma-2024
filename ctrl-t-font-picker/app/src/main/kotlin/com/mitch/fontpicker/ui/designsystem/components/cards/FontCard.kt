@@ -122,14 +122,14 @@ fun FontCard(
             .fillMaxWidth()
             .border(BorderStroke(BORDER_THICKNESS, borderColor), shape = CardDefaults.shape)
             .background(
-                color = FontPickerDesignSystem.colorScheme.surface,
+                color = FontPickerDesignSystem.extendedColorScheme.cardSurface,
                 shape = CardDefaults.shape
             )
             .clip(CardDefaults.shape)
             // Must come after the clip
             .clickable(enabled = inSelectionDialog) { handleLikeClick() },
         colors = CardDefaults.cardColors(
-            containerColor = FontPickerDesignSystem.colorScheme.surface
+            containerColor = FontPickerDesignSystem.extendedColorScheme.cardSurface
         )
     ) {
         Box(

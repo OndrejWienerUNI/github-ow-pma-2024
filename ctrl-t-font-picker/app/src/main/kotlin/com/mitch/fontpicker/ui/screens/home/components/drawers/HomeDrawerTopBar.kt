@@ -38,7 +38,7 @@ fun HomeDrawerTopBar(
             modifier = Modifier
                 .padding(horizontal = ICON_PADDING_HORIZONTAL, vertical = ROW_PADDING_VERTICAL)
                 .background(
-                    FontPickerDesignSystem.colorScheme.surface.copy(alpha = rowAlpha)
+                    FontPickerDesignSystem.colorScheme.background.copy(alpha = rowAlpha)
                 )
                 .alpha(rowAlpha),
             verticalAlignment = Alignment.CenterVertically
