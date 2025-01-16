@@ -53,7 +53,7 @@ fun WipeRecycleBinDialog(
         dismissButton = {
             StyledDialogButton(
                 text = stringResource(id = R.string.cancel),
-                onClick = onConfirm,
+                onClick = onDismiss,
                 textColor = FontPickerDesignSystem.extendedColorScheme.redAccent,
                 borderColorPressed = FontPickerDesignSystem.extendedColorScheme.redAccent
             )
