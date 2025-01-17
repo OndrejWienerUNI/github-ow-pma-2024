@@ -53,6 +53,8 @@ class FavoritesViewModel(
                 fontsDatabaseRepository.getFavoritesWithAssets()
                     .map { fontWithAssets: List<FontsDatabaseRepository.Companion.FontWithAssets> ->
                         Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
+
+                        // Map the assets to FontDownloaded and sort by ID
                         fontWithAssets.map { asset ->
                             val bitmaps = asset.bitmapData.firstOrNull()?.map { bitmapData ->
                                 BitmapToolkit.decodeBinary(bitmapData.bitmap)
@@ -73,7 +75,7 @@ class FavoritesViewModel(
                                 bitmaps = bitmaps,
                                 isLiked = mutableStateOf(asset.font.categoryId == fontsDatabaseRepository.favoritesCategoryId)
                             )
-                        }
+                        }.sortedBy { it.id } // Explicitly sort by ID
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")

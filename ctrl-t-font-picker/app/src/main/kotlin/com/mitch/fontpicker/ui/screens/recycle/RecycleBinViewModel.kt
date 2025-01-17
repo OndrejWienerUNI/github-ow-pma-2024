@@ -56,6 +56,8 @@ class RecycleBinViewModel(
                 fontsDatabaseRepository.getRecycleBinWithAssets()
                     .map { fontWithAssets ->
                         Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
+
+                        // Map the assets and sort them by ID
                         fontWithAssets.map { asset ->
                             val bitmaps = asset.bitmapData.firstOrNull()?.map { bitmapData ->
                                 BitmapToolkit.decodeBinary(bitmapData.bitmap)
@@ -76,7 +78,7 @@ class RecycleBinViewModel(
                                 bitmaps = bitmaps,
                                 isLiked = mutableStateOf(false) // Fonts in recycle bin are not liked
                             )
-                        }
+                        }.sortedBy { it.id } // Explicitly sort by ID
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")
