@@ -111,7 +111,6 @@ fun RecycleBinScreenContent(
             uiState = uiState,
             onToggleLike = onRestore,
             onRetry = onRetry,
-            lastToFirst = true,
             listEndText = stringResource(R.string.recycle_bin_disclaimer),
             modifier = Modifier.align(Alignment.TopCenter)
         )

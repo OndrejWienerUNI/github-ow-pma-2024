@@ -31,14 +31,13 @@ import timber.log.Timber
 import java.util.UUID
 
 private val GRADIENT_HEIGHT_TOP = 10.dp
-private val GRADIENT_HEIGHT_BOTTOM = 32.dp
+private val GRADIENT_HEIGHT_BOTTOM = 10.dp
 
 @Composable
 fun FontCardListScreenContent(
     uiState: FontCardListUiState,
     onToggleLike: (FontDownloaded) -> Unit,
     onRetry: () -> Unit,
-    lastToFirst: Boolean = false,
     listEndText: String = "",
     modifier: Modifier = Modifier
 ) {
@@ -58,8 +57,7 @@ fun FontCardListScreenContent(
 
             Box(modifier = Modifier.fillMaxSize()) {
 
-                val displayedFonts = if (lastToFirst) uiState.fontPreviews.reversed()
-                else uiState.fontPreviews
+                val displayedFonts = uiState.fontPreviews
 
                 LazyColumn(
                     modifier = modifier.fillMaxSize(),

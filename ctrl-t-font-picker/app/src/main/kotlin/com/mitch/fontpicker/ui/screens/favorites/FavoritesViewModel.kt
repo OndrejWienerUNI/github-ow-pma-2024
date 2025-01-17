@@ -75,7 +75,7 @@ class FavoritesViewModel(
                                 bitmaps = bitmaps,
                                 isLiked = mutableStateOf(asset.font.categoryId == fontsDatabaseRepository.favoritesCategoryId)
                             )
-                        }.sortedBy { it.id } // Explicitly sort by ID
+                        }.sortedBy { it.id }.reversed() // Explicitly sort by ID descending
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")

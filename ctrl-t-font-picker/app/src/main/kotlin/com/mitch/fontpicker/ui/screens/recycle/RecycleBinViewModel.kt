@@ -78,7 +78,7 @@ class RecycleBinViewModel(
                                 bitmaps = bitmaps,
                                 isLiked = mutableStateOf(false) // Fonts in recycle bin are not liked
                             )
-                        }.sortedBy { it.id } // Explicitly sort by ID
+                        }.sortedBy { it.id }.reversed() // Explicitly sort by ID descending
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")

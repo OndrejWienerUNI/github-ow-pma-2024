@@ -75,8 +75,7 @@ fun FavoritesScreenContent(
     FontCardListScreenContent(
         uiState = uiState,
         onToggleLike = onToggleLike,
-        onRetry = onRetry,
-        lastToFirst = true
+        onRetry = onRetry
     )
 }
 

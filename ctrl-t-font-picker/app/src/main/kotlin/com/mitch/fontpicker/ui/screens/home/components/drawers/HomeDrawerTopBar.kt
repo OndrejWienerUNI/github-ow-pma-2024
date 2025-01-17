@@ -43,7 +43,7 @@ fun HomeDrawerTopBar(
     val animatedAlpha by animateFloatAsState(
         targetValue = rowAlpha,
         animationSpec = androidx.compose.animation.core.tween(
-            durationMillis = 300, // Duration of the animation
+            durationMillis = 80, // Duration of the animation
             easing = androidx.compose.animation.core.FastOutSlowInEasing
         ), label = ""
     )
