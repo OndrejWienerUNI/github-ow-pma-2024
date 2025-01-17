@@ -189,7 +189,6 @@ fun FontCard(
 
             IconButton(
                 onClick = { handleLikeClick() },
-                enabled = !inSelectionDialog,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(horizontal = padding.medium, vertical = padding.extraSmall)
@@ -205,8 +204,7 @@ fun FontCard(
             }
 
             IconButton(
-                onClick = { handleWebpageClick() },
-                enabled = !inSelectionDialog,
+                onClick = { if (!inSelectionDialog) handleWebpageClick() else handleLikeClick() },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(padding.medium)
