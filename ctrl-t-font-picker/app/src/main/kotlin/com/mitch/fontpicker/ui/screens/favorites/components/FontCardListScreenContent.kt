@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.components.cards.FontCard
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.ErrorDialog
 import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
-import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import timber.log.Timber
 
 private val GRADIENT_HEIGHT_TOP = 10.dp
@@ -127,12 +127,10 @@ fun FontCardListScreenContent(
             }
         }
         is FontCardListUiState.Error -> {
-            Timber.e("ErrorOverlay displayed with message: ${uiState.error}")
-            ErrorOverlay(
-                errorMessage = uiState.error ?: "Unknown Error",
-                closable = true,
-                onClose = {
-                    Timber.d("Error overlay dismissed.")
+            Timber.e("ErrorOverlay displayed with message: ${uiState.errorMessage}")
+            ErrorDialog(
+                errorMessage = uiState.errorMessage ?: "Unknown Error, please try again later.",
+                onDismiss = {
                     onRetry()
                 }
             )

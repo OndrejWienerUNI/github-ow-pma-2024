@@ -21,13 +21,6 @@ class WhatFontIsApiRepository(
     private val httpClient: HttpClient,
     private val apiKey: String
 ) {
-    companion object {
-        // List of acceptable plain text responses, case-insensitive
-        private val STRING_RESPONSE_WHITELIST = listOf(
-            "No chars found"
-        ).map { it.lowercase() }
-    }
-
     /**
      * Sends a Base64-encoded image to the WhatFontIs API for font identification.
      *
@@ -37,7 +30,7 @@ class WhatFontIsApiRepository(
      * @throws IllegalStateException if the API returns a non-success status or a non-whitelisted plain text response.
      */
     @Suppress("SpellCheckingInspection") // Suppress IDE spell check warnings in this function
-    suspend fun identifyFont(imageBase64: String, limit: Int = 5, ignoreWhitelist: Boolean = false): List<FontResult> {
+    suspend fun identifyFont(imageBase64: String, limit: Int = 5): List<FontResult> {
         val apiUrl = "https://www.whatfontis.com/api2/"
 
         val params = Parameters.build {
@@ -65,16 +58,8 @@ class WhatFontIsApiRepository(
                 // Attempt to decode as JSON
                 kotlinx.serialization.json.Json.decodeFromString(responseBody)
             } catch (jsonException: Exception) {
-                // Check for whitelisted plain text response if whitelist is not ignored
-                if (!ignoreWhitelist && STRING_RESPONSE_WHITELIST.contains(responseBody.trim().lowercase())) {
-                    Timber.d("Whitelisted string response received: $responseBody")
-                    // Optionally, return an empty list or a specific marker for whitelisted responses
-                    emptyList()
-                } else {
-                    // Non-whitelisted response or whitelist ignored, treat as a general error
-                    Timber.e(jsonException, "Response is not valid JSON and not whitelisted.")
-                    throw IllegalStateException("Error from API: $responseBody")
-                }
+                Timber.e(jsonException, "Response is not valid JSON.")
+                throw IllegalStateException("Error from API: $responseBody")
             }
         } catch (e: Exception) {
             Timber.e(e, "Error identifying font")

@@ -28,8 +28,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.mitch.fontpicker.data.api.FontDownloaded
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
+import com.mitch.fontpicker.ui.designsystem.components.dialogs.ErrorDialog
 import com.mitch.fontpicker.ui.designsystem.components.dialogs.FontCardSelectionDialog
-import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import com.mitch.fontpicker.ui.screens.camera.components.CameraActionRow
 import com.mitch.fontpicker.ui.screens.camera.components.CameraLiveView
@@ -141,7 +141,7 @@ private fun CameraScreenContent(
     LaunchedEffect(uiState) {
         Timber.d("CameraScreenContent: Current UI State: $uiState")
         if (uiState is CameraUiState.Error) {
-            Timber.d("CameraScreenContent: Displaying error overlay: ${uiState.error}")
+            Timber.d("CameraScreenContent: Displaying error overlay: ${uiState.errorMessage}")
         }
     }
 
@@ -193,11 +193,9 @@ private fun CameraScreenContent(
         }
 
         if (uiState is CameraUiState.Error) {
-            ErrorOverlay(
-                errorMessage = uiState.error,
-                closable = true,
-                verticalBias = 0.1f,
-                onClose = onDismissError
+            ErrorDialog(
+                errorMessage = uiState.errorMessage,
+                onDismiss = onDismissError
             )
         }
 

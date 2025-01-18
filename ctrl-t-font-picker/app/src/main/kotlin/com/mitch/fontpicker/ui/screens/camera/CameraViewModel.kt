@@ -94,7 +94,7 @@ class CameraViewModel(
                 _cameraPreview.value = cameraController.preview
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             } else {
-                onError("Failed to load camera provider: ${result.exceptionOrNull()?.message}")
+                onError("Failed to load camera provider: ${result.exceptionOrNull()?.message}")
             }
         }
     }
@@ -111,7 +111,7 @@ class CameraViewModel(
 
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             } else {
-                onError("Failed to flip camera: ${flipResult.exceptionOrNull()?.message}")
+                onError("Failed to flip camera: ${flipResult.exceptionOrNull()?.message}.")
             }
         }
     }
@@ -123,7 +123,7 @@ class CameraViewModel(
         viewModelScope.launch {
             val fileResult = runCatching { storageController.newFile(storageController.picturesDir) }
             if (fileResult.isFailure) {
-                onError("Failed to create photo file: ${fileResult.exceptionOrNull()?.message}")
+                onError("Failed to create photo file: ${fileResult.exceptionOrNull()?.message}.")
                 return@launch
             }
 
@@ -132,7 +132,7 @@ class CameraViewModel(
 
             val captureResult = cameraController.capturePhoto(context, photoFile)
             if (captureResult.isFailure) {
-                onError("Photo capture failed: ${captureResult.exceptionOrNull()?.message}")
+                onError("Photo capture failed: ${captureResult.exceptionOrNull()?.message}.")
                 return@launch
             }
 
@@ -172,11 +172,19 @@ class CameraViewModel(
                                 "in onPhotoCaptured (actual value = $currentState).")
                     }
                 } else {
-                    onError("Failed to process captured image: ${result.exceptionOrNull()?.message}")
+                    var errorMessage = result.exceptionOrNull()?.message
+                    if (errorMessage == null) {
+                        errorMessage = ("No response from server. " +
+                                "\nPlease make sure that you're connected to the internet.")
+                        onError(message = errorMessage)
+                    } else {
+                        onError("Failed to process captured image (${errorMessage}), " +
+                                "recognized on capturing stage.")
+                    }
                 }
             }
         } else {
-            onError("No photo URI available after capture.")
+            onError("No photo URI available after capture.")
         }
     }
 
@@ -204,7 +212,7 @@ class CameraViewModel(
                 // Copy the selected image to the pictures directory
                 val copiedUri = storageController.copyImageToDirectory(context, uri, storageController.picturesDir)
                 if (copiedUri == null) {
-                    onError("Failed to prepare the selected image.")
+                    onError("Failed to prepare the selected image.")
                     return@launch
                 }
 
@@ -230,12 +238,13 @@ class CameraViewModel(
                         _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
                     }
                 } else {
-                    val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error during image processing."
-                    onError("Failed to process selected image: $errorMessage")
+                    val errorMessage = result.exceptionOrNull()?.message ?: ("Unknown error " +
+                            "during image processing.")
+                    onError("Failed to process selected image ($errorMessage).")
                     Timber.e("Error processing selected image: $errorMessage")
                 }
             } catch (e: Exception) {
-                onError("Failed to handle the selected image: ${e.message}")
+                onError("Failed to handle the selected image: ${e.message}.")
                 Timber.e(e, "Error handling selected gallery image.")
             }
         }
@@ -262,7 +271,7 @@ class CameraViewModel(
 
             // Update the UI state based on the result
             if (result.isFailure) {
-                onError("Error processing image: ${result.exceptionOrNull()?.message}")
+                onError("Error processing image: ${result.exceptionOrNull()?.message}.")
             } else {
                 val fonts = result.getOrDefault(emptyList())
                 _uiState.value = if (fonts.isEmpty()) {
@@ -277,7 +286,7 @@ class CameraViewModel(
             result // Return the result
         } catch (e: Exception) {
             Timber.e(e, "Error processing image.")
-            onError("Error processing image: ${e.message}")
+            onError("Error processing image: ${e.message}.")
             Result.failure(e)
         } finally {
             isProcessingImage = false
@@ -319,10 +328,10 @@ class CameraViewModel(
                     _uiState.value = CameraUiState.OpeningFontsDialog(downloadedFonts)
                     Timber.d("Fonts processed successfully. Opening fonts dialog.")
                 } else {
-                    onError("Failed to download thumbnails for all fonts.")
+                    onError("Failed to download thumbnails for all fonts.")
                 }
             } catch (e: Exception) {
-                onError("Error while processing fonts: ${e.message}")
+                onError("Error while processing fonts: ${e.message}.")
                 Timber.e(e, "Error during fonts processing.")
                 markThumbnailsAsNotInUse()
             }
@@ -353,7 +362,7 @@ class CameraViewModel(
      * Generic error handler that updates UI state.
      */
     private fun onError(message: String) {
-        _uiState.value = CameraUiState.Error(error = message)
+        _uiState.value = CameraUiState.Error(errorMessage = message)
         Timber.e(message)
     }
 
@@ -466,7 +475,7 @@ class CameraViewModel(
                 fontsDatabaseRepository.attemptRecycling()
                 fontsDatabaseRepository.attemptRestoration()
             } catch (e: Exception) {
-                onError("Failed to confirm fonts selection: ${e.message}")
+                onError("Failed to confirm fonts selection: ${e.message}")
                 Timber.e(e, "Error confirming fonts dialog.")
                 fontsDatabaseRepository.dismissRecycling()
                 fontsDatabaseRepository.dismissRestoration()

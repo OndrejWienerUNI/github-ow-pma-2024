@@ -21,6 +21,9 @@ val ColDarkGray = Color(0xFF6E6E6E)
 val ColWhiteSmoke = Color(0xFFF5F5F5)
 val ColOnyx = Color(0xFF111117)
 val ColOnyxLighter = Color(0xFF2F2F38)
+val ColLightRed = Color(0xFFF2B8B5)
+val ColRed = Color(0xFFB3261E)
+val ColDarkRed = Color(0xFF601410)
 
 
 val DarkColorScheme: ColorScheme = darkColorScheme(
@@ -30,12 +33,16 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
     tertiary = ColLightGray,
     background = ColOnyx,
     surface = ColOnyxLighter,
+    error = ColLightRed,
+    errorContainer = ColLightRed,
     onPrimary = Color.Black,
     onPrimaryContainer = Color.Black,
     onSecondary = Color.Black,
     onTertiary = Color.Black,
     onBackground = Color.White,
     onSurface = Color.White,
+    onErrorContainer = ColDarkRed,
+    onError = ColDarkRed
 )
 
 val LightColorScheme: ColorScheme = lightColorScheme(
@@ -45,12 +52,16 @@ val LightColorScheme: ColorScheme = lightColorScheme(
     tertiary = ColDarkGray,
     background = ColWhiteSmoke,
     surface = Color.White,
+    error = ColRed,
+    errorContainer = ColRed,
     onPrimary = Color.White,
     onPrimaryContainer = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    onSurface = Color.Black,
+    onError = Color.White,
+    onErrorContainer = Color.White
 )
 
 

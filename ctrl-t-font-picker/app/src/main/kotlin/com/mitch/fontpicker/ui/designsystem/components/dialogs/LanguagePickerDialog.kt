@@ -52,7 +52,13 @@ fun LanguagePickerDialog(
         icon = {
             Icon(
                 imageVector = FontPickerIcons.Outlined.Translate,
-                contentDescription = null
+                contentDescription = null,
+                modifier = Modifier.padding(
+                    top = padding.small,
+                    bottom = padding.zero,
+                    start = padding.zero,
+                    end = padding.zero,
+                )
             )
         },
         title = {

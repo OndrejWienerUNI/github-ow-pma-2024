@@ -5,7 +5,7 @@ import com.mitch.fontpicker.data.api.FontDownloaded
 sealed interface FontCardListUiState {
     data object Loading : FontCardListUiState
     data class Error(
-        val error: String? = null
+        val errorMessage: String? = null
     ) : FontCardListUiState
     data class Success(
         val fontPreviews: List<FontDownloaded>

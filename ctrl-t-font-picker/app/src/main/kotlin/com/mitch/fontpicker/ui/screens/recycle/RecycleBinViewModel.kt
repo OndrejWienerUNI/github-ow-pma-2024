@@ -89,7 +89,7 @@ class RecycleBinViewModel(
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe recycle bin data.")
-                _uiState.value = FontCardListUiState.Error(error = e.message)
+                _uiState.value = FontCardListUiState.Error(errorMessage = e.message)
             }
         }
     }

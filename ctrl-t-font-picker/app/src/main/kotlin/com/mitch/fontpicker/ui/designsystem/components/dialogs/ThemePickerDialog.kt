@@ -58,7 +58,13 @@ fun ThemePickerDialog(
         icon = {
             Icon(
                 imageVector = FontPickerIcons.Outlined.Palette,
-                contentDescription = null
+                contentDescription = null,
+                modifier = Modifier.padding(
+                    top = padding.small,
+                    bottom = padding.zero,
+                    start = padding.zero,
+                    end = padding.zero,
+                )
             )
         },
         title = {

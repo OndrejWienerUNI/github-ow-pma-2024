@@ -81,7 +81,7 @@ class FavoritesViewModel(
                     }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to observe favorites data.")
-                _uiState.value = FontCardListUiState.Error(error = e.message)
+                _uiState.value = FontCardListUiState.Error(errorMessage = e.message)
             }
         }
     }

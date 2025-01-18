@@ -59,7 +59,8 @@ class FontRecognitionApiController(
             Result.success(fontResults)
         } catch (e: HttpRequestTimeoutException) {
             // Handle timeout error gracefully
-            Timber.e("Request timed out while identifying the font.")
+            Timber.e("Request timed out. the database " +
+                    "is either unreachable or took too long to respond.")
             Result.failure(Exception("Request timed out. Please try again."))
         } catch (e: Exception) {
             // Handle all other errors

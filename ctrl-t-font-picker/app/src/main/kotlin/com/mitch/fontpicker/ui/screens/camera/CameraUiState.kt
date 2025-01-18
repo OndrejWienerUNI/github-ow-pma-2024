@@ -14,7 +14,7 @@ sealed interface CameraUiState {
     data object Processing : CameraUiState
 
     data class Error(
-        val error: String
+        val errorMessage: String
     ) : CameraUiState
 
     data class ImageReady(

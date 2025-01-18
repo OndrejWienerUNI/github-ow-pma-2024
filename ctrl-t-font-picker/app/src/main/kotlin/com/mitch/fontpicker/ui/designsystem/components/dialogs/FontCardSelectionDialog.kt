@@ -7,9 +7,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -47,6 +47,7 @@ fun FontCardSelectionDialog(
     isThemeDark: Boolean = isSystemInDarkTheme()
 ) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val maxDialogWidth = minOf(DIALOG_WIDTH_MAX, screenWidth)
 
     AlertDialog(
@@ -56,9 +57,7 @@ fun FontCardSelectionDialog(
                 text = stringResource(R.string.select_received_fonts),
                 style = FontPickerDesignSystem.typography.titleMedium,
                 color = FontPickerDesignSystem.colorScheme.onSurface,
-                modifier = Modifier
-                    .padding(bottom = padding.extraSmall)
-                    .offset(y = TITLE_OFFSET_Y)
+                modifier = Modifier.offset(y = TITLE_OFFSET_Y)
             )
         },
         text = {
@@ -144,9 +143,9 @@ fun FontCardSelectionDialog(
         titleContentColor = FontPickerDesignSystem.colorScheme.primary,
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier = Modifier
-            .fillMaxSize()
+            .padding(horizontal = padding.medium, vertical = padding.large)
             .widthIn(max = maxDialogWidth)
-            .padding(horizontal = padding.medium, vertical = padding.extraLarge)
+            .heightIn(max = screenHeight * 0.8f)
     )
 }
 
