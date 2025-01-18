@@ -96,11 +96,11 @@ fun FontCardListScreenContent(
                             isThemeDark = isSystemInDarkTheme(),
                             modifier = Modifier.animateItem(
                                 fadeInSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    dampingRatio = Spring.DampingRatioHighBouncy,
                                     stiffness = Spring.StiffnessLow),
                                 fadeOutSpec = spring(
-                                    dampingRatio = Spring.DampingRatioNoBouncy,
-                                    stiffness = Spring.StiffnessMedium)
+                                    dampingRatio = Spring.DampingRatioHighBouncy,
+                                    stiffness = Spring.StiffnessLow)
                             )
                         )
 
@@ -109,11 +109,11 @@ fun FontCardListScreenContent(
                                 text = listEndText.trim(),
                                 modifier = Modifier.animateItem(
                                     fadeInSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        dampingRatio = Spring.DampingRatioHighBouncy,
                                         stiffness = Spring.StiffnessLow),
                                     fadeOutSpec = spring(
-                                        dampingRatio = Spring.DampingRatioNoBouncy,
-                                        stiffness = Spring.StiffnessMedium)
+                                        dampingRatio = Spring.DampingRatioHighBouncy,
+                                        stiffness = Spring.StiffnessLow)
                                 )
                             )
                         }

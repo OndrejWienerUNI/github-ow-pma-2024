@@ -7,7 +7,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -16,7 +25,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +49,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 
@@ -62,19 +74,31 @@ fun FontCard(
 ) {
     // Safeguard for rapid-fire clicks
     val lastClickTime = remember { mutableLongStateOf(0L) }
+    val coroutineScope = rememberCoroutineScope()
+    val isProcessing = remember { mutableStateOf(false) }
     val isLiked = font.isLiked.value
 
     fun handleLikeClick() {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime.longValue > CLICK_DEBOUNCE_TIMEOUT) {
+        if (currentTime - lastClickTime.longValue > CLICK_DEBOUNCE_TIMEOUT && !isProcessing.value) {
             lastClickTime.longValue = currentTime
+            isProcessing.value = true
+
+            // Update UI state
             font.isLiked.value = !isLiked
             Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
             onLikeClick(font)
+
+            // Reset processing flag after debounce timeout
+            coroutineScope.launch {
+                kotlinx.coroutines.delay(CLICK_DEBOUNCE_TIMEOUT)
+                isProcessing.value = false
+            }
         } else {
             Timber.d("FontCard: Rapid click ignored for like button")
         }
     }
+
 
     fun handleWebpageClick() {
         val currentTime = System.currentTimeMillis()
