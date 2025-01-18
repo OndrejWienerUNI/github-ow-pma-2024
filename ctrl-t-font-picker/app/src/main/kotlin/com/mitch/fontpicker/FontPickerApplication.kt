@@ -24,7 +24,13 @@ class FontPickerApplication : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
             // Initialize StrictModeManager
-            StrictModeManager.init()
+            StrictModeManager.addWhitelistEntries(
+                listOf(
+                    "com.mediatek.scnmodule.ScnModule.isGameApp",
+                    "androidx.core.content.FileProvider.parsePathStrategy"
+                )
+            )
+            StrictModeManager.initializeStrictMode()
         }
     }
 }
