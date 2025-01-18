@@ -178,8 +178,7 @@ class CameraViewModel(
                                 "\nPlease make sure that you're connected to the internet.")
                         onError(message = errorMessage)
                     } else {
-                        onError("Failed to process captured image (${errorMessage}), " +
-                                "recognized on capturing stage.")
+                        onError(message = errorMessage)
                     }
                 }
             }
@@ -271,7 +270,8 @@ class CameraViewModel(
 
             // Update the UI state based on the result
             if (result.isFailure) {
-                onError("Error processing image: ${result.exceptionOrNull()?.message}.")
+                onError("An error was encountered in image processing " +
+                        "(${result.exceptionOrNull()?.message}).")
             } else {
                 val fonts = result.getOrDefault(emptyList())
                 _uiState.value = if (fonts.isEmpty()) {
@@ -286,7 +286,7 @@ class CameraViewModel(
             result // Return the result
         } catch (e: Exception) {
             Timber.e(e, "Error processing image.")
-            onError("Error processing image: ${e.message}.")
+            onError("Fatal error was encountered in image processing (${e.message}).")
             Result.failure(e)
         } finally {
             isProcessingImage = false

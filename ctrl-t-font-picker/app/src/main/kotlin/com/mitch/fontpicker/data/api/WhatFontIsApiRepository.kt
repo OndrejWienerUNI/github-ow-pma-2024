@@ -59,7 +59,10 @@ class WhatFontIsApiRepository(
                 kotlinx.serialization.json.Json.decodeFromString(responseBody)
             } catch (jsonException: Exception) {
                 Timber.e(jsonException, "Response is not valid JSON.")
-                throw IllegalStateException("Error from API: $responseBody")
+                if (responseBody == "No chars found") {
+                    return emptyList()
+                }
+                throw IllegalStateException("API error encounterd ($responseBody)")
             }
         } catch (e: Exception) {
             Timber.e(e, "Error identifying font")
