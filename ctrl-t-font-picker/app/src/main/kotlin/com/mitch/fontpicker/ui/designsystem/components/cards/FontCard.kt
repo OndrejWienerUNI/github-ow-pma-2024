@@ -50,8 +50,6 @@ private val IMAGES_COLUMN_HEIGHT = 120.dp // Fixed height for images column
 private val OVERLAY_CIRCLE_SIZE = 36.dp
 private val OVERLAY_ICON_SIZE = 32.dp
 
-private const val ASPECT_RATIO_THRESHOLD = 7.5f
-
 
 @Composable
 fun FontCard(
@@ -172,14 +170,6 @@ fun FontCard(
                 ) {
                     // Distribute available height equally among images
                     processedImages.forEach { bitmap ->
-                        val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
-
-                        val imageContentScale = if (aspectRatio > ASPECT_RATIO_THRESHOLD) {
-                            ContentScale.FillWidth
-                        } else {
-                            ContentScale.FillHeight
-                        }
-
                         Row(
                             modifier = Modifier
                                 .wrapContentWidth()
@@ -191,7 +181,7 @@ fun FontCard(
                                 contentDescription = "Font Preview Image",
                                 modifier = Modifier
                                     .fillMaxHeight(),
-                                contentScale = imageContentScale
+                                contentScale = ContentScale.Fit
                             )
                         }
                     }
