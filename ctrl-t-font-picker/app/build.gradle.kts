@@ -254,6 +254,7 @@ dependencies {
     implementation(libs.icons.eva)
     implementation(libs.core.splashscreen)
     implementation(libs.appcompat)
+    implementation(libs.exifinterface)
 
     // cameraCore
     implementation(libs.camera.core)
