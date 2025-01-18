@@ -7,14 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +24,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,15 +40,17 @@ import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import timber.log.Timber
 
-// 500ms debounce filter for clicks
+
 private const val CLICK_DEBOUNCE_TIMEOUT = 500L
 
 private val BORDER_THICKNESS = 1.dp
 private val HEART_ICON_BUTTON_SIZE = 38.dp
 private val HEART_ICON_SIZE = 30.dp
-private val IMAGE_HEIGHT = 40.dp
+private val IMAGES_COLUMN_HEIGHT = 120.dp // Fixed height for images column
 private val OVERLAY_CIRCLE_SIZE = 36.dp
 private val OVERLAY_ICON_SIZE = 32.dp
+
+private const val ASPECT_RATIO_THRESHOLD = 7.5f
 
 
 @Composable
@@ -160,6 +156,7 @@ fun FontCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(IMAGES_COLUMN_HEIGHT) // Fixed height for the images column
                         .padding(
                             start = padding.small,
                             end = padding.small,
@@ -173,16 +170,30 @@ fun FontCard(
                         .clip(CardDefaults.shape),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Distribute available height equally among images
                     processedImages.forEach { bitmap ->
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Font Preview Image",
+                        val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
+
+                        val imageContentScale = if (aspectRatio > ASPECT_RATIO_THRESHOLD) {
+                            ContentScale.FillWidth
+                        } else {
+                            ContentScale.FillHeight
+                        }
+
+                        Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(IMAGE_HEIGHT)
-                                .clip(CardDefaults.shape),
-                            alignment = Alignment.Center
-                        )
+                                .wrapContentWidth()
+                                .weight(1f)
+                                .align(Alignment.CenterHorizontally)
+                        ) {
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Font Preview Image",
+                                modifier = Modifier
+                                    .fillMaxHeight(),
+                                contentScale = imageContentScale
+                            )
+                        }
                     }
                 }
             }
@@ -191,7 +202,7 @@ fun FontCard(
                 onClick = { handleLikeClick() },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(horizontal = padding.medium, vertical = padding.extraSmall)
+                    .padding(horizontal = padding.medium  - 2.dp, vertical = padding.extraSmall)
                     .size(HEART_ICON_BUTTON_SIZE)
                     .zIndex(1f)
             ) {
@@ -238,18 +249,22 @@ fun FontCard(
     }
 }
 
-
-
 @Preview
 @Composable
 fun FontCardPreviewLight() {
     FontPickerTheme(isThemeDark = false) {
-        val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+        val sampleBitmap1 = Bitmap.createBitmap(800, 120, Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.RED) }
+        val sampleBitmap2 = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.GREEN) }
+        val sampleBitmap3 = Bitmap.createBitmap(1200, 120, Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.BLUE) }
+
         val fontDownloaded = FontDownloaded(
             title = "Example Font (Light Theme, disliked)",
             url = "https://example.com/font",
             imageUrls = listOf("https://example.com/font-image-1"),
-            bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap)
+            bitmaps = listOf(sampleBitmap1, sampleBitmap2, sampleBitmap3)
         )
 
         FontCard(
@@ -266,12 +281,18 @@ fun FontCardPreviewLight() {
 @Composable
 fun FontCardPreviewDark() {
     FontPickerTheme(isThemeDark = true) {
-        val sampleBitmap = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+        val sampleBitmap1 = Bitmap.createBitmap(800, 120, Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.RED) }
+//        val sampleBitmap2 = Bitmap.createBitmap(500, 120, Bitmap.Config.ARGB_8888)
+//            .apply { eraseColor(android.graphics.Color.GREEN) }
+        val sampleBitmap3 = Bitmap.createBitmap(1200, 120, Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.BLUE) }
+
         val fontDownloaded = FontDownloaded(
             title = "Example Font (Dark Theme, liked)",
             url = "https://example.com/font",
             imageUrls = listOf("https://example.com/font-image-1"),
-            bitmaps = listOf(sampleBitmap, sampleBitmap, sampleBitmap)
+            bitmaps = listOf(sampleBitmap1, sampleBitmap3)
         )
 
         FontCard(
