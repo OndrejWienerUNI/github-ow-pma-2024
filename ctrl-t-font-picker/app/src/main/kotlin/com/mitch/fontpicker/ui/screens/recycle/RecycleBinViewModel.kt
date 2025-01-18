@@ -101,7 +101,6 @@ class RecycleBinViewModel(
                     Timber.d("Restoring font: ${font.title} (id=$fontId)")
                     fontsDatabaseRepository.moveToFavorites(fontId)
                     Timber.d("Font '${font.title}' restored to Favorites.")
-                    observeRecycleBin() // Refresh the data
                 } ?: Timber.e("Cannot restore font with null ID: ${font.title}")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to restore font '${font.title}'.")
@@ -117,7 +116,6 @@ class RecycleBinViewModel(
                     Timber.d("Deleting font: ${font.title} (id=$fontId) from Recycle Bin.")
                     fontsDatabaseRepository.deleteRecycledFont(fontId)
                     Timber.d("Font '${font.title}' deleted from Recycle Bin.")
-                    observeRecycleBin() // Refresh the data
                 } ?: Timber.e("Cannot delete font with null ID: ${font.title}")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to delete font '${font.title}'.")
@@ -131,7 +129,6 @@ class RecycleBinViewModel(
                 Timber.d("Wiping all fonts from the recycle bin.")
                 fontsDatabaseRepository.wipeRecycleBin()
                 Timber.d("Recycle Bin cleared.")
-                observeRecycleBin() // Refresh the data
             } catch (e: Exception) {
                 Timber.e(e, "Failed to wipe recycle bin.")
             }

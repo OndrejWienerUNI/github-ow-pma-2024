@@ -76,7 +76,7 @@ fun FontCard(
     val lastClickTime = remember { mutableLongStateOf(0L) }
     val coroutineScope = rememberCoroutineScope()
     val isProcessing = remember { mutableStateOf(false) }
-    val isLiked = font.isLiked.value
+    val isLiked = remember { mutableStateOf(font.isLiked.value) }
 
     fun handleLikeClick() {
         val currentTime = System.currentTimeMillis()
@@ -85,12 +85,13 @@ fun FontCard(
             isProcessing.value = true
 
             // Update UI state
-            font.isLiked.value = !isLiked
+            isLiked.value = !isLiked.value
+            font.isLiked.value = isLiked.value
             Timber.d("FontCard: Font '${font.title}' like state changed to ${font.isLiked.value}")
-            onLikeClick(font)
 
             // Reset processing flag after debounce timeout
             coroutineScope.launch {
+                onLikeClick(font)
                 kotlinx.coroutines.delay(CLICK_DEBOUNCE_TIMEOUT)
                 isProcessing.value = false
             }
@@ -123,13 +124,14 @@ fun FontCard(
         }
     }
 
-    val heartIcon: ImageVector = if (isLiked) FontPickerIcons.Filled.Heart else FontPickerIcons.Outlined.Heart
-    val heartColor: Color = if (isLiked)
+    val heartIcon: ImageVector = if (isLiked.value) FontPickerIcons.Filled.Heart
+        else FontPickerIcons.Outlined.Heart
+    val heartColor: Color = if (isLiked.value)
         FontPickerDesignSystem.colorScheme.primary
     else
         FontPickerDesignSystem.extendedColorScheme.icOnBackground
 
-    val borderColor: Color = if (isLiked)
+    val borderColor: Color = if (isLiked.value)
         FontPickerDesignSystem.colorScheme.primary
     else
         FontPickerDesignSystem.extendedColorScheme.borders

@@ -93,7 +93,6 @@ class FavoritesViewModel(
                     Timber.d("Toggling like for font: ${font.title} (id=$fontId)")
                     fontsDatabaseRepository.moveToRecycleBin(fontId)
                     Timber.d("Font '${font.title}' moved to Recycle Bin.")
-                    observeFavorites() // Refresh the data
                 } ?: Timber.e("Cannot toggle like for font with null ID: ${font.title}")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to toggle like for font '${font.title}'.")

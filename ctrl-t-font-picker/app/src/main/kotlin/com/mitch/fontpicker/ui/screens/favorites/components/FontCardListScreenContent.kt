@@ -10,12 +10,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -26,9 +28,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.components.cards.FontCard
 import com.mitch.fontpicker.ui.designsystem.components.loading.LoadingScreen
 import com.mitch.fontpicker.ui.designsystem.components.overlays.ErrorOverlay
-import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 import timber.log.Timber
-import java.util.UUID
 
 private val GRADIENT_HEIGHT_TOP = 10.dp
 private val GRADIENT_HEIGHT_BOTTOM = 10.dp
@@ -42,6 +42,7 @@ fun FontCardListScreenContent(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val isThemeDark = isSystemInDarkTheme()
 
     when (uiState) {
         is FontCardListUiState.Loading -> {
@@ -55,77 +56,41 @@ fun FontCardListScreenContent(
         is FontCardListUiState.Success -> {
             Timber.d("FavoritesScreenContent displaying ${uiState.fontPreviews.size} fonts.")
 
+            val displayedFonts = uiState.fontPreviews
+
+            // Filter fonts with non-null IDs and log excluded ones
+            val filteredFonts = remember(displayedFonts) {
+                displayedFonts.filter { font ->
+                    if (font.id != null) {
+                        true
+                    } else {
+                        Timber.w(
+                            "Font excluded due to missing ID: " +
+                                    "Title='${font.title}', URL='${font.url}', " +
+                                    "ImageUrls=${font.imageUrls}, Bitmaps=${font.bitmaps}"
+                        )
+                        false
+                    }
+                }
+            }
+
             Box(modifier = Modifier.fillMaxSize()) {
 
-                val displayedFonts = uiState.fontPreviews
-
-                LazyColumn(
-                    modifier = modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(padding.medium),
-                    flingBehavior = ScrollableDefaults.flingBehavior(),
-                    contentPadding = PaddingValues(
-                        horizontal = padding.medium, vertical = padding.zero
-                    )
-                ) {
-                    item { /** zero height item for spacing **/ }
-
-                    itemsIndexed(
-                        items = displayedFonts,
-                        key = { _, fontPreview -> fontPreview.id ?: UUID.randomUUID().toString() }
-                    ) { index, fontPreview ->
-
-                        Timber.d("Rendering LazyColumn item: ${fontPreview.title}, " +
-                                "ID=${fontPreview.id}")
-                        FontCard(
-                            font = fontPreview,
-                            inSelectionDialog = false,
-                            onLikeClick = {
-                                Timber.d("FontCard onLikeClick triggered " +
-                                        "for font: ${fontPreview.title}")
-                                onToggleLike(fontPreview)
-                            },
-                            onWebpageClick = {
-                                Timber.d("FontCard onWebpageClick triggered " +
-                                        "for font: ${fontPreview.title} " +
-                                        "with URL: ${fontPreview.url}")
-                                fontPreview.url.let { url ->
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                    context.startActivity(intent)
-                                }
-                            },
-                            isThemeDark = isSystemInDarkTheme(),
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = spring(
-                                    dampingRatio = Spring.DampingRatioHighBouncy,
-                                    stiffness = Spring.StiffnessLow),
-                                fadeOutSpec = spring(
-                                    dampingRatio = Spring.DampingRatioHighBouncy,
-                                    stiffness = Spring.StiffnessLow)
-                            )
-                        )
-
-                        if (index == displayedFonts.lastIndex && listEndText.isNotBlank()) {
-                            ListEndText(
-                                text = listEndText.trim(),
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = spring(
-                                        dampingRatio = Spring.DampingRatioHighBouncy,
-                                        stiffness = Spring.StiffnessLow),
-                                    fadeOutSpec = spring(
-                                        dampingRatio = Spring.DampingRatioHighBouncy,
-                                        stiffness = Spring.StiffnessLow)
-                                )
-                            )
+                FontListLazyColumn(
+                    filteredFonts = filteredFonts,
+                    listEndText = listEndText,
+                    onToggleLike = onToggleLike,
+                    onWebpageClick = { fontPreview ->
+                        Timber.d("FontCard onWebpageClick triggered for font: ${fontPreview.title} " +
+                                "with ID: ${fontPreview.id} and URL: ${fontPreview.url}")
+                        fontPreview.url.let { url ->
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
                         }
-                    }
-
-                    if (displayedFonts.isEmpty()) {
-                        item { ListEndText(text = listEndText.trim()) }
-                    }
-
-                    item { /** zero height item for spacing **/ }
-                }
-
+                    },
+                    isThemeDark = isThemeDark,
+                    modifier = modifier
+                )
 
                 // Gradient overlay at the top
                 Box(
@@ -170,6 +135,141 @@ fun FontCardListScreenContent(
                     Timber.d("Error overlay dismissed.")
                     onRetry()
                 }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun FontListLazyColumn(
+    filteredFonts: List<FontDownloaded>,
+    listEndText: String,
+    onToggleLike: (FontDownloaded) -> Unit,
+    onWebpageClick: (FontDownloaded) -> Unit,
+    isThemeDark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    // Hardcoded padding values
+    val horizontalPadding = 16.dp
+    val verticalSpacing = 8.dp
+
+    // Hardcoded spring animation parameters
+    val springDampingRatio = Spring.DampingRatioHighBouncy
+    val springStiffness = Spring.StiffnessLow
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+        flingBehavior = ScrollableDefaults.flingBehavior(),
+        contentPadding = PaddingValues(
+            horizontal = horizontalPadding, vertical = 0.dp
+        )
+    ) {
+        // Top spacing
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(0.dp)
+                    .animateItem(
+                        fadeInSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        ),
+                        fadeOutSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        )
+                    )
+            )
+        }
+
+        // Render filtered fonts
+        itemsIndexed(
+            items = filteredFonts,
+            key = { _, fontPreview -> fontPreview.id!! }
+        ) { index, fontPreview ->
+
+            Timber.d("Rendering LazyColumn item: ${fontPreview.title}, ID=${fontPreview.id}")
+            FontCard(
+                font = fontPreview,
+                inSelectionDialog = false,
+                onLikeClick = {
+                    Timber.d("FontCard onLikeClick triggered for font: ${fontPreview.title}")
+                    onToggleLike(fontPreview)
+                },
+                onWebpageClick = {
+                    Timber.d(
+                        "FontCard onWebpageClick triggered for font: ${fontPreview.title} " +
+                                "with ID: ${fontPreview.id} and URL: ${fontPreview.url}"
+                    )
+                    onWebpageClick(fontPreview)
+                },
+                isThemeDark = isThemeDark,
+                modifier = Modifier.animateItem(
+                    fadeInSpec = spring(
+                        dampingRatio = springDampingRatio,
+                        stiffness = springStiffness
+                    ),
+                    fadeOutSpec = spring(
+                        dampingRatio = springDampingRatio,
+                        stiffness = springStiffness
+                    )
+                )
+            )
+
+            // List end text
+            if (index == filteredFonts.lastIndex && listEndText.isNotBlank()) {
+                ListEndText(
+                    text = listEndText.trim(),
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        ),
+                        fadeOutSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        )
+                    )
+                )
+            }
+        }
+
+        // Handle empty list
+        if (filteredFonts.isEmpty()) {
+            item {
+                ListEndText(
+                    text = listEndText.trim(),
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        ),
+                        fadeOutSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        )
+                    )
+                )
+            }
+        }
+
+        // Bottom spacing
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(0.dp)
+                    .animateItem(
+                        fadeInSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        ),
+                        fadeOutSpec = spring(
+                            dampingRatio = springDampingRatio,
+                            stiffness = springStiffness
+                        )
+                    )
             )
         }
     }
