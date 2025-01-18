@@ -58,7 +58,7 @@ fun CameraScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
-    val photoUri by viewModel.photoUri.collectAsState()
+    val imageUri by viewModel.imageUri.collectAsState()
     val cameraPreviewView by viewModel.cameraPreviewView.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -111,7 +111,7 @@ fun CameraScreen(
     CameraScreenContent(
         uiState = uiState,
         isPreview = isPreview,
-        photoUri = photoUri,
+        imageUri = imageUri,
         cameraPreviewView = cameraPreviewView,
         onCapturePhoto = { coroutineScope.launch { viewModel.capturePhoto(context) } },
         onFlipCamera = { viewModel.flipCamera(context, lifecycleOwner) },
@@ -129,7 +129,7 @@ fun CameraScreen(
 private fun CameraScreenContent(
     uiState: CameraUiState,
     isPreview: Boolean,
-    photoUri: Uri?,
+    imageUri: Uri?,
     cameraPreviewView: androidx.camera.core.Preview?,
     onCapturePhoto: () -> Unit,
     onFlipCamera: () -> Unit,
@@ -177,7 +177,7 @@ private fun CameraScreenContent(
                         cameraPreviewView = cameraPreviewView,
                         modifier = Modifier.fillMaxSize(),
                         isLoading = isLoading,
-                        photoUri = photoUri
+                        imageUri = imageUri
                     )
                 }
             }
@@ -217,14 +217,14 @@ fun CameraScreenContentPreview() {
     FontPickerTheme {
         // Mock dependencies for preview
         val mockUiState = CameraUiState.CameraReady()
-        val mockPhotoUri: Uri? = null
+        val mockImageUri: Uri? = null
         val mockCameraPreviewView: androidx.camera.core.Preview? = null
 
         // Render the UI
         CameraScreenContent(
             uiState = mockUiState,
             isPreview = true,
-            photoUri = mockPhotoUri,
+            imageUri = mockImageUri,
             cameraPreviewView = mockCameraPreviewView,
             onCapturePhoto = {},
             onFlipCamera = {},

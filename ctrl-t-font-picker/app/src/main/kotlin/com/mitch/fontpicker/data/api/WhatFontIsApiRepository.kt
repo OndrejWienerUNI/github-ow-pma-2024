@@ -49,24 +49,23 @@ class WhatFontIsApiRepository(
             setBody(FormDataContent(params))
         }
 
-        return try {
-            // Force treat the response body as text
-            val responseBody = response.bodyAsText()
-            Timber.d("Raw response body: $responseBody")
 
-            try {
-                // Attempt to decode as JSON
-                kotlinx.serialization.json.Json.decodeFromString(responseBody)
-            } catch (jsonException: Exception) {
-                Timber.e(jsonException, "Response is not valid JSON.")
-                if (responseBody == "No chars found") {
-                    return emptyList()
-                }
+        // Force treat the response body as text
+        val responseBody = response.bodyAsText()
+        Timber.d("Raw response body: $responseBody")
+
+        try {
+            // Attempt to decode as JSON
+            return kotlinx.serialization.json.Json.decodeFromString(responseBody)
+        } catch (jsonException: Exception) {
+            if (responseBody == "No chars found") {
+                Timber.d("No characters found in the image.")
+                return emptyList()
+            } else {
+                Timber.w(jsonException, "Response is not valid JSON.")
                 throw IllegalStateException("API error encounterd ($responseBody)")
             }
-        } catch (e: Exception) {
-            Timber.e(e, "Error identifying font")
-            throw e
+
         }
     }
 }

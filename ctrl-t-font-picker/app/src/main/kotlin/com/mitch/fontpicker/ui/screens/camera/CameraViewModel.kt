@@ -40,8 +40,8 @@ class CameraViewModel(
     private val _uiState = MutableStateFlow<CameraUiState>(CameraUiState.CameraReady())
     val uiState: StateFlow<CameraUiState> = _uiState
 
-    private val _photoUri = MutableStateFlow<Uri?>(null)
-    val photoUri: StateFlow<Uri?> = _photoUri
+    private val _imageUri = MutableStateFlow<Uri?>(null)
+    val imageUri: StateFlow<Uri?> = _imageUri
 
     private val _galleryPickerEvent = MutableStateFlow(false)
     val galleryPickerEvent: StateFlow<Boolean> = _galleryPickerEvent
@@ -52,20 +52,20 @@ class CameraViewModel(
 
     private var isProcessingImage = false
 
-    private val _cameraPreview = MutableStateFlow<Preview?>(null)
-    val cameraPreviewView: StateFlow<Preview?> = _cameraPreview
+    private val _cameraPreviewView = MutableStateFlow<Preview?>(null)
+    val cameraPreviewView: StateFlow<Preview?> = _cameraPreviewView
 
     init {
         viewModelScope.launch {
             _uiState.collect { newState ->
                 Timber.d("CameraUiState changed to: $newState")
 
-                // Reset _photoUri for specific states
+                // Reset _imageUri for specific states
                 when (newState) {
                     is CameraUiState.Error,
                     is CameraUiState.CameraReady,
                     is CameraUiState.Success -> {
-                        _photoUri.value = null
+                        _imageUri.value = null
                         _isImageInUse.value = false
                         Timber.d("Photo URI reset due to state: $newState. Releasing resources.")
                     }
@@ -91,7 +91,7 @@ class CameraViewModel(
             val result = cameraController.initializeCamera(context, lifecycleOwner)
             if (result.isSuccess) {
                 // <-- Set the new preview reference so the UI sees it
-                _cameraPreview.value = cameraController.preview
+                _cameraPreviewView.value = cameraController.preview
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             } else {
                 onError("Failed to load camera provider: ${result.exceptionOrNull()?.message}")
@@ -107,7 +107,7 @@ class CameraViewModel(
             val flipResult = cameraController.flipCamera(context, lifecycleOwner)
             if (flipResult.isSuccess) {
                 // Update the preview Flow again
-                _cameraPreview.value = cameraController.preview
+                _cameraPreviewView.value = cameraController.preview
 
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             } else {
@@ -117,45 +117,73 @@ class CameraViewModel(
     }
 
     /**
-     * Capture a photo using CameraX, then proceed with UI updates.
+     * Converts the given image file to black and white with elevated contrast.
+     *
+     * @param filePath The path to the image file.
+     * @return The processed image file.
+     * @throws Exception If the processing fails.
+     */
+    private suspend fun makeImageHighContrastBw(filePath: String): File = withContext(Dispatchers.IO) {
+        val bitmap = BitmapToolkit.getBitmapFromPath(filePath)
+
+        val bitmapBw = BitmapToolkit.makeHighContrastBw(bitmap)
+            ?: throw Exception("Failed to convert image to black and white.")
+
+        val file = File(filePath)
+        storageController.replaceJpegFileWithBitmap(file, bitmapBw)
+        return@withContext file
+    }
+
+    /**
+     * Capture a photo using CameraX, process it to black and white with elevated contrast, then proceed with UI updates.
      */
     fun capturePhoto(context: Context) {
         viewModelScope.launch {
             val fileResult = runCatching { storageController.newFile(storageController.picturesDir) }
             if (fileResult.isFailure) {
-                onError("Failed to create photo file: ${fileResult.exceptionOrNull()?.message}.")
+                onError("Failed to create photo file: ${fileResult.exceptionOrNull()?.message}.")
                 return@launch
             }
 
             val photoFile: File = fileResult.getOrThrow()
-            _uiState.value = CameraUiState.Processing // or whatever state you prefer
+            _uiState.value = CameraUiState.Processing
 
-            val captureResult = cameraController.capturePhoto(context, photoFile)
+            val captureResult: Result<File> = cameraController.capturePhoto(context, photoFile)
             if (captureResult.isFailure) {
                 onError("Photo capture failed: ${captureResult.exceptionOrNull()?.message}.")
                 return@launch
             }
 
             val capturedFile = captureResult.getOrThrow()
-            val capturedUri = Uri.fromFile(capturedFile)  // or convert to a content URI if needed
-            _photoUri.value = capturedUri
-            Timber.d("Starting photo capture. File=$photoFile, contentUri=$capturedUri")
+
+            val processedResult = runCatching {
+                makeImageHighContrastBw(capturedFile.absolutePath)
+            }
+
+            if (processedResult.isFailure) {
+                onError("Failed to process image: ${processedResult.exceptionOrNull()?.message}.")
+                return@launch
+            }
+
+            val processedFile = processedResult.getOrThrow()
+            val capturedUri = Uri.fromFile(processedFile)
+            _imageUri.value = capturedUri
+            Timber.d("Photo captured and processed. File=$processedFile, contentUri=$capturedUri")
             _uiState.value = CameraUiState.ImageReady(capturedUri)
 
-            onPhotoCaptured()
+            onImageReady()
         }
     }
 
     /**
      * Called when a photo was successfully captured.
      */
-    private fun onPhotoCaptured() {
-        val uri = _photoUri.value
+    private fun onImageReady() {
+        val uri = _imageUri.value
         if (uri != null) {
             viewModelScope.launch {
-                val result = sendImageForProcessing(uri) // Make this a suspending call.
+                val result = sendImageForProcessing(uri)
 
-                // Ensure the UI state has been updated by waiting for the processing to complete.
                 if (result.isSuccess) {
                     val fonts = result.getOrDefault(emptyList())
                     _uiState.value = if (fonts.isEmpty()) {
@@ -188,6 +216,65 @@ class CameraViewModel(
     }
 
     /**
+     * Handle a selected gallery image by copying it to pictures directory,
+     * then updating the UI state.
+     */
+    fun onGalleryImageSelected(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val copiedUri = storageController.copyImageToDirectory(context, uri, storageController.picturesDir)
+                Timber.d("Gallery image copied to pictures directory: $copiedUri")
+
+                if (copiedUri == null) {
+                    onError("Failed to prepare the selected image.")
+                    return@launch
+                }
+
+                // Convert the copied image to black and white with high contrast
+                val bwConversionResult = runCatching {
+                    val filePath = copiedUri.path ?: throw Exception("Invalid file path for copied image.")
+                    makeImageHighContrastBw(filePath)
+                }
+
+                if (bwConversionResult.isFailure) {
+                    onError("Failed to process the selected image: ${bwConversionResult.exceptionOrNull()?.message}")
+                    return@launch
+                }
+
+                val processedFile = bwConversionResult.getOrThrow()
+                val processedUri = Uri.fromFile(processedFile)
+
+                _imageUri.value = processedUri
+                _isImageInUse.value = true
+                _uiState.value = CameraUiState.ImageReady(processedUri)
+
+                Timber.d("Gallery image selected and processed to black and white: $processedUri, ready for display.")
+
+                val result = sendImageForProcessing(processedUri)
+
+                if (result.isSuccess) {
+                    val fonts = result.getOrDefault(emptyList())
+                    if (fonts.isNotEmpty()) {
+                        _uiState.value = CameraUiState.FontsReceived(fonts)
+                        processReceivedFonts(fonts)
+                    } else {
+                        Timber.d("No fonts detected. Returning to CameraReady state.")
+                        _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
+                    }
+                } else {
+                    val errorMessage = result.exceptionOrNull()?.message ?: ("Unknown error during image processing.")
+                    onError("Failed to process selected image ($errorMessage).")
+                    Timber.e("Error processing selected image: $errorMessage")
+                }
+
+            } catch (e: Exception) {
+                onError("Failed to handle the selected image: ${e.message}.")
+                Timber.e(e, "Error handling selected gallery image.")
+            }
+        }
+    }
+
+    /**
      * Reset the gallery picker event flag.
      */
     fun resetGalleryPickerEvent() {
@@ -199,54 +286,6 @@ class CameraViewModel(
      */
     fun onOpenGallery() {
         _galleryPickerEvent.value = true
-    }
-
-    /**
-     * Handle a selected gallery image by copying it to pictures directory,
-     * then updating the UI state.
-     */
-    fun onGalleryImageSelected(context: Context, uri: Uri) {
-        viewModelScope.launch {
-            try {
-                // Copy the selected image to the pictures directory
-                val copiedUri = storageController.copyImageToDirectory(context, uri, storageController.picturesDir)
-                if (copiedUri == null) {
-                    onError("Failed to prepare the selected image.")
-                    return@launch
-                }
-
-                // Update state with the copied image URI
-                _photoUri.value = copiedUri
-                _isImageInUse.value = true
-                _uiState.value = CameraUiState.ImageReady(copiedUri)
-                Timber.d("Gallery image copied to pictures directory: $copiedUri")
-                Timber.d("Gallery image selected: $uri, ready for display.")
-
-                // Start processing the image
-                _uiState.value = CameraUiState.Processing
-                val result = sendImageForProcessing(copiedUri)
-
-                // Handle the result of the image processing
-                if (result.isSuccess) {
-                    val fonts = result.getOrDefault(emptyList())
-                    if (fonts.isNotEmpty()) {
-                        _uiState.value = CameraUiState.FontsReceived(fonts)
-                        processReceivedFonts(fonts)
-                    } else {
-                        Timber.d("No fonts detected. Returning to CameraReady state.")
-                        _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
-                    }
-                } else {
-                    val errorMessage = result.exceptionOrNull()?.message ?: ("Unknown error " +
-                            "during image processing.")
-                    onError("Failed to process selected image ($errorMessage).")
-                    Timber.e("Error processing selected image: $errorMessage")
-                }
-            } catch (e: Exception) {
-                onError("Failed to handle the selected image: ${e.message}.")
-                Timber.e(e, "Error handling selected gallery image.")
-            }
-        }
     }
 
     /**
@@ -290,6 +329,7 @@ class CameraViewModel(
             Result.failure(e)
         } finally {
             isProcessingImage = false
+            markImageAsNotInUse()
         }
     }
 
@@ -334,6 +374,7 @@ class CameraViewModel(
                 onError("Error while processing fonts: ${e.message}.")
                 Timber.e(e, "Error during fonts processing.")
                 markThumbnailsAsNotInUse()
+                _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
             }
         }
     }
@@ -342,7 +383,7 @@ class CameraViewModel(
      * Resets the view model's photo state and triggers a dir clear (optional).
      */
     fun resetImageState() {
-        _photoUri.value = null
+        _imageUri.value = null
         _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
         markImageAsNotInUse()
     }
@@ -363,6 +404,8 @@ class CameraViewModel(
      */
     private fun onError(message: String) {
         _uiState.value = CameraUiState.Error(errorMessage = message)
+        markImageAsNotInUse()
+        markThumbnailsAsNotInUse()
         Timber.e(message)
     }
 
@@ -455,6 +498,7 @@ class CameraViewModel(
             markThumbnailsAsNotInUse()
             fontsDatabaseRepository.dismissRecycling()
             fontsDatabaseRepository.dismissRestoration()
+            _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
         }
     }
 
@@ -496,9 +540,6 @@ class CameraViewModel(
             thumbnailMutex.withLock {
                 try {
                     val currentState = _uiState.value
-
-                    _uiState.value = CameraUiState.ClearingThumbnails
-
                     when (currentState) {
                         is CameraUiState.OpeningFontsDialog -> currentState.downloadedFonts
                         is CameraUiState.SavingFavoriteFonts -> currentState.downloadedFonts
@@ -513,8 +554,6 @@ class CameraViewModel(
                     Timber.d("Thumbnails directory cleared.")
                 } catch (e: Exception) {
                     Timber.e(e, "Error during thumbnail cleanup.")
-                } finally {
-                    _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
                 }
             }
         }

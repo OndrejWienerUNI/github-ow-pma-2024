@@ -1,13 +1,16 @@
 package com.mitch.fontpicker.ui.screens.camera.controlers
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
-import androidx.core.content.FileProvider
+import com.mitch.fontpicker.data.images.BitmapToolkit
 import com.mitch.fontpicker.di.DependenciesProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import timber.log.Timber
 import java.io.File
+import java.io.FileOutputStream
 
 /**
  * Handles file operations such as creating files, copying images, and clearing directories.
@@ -71,31 +74,52 @@ class StorageController(
             val prefix: String = when (directory) {
                 picturesDir -> "pd"
                 thumbnailsDir -> "td"
-                else -> {
-                    "uncategorized"
-                }
+                else -> "uncategorized"
             }
             val fileName = "${prefix}_c_${System.currentTimeMillis()}.jpg"
             val destinationFile = File(directory, fileName)
 
             try {
-                context.contentResolver.openInputStream(sourceUri).use { inputStream ->
+                // Resolve the file path from the Uri (content:// or file://)
+                val sourcePath = sourceUri.toFilePath(context)
+                    ?: throw IllegalArgumentException("Unable to resolve file path from Uri: $sourceUri")
+
+                // Copy the resolved file to the destination
+                File(sourcePath).inputStream().use { inputStream ->
                     destinationFile.outputStream().use { outputStream ->
-                        inputStream?.copyTo(outputStream)
+                        inputStream.copyTo(outputStream)
                     }
                 }
                 Timber.d("Image copied to: ${destinationFile.absolutePath}")
-                FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    destinationFile
-                )
+                val fileUri = Uri.fromFile(destinationFile)
+
+                // return file uri
+                fileUri
             } catch (e: Exception) {
                 Timber.e(e, "Error copying image to the directory.")
+
+                // return a null
                 null
             }
         }
     }
+
+    private fun Uri.toFilePath(context: Context): String? {
+        return when (scheme) {
+            "content" -> {
+                val projection = arrayOf(android.provider.MediaStore.Images.Media.DATA)
+                context.contentResolver.query(
+                    this, projection, null, null, null
+                )?.use { cursor ->
+                    val columnIndex = cursor.getColumnIndexOrThrow(projection[0])
+                    if (cursor.moveToFirst()) cursor.getString(columnIndex) else null
+                }
+            }
+            "file" -> path
+            else -> null
+        }
+    }
+
 
     /**
      * Clears all files in the specified directory.
@@ -121,5 +145,38 @@ class StorageController(
                 }
             }
         }
+    }
+
+    /**
+     * Replaces a JPEG file's content with a given bitmap.
+     * Ensures the file is a JPEG before processing.
+     *
+     * @param jpegFile The JPEG file to be overwritten.
+     * @param bitmap The bitmap to replace the contents of the JPEG file.
+     *
+     * @return The newly replaced JPEG file.
+     *
+     * @throws IllegalArgumentException If the provided file is not a JPEG.
+     * @throws IOException If an error occurs during file writing.
+     */
+    fun replaceJpegFileWithBitmap(jpegFile: File, bitmap: Bitmap): File {
+        val validJpegExtensions = listOf("jpg", "jpeg")
+
+        val fileExtension = jpegFile.extension.lowercase()
+
+        require(fileExtension in validJpegExtensions) {
+            "Invalid file type: ${jpegFile.name}. Only JPEG files are supported."
+        }
+
+        val jpegCompatibleBitmap = BitmapToolkit.makeJpegCompatible(bitmap)
+
+        FileOutputStream(jpegFile).use { outputStream ->
+            val compressed = jpegCompatibleBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            if (!compressed) {
+                throw IOException("Failed to compress bitmap into JPEG format.")
+            }
+        }
+
+        return jpegFile
     }
 }

@@ -28,7 +28,7 @@ fun CameraLiveView(
     cameraPreviewView: androidx.camera.core.Preview?,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(LIVE_VIEW_CORNER_RADIUS),
-    photoUri: Uri? = null,
+    imageUri: Uri? = null,
     isLoading: Boolean? = false,
     aspectRatio: Float = 3f / 4f
 ) {
@@ -40,7 +40,7 @@ fun CameraLiveView(
     }
 
     Timber.d("CameraLiveView Composable called " +
-            "with isLoadingNonNull: $isLoadingNonNull and photoUri: $photoUri")
+            "with isLoadingNonNull: $isLoadingNonNull and imageUri: $imageUri")
 
     Box(
         modifier = modifier
@@ -85,9 +85,9 @@ fun CameraLiveView(
         )
 
         // Display captured photo overlay if a photo is being processed
-        if (photoUri != null && isLoadingNonNull.value) {
-            Timber.d("Displaying CapturedImageWithOverlay for URI: $photoUri")
-            CapturedImageWithOverlay(photoUri = photoUri)
+        if (imageUri != null && isLoadingNonNull.value) {
+            Timber.d("Displaying CapturedImageWithOverlay for URI: $imageUri")
+            CapturedImageWithOverlay(imageUri = imageUri)
         }
     }
 }

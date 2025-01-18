@@ -37,8 +37,6 @@ sealed interface CameraUiState {
         val downloadedFonts: List<FontDownloaded>
     ) : CameraUiState
 
-    data object ClearingThumbnails : CameraUiState
-
     data class Success(
         val message: String
     ) : CameraUiState

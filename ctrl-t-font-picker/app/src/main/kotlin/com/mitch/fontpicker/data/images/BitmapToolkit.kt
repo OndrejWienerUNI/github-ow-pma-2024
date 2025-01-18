@@ -6,7 +6,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
+import android.graphics.Matrix
 import android.graphics.Paint
+import androidx.exifinterface.media.ExifInterface
 import android.net.Uri
 import androidx.core.net.toFile
 import com.mitch.fontpicker.di.DependenciesProvider
@@ -131,22 +133,98 @@ class BitmapToolkit(
             }
         }
 
-        fun makeJpegCompatible(bitmap: Bitmap, backgroundColor: Int = Color.WHITE): Bitmap {
-            if (Color.alpha(backgroundColor) != 255) {
-                throw IllegalArgumentException("Transparent background colors are not allowed for JPEG compatibility.")
+        /**
+         * Return a bitmap based on a file path.
+         *
+         * @return A new Bitmap that has been processed.
+         */
+        fun getBitmapFromPath(path: String): Bitmap {
+            val bitmap = BitmapFactory.decodeFile(path)
+                ?: throw Exception("Failed to decode captured image.")
+
+            val exif = ExifInterface(path)
+            val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+
+            val matrix = Matrix().apply {
+                when (orientation) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> postRotate(90f)
+                    ExifInterface.ORIENTATION_ROTATE_180 -> postRotate(180f)
+                    ExifInterface.ORIENTATION_ROTATE_270 -> postRotate(270f)
+                }
             }
 
-            return if (bitmap.hasAlpha()) {
-                val bitmapWithBg = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmapWithBg)
+            return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        }
+
+        /**
+         * Processes the given bitmap to enhance brightness and contrast, making blacks deeper
+         * and whites brighter.
+         *
+         * @return A new Bitmap that has been processed.
+         */
+        fun makeHighContrastBw(bitmap: Bitmap): Bitmap? {
+            val width = bitmap.width
+            val height = bitmap.height
+            val processedBitmap = bitmap.config?.let { Bitmap.createBitmap(width, height, it) }
+
+            val canvas = processedBitmap?.let { Canvas(it) }
+            val paint = Paint()
+
+            val grayscaleMatrix = ColorMatrix().apply {
+                setSaturation(0f)
+            }
+
+            val contrast = 1.4f // Adjust this for stronger contrast (1.0 = no change)
+            val brightness = -20f // Adjust this for brightness shift (0 = no change)
+            val contrastMatrix = ColorMatrix(
+                floatArrayOf(
+                    contrast, 0f, 0f, 0f, brightness,   // Red
+                    0f, contrast, 0f, 0f, brightness,   // Green
+                    0f, 0f, contrast, 0f, brightness,   // Blue
+                    0f, 0f, 0f, 1f, 0f                  // Alpha
+                )
+            )
+
+            grayscaleMatrix.postConcat(contrastMatrix)
+            paint.colorFilter = ColorMatrixColorFilter(grayscaleMatrix)
+
+            canvas?.drawBitmap(bitmap, 0f, 0f, paint)
+
+            return processedBitmap
+        }
+
+        /**
+         * Processes the given bitmap to ensure it's JPEG-compatible by removing transparency
+         * and applying a white background if necessary.
+         *
+         * @param bitmap The original bitmap.
+         * @param backgroundColor The background color to apply if the bitmap has transparency.
+         *
+         * @return A Bitmap object that is JPEG-compatible.
+         *
+         * @throws IllegalArgumentException If the background color has transparency.
+         */
+        fun makeJpegCompatible(bitmap: Bitmap, backgroundColor: Int = Color.WHITE): Bitmap {
+
+            require(Color.alpha(backgroundColor) == 255) {
+                "Transparent background colors are not allowed for JPEG compatibility."
+            }
+
+            val jpegCompatibleBitmap = if (bitmap.hasAlpha()) {
+                val bitmapNoTransparency = Bitmap.createBitmap(
+                    bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888
+                )
+                val canvas = Canvas(bitmapNoTransparency)
                 canvas.drawColor(backgroundColor)
                 canvas.drawBitmap(bitmap, 0f, 0f, null)
                 Timber.d("Made bitmap JPEG-compatible by adding a background color.")
-                bitmapWithBg
+                bitmapNoTransparency
             } else {
-                Timber.d("Bitmap is already JPEG-compatible (no transparency).")
+                Timber.d("Bitmap is already JPEG-compatible.")
                 bitmap
             }
+
+            return jpegCompatibleBitmap
         }
 
         fun resize(bitmap: Bitmap, targetWidth: Int? = null, targetHeight: Int? = null): Bitmap {

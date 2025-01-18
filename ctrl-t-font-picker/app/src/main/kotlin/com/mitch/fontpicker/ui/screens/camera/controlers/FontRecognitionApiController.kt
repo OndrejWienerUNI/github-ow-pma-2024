@@ -48,9 +48,8 @@ class FontRecognitionApiController(
             // Handle the case where no fonts are detected
             if (fontResults.isEmpty()) {
                 Timber.d(
-                    "No fonts detected in the API response. " +
-                            "This could also indicate a whitelisted response " +
-                            "(e.g., 'No chars found'). Returning empty list."
+                    "No characters were recognized or no were fonts detected in the image. " +
+                            "Returning empty list."
                 )
                 return Result.success(emptyList())
             }
@@ -98,18 +97,13 @@ class FontRecognitionApiController(
         maxWidth: Int = 1200,
         maxHeight: Int = 1200): String? = withContext(Dispatchers.IO)
     {
-        try {
-            Timber.d("Starting image resize and Base64 conversion for URI: $this")
-            val resizedImage = resizeImage(context, this@toBase64, maxWidth, maxHeight)
-                ?: throw IllegalArgumentException("Failed to resize image.")
+        Timber.d("Starting image resize and Base64 conversion for URI: $this")
+        val resizedImage = resizeImage(context, this@toBase64, maxWidth, maxHeight)
+            ?: throw IllegalArgumentException("Failed to resize image.")
 
-            val base64 = Base64.getEncoder().encodeToString(resizedImage)
-            Timber.d("Base64 conversion completed successfully. " +
-                    "Length: ${base64.length} characters.")
-            base64
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to resize and convert image to Base64.")
-            null
-        }
+        val base64 = Base64.getEncoder().encodeToString(resizedImage)
+        Timber.d("Base64 conversion completed successfully. " +
+                "Length: ${base64.length} characters.")
+        base64
     }
 }

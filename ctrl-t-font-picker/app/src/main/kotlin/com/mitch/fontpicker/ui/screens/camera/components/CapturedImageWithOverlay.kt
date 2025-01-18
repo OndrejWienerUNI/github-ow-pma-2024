@@ -26,13 +26,13 @@ import timber.log.Timber
 
 @Composable
 fun CapturedImageWithOverlay(
-    photoUri: Uri?,
+    imageUri: Uri?,
     showContent: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    // Conditionally create the painter only if showContent is true and photoUri is not null
-    val painter = if (showContent && photoUri != null) {
-        rememberAsyncImagePainter(photoUri)
+    // Conditionally create the painter only if showContent is true and imageUri is not null
+    val painter = if (showContent && imageUri != null) {
+        rememberAsyncImagePainter(imageUri)
     } else {
         null
     }
@@ -92,6 +92,6 @@ fun CapturedImageWithOverlay(
             }
         }
     } else {
-        Timber.d("Hiding overlay as showContent is false or photoUri is null.")
+        Timber.d("Hiding overlay as showContent is false or imageUri is null.")
     }
 }
