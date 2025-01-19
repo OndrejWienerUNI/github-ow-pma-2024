@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
@@ -32,11 +33,22 @@ fun CameraLiveView(
     isLoading: Boolean? = false,
     aspectRatio: Float = 3f / 4f
 ) {
-    // Maintain a remembered state that only updates when isLoading is not null
+
     val isLoadingNonNull = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     if (isLoading != null) {
         isLoadingNonNull.value = isLoading
+    }
+
+    val previewView = remember {
+        PreviewView(context).apply {
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
     }
 
     Timber.d("CameraLiveView Composable called " +
@@ -58,21 +70,7 @@ fun CameraLiveView(
     ) {
         // Camera Preview
         AndroidView(
-            factory = { context ->
-                Timber.d("Creating PreviewView.")
-                PreviewView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    if (cameraPreviewView != null) {
-                        Timber.d("Setting SurfaceProvider for PreviewView in factory.")
-                        cameraPreviewView.surfaceProvider = this.surfaceProvider
-                    } else {
-                        Timber.e("Preview is null in factory. Cannot set SurfaceProvider.")
-                    }
-                }
-            },
+            factory = { previewView },
             update = { view ->
                 if (cameraPreviewView != null) {
                     Timber.d("Updating SurfaceProvider in update lambda.")
