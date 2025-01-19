@@ -59,16 +59,20 @@ class RecycleBinViewModel(
                     .map { fontWithAssets ->
                         withContext(Dispatchers.Default) {
                             Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
-                            fontWithAssets.map { asset ->
+                            fontWithAssets.mapIndexed { index, asset ->
+                                val paddedIndex = "[${index.toString().padStart(4, ' ')}]"
                                 val bitmaps = asset.bitmapData.firstOrNull()?.map { bitmapData ->
                                     BitmapToolkit.decodeBinary(bitmapData.bitmap)
-                                } ?: emptyList<Bitmap>().also { Timber.d("No binaries to be decoded.") }
+                                } ?: emptyList<Bitmap>().also { Timber.d("$paddedIndex No binaries to be decoded.") }
 
                                 val imageUrls = asset.imageUrls.firstOrNull()?.map { it.url } ?: emptyList()
 
                                 Timber.d(
-                                    "Mapped FontWithAssets for font: ${asset.font.title}, ID=${asset.font.id}, " +
-                                            "ImageUrls=${imageUrls.size}, Bitmaps=${bitmaps.size}"
+                                    "$paddedIndex ${asset.font.title}, " +
+                                            "ID=${asset.font.id}, " +
+                                            "ImageUrls=${imageUrls.size}, " +
+                                            "Bitmaps=${bitmaps.size}" +
+                                            "Font successfully mapped."
                                 )
 
                                 FontDownloaded(
@@ -77,7 +81,7 @@ class RecycleBinViewModel(
                                     url = asset.font.url,
                                     imageUrls = imageUrls,
                                     bitmaps = bitmaps,
-                                    isLiked = mutableStateOf(false) // Fonts in recycle bin are not liked
+                                    isLiked = mutableStateOf(false)
                                 )
                             }.sortedByDescending { it.id } // Sort the list by ID
                         }

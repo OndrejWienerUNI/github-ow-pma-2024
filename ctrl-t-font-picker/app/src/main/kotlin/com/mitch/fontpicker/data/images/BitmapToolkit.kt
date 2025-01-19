@@ -112,8 +112,6 @@ class BitmapToolkit(
                 if (binaryData.size > MAX_DATABASE_BLOB_SIZE) {
                     Timber.w("Encoded data exceeds size limit: ${binaryData.size} bytes.")
                 }
-
-                Timber.d("Encoding successful. Size: ${binaryData.size} bytes.")
                 binaryData
             } catch (e: Exception) {
                 Timber.e(e, "Failed to encode bitmap.")
@@ -125,7 +123,6 @@ class BitmapToolkit(
             return try {
                 val bitmap = BitmapFactory.decodeByteArray(binaryData, 0, binaryData.size)
                     ?: throw IllegalArgumentException("Failed to decode binary data into a bitmap.")
-                Timber.d("Decoding successful. Size: ${binaryData.size} bytes.")
                 bitmap
             } catch (e: Exception) {
                 Timber.e(e, "Failed to decode binary data.")

@@ -17,7 +17,10 @@ import com.mitch.fontpicker.data.room.repository.FontsDatabaseRepository.Compani
 import com.mitch.fontpicker.ui.screens.camera.controlers.CameraController
 import com.mitch.fontpicker.ui.screens.camera.controlers.FontRecognitionApiController
 import com.mitch.fontpicker.ui.screens.camera.controlers.StorageController
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +30,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class CameraViewModel(
@@ -55,6 +59,11 @@ class CameraViewModel(
     private val _cameraPreviewView = MutableStateFlow<Preview?>(null)
     val cameraPreviewView: StateFlow<Preview?> = _cameraPreviewView
 
+    private var processingJob = SupervisorJob()
+    private var processingScope = CoroutineScope(Dispatchers.IO + processingJob)
+    private val cancellationMutex = Mutex()
+    private val isCancellationHandled = MutableStateFlow(false)
+
     init {
         viewModelScope.launch {
             _uiState.collect { newState ->
@@ -67,6 +76,7 @@ class CameraViewModel(
                     is CameraUiState.Success -> {
                         _imageUri.value = null
                         _isImageInUse.value = false
+                        restartProcessingJob()
                         Timber.d("Photo URI reset due to state: $newState. Releasing resources.")
                     }
                     else -> {
@@ -77,10 +87,37 @@ class CameraViewModel(
         }
     }
 
-    fun onBackHandler(){
+    fun cancelProcessing() {
+        processingJob.cancel() // Cancel all coroutines under this job
         _uiState.value = CameraUiState.Success(
-            "Back handler has interrupted camera operations. User hit back."
+            "Back handler has interrupted camera operations. User recognized a back gesture."
         )
+    }
+
+    private fun restartProcessingJob() {
+        if (!processingJob.isCancelled) { processingJob.cancel() }
+        processingJob = SupervisorJob()
+        processingScope = CoroutineScope(Dispatchers.IO + processingJob)
+    }
+
+    private suspend fun handleCancellationException(
+        uri: Uri?,
+        lensFacing: Int,
+        onResetState: () -> Unit
+    ) {
+        if (!isCancellationHandled.value) {
+            cancellationMutex.withLock {
+                if (!isCancellationHandled.value) { // Double-check inside the lock
+                    isCancellationHandled.value = true
+                    Timber.d("PROCESSING CANCELED FOR URI: $uri")
+                    markImageAsNotInUse()
+                    markThumbnailsAsNotInUse()
+                    _uiState.value = CameraUiState.CameraReady(lensFacing)
+                    onResetState()
+                    isCancellationHandled.value = false
+                }
+            }
+        }
     }
 
     /**
@@ -138,6 +175,9 @@ class CameraViewModel(
      * Capture a photo using CameraX, process it to black and white with elevated contrast, then proceed with UI updates.
      */
     fun capturePhoto(context: Context) {
+
+        processingJob.cancelChildren()
+
         viewModelScope.launch {
             val fileResult = runCatching { storageController.newFile(storageController.picturesDir) }
             if (fileResult.isFailure) {
@@ -176,38 +216,46 @@ class CameraViewModel(
     }
 
     /**
-     * Called when a photo was successfully captured.
+     * Called when a photo was successfully captured or copied from gallery.
      */
     private fun onImageReady() {
         val uri = _imageUri.value
         if (uri != null) {
             viewModelScope.launch {
-                val result = sendImageForProcessing(uri)
+                try {
+                    val result = sendImageForProcessing(uri)
 
-                if (result.isSuccess) {
-                    val fonts = result.getOrDefault(emptyList())
-                    _uiState.value = if (fonts.isEmpty()) {
-                        CameraUiState.CameraReady(cameraController.lensFacing)
-                    } else {
-                        CameraUiState.FontsReceived(fonts)
-                    }
+                    if (result.isSuccess) {
+                        val fonts = result.getOrDefault(emptyList())
+                        _uiState.value = if (fonts.isEmpty()) {
+                            CameraUiState.CameraReady(cameraController.lensFacing)
+                        } else {
+                            CameraUiState.FontsReceived(fonts)
+                        }
 
-                    val currentState = _uiState.value
-                    if (currentState is CameraUiState.FontsReceived) {
-                        processReceivedFonts(currentState.fonts)
+                        val currentState = _uiState.value
+                        if (currentState is CameraUiState.FontsReceived) {
+                            processReceivedFonts(currentState.fonts)
+                        } else {
+                            Timber.w(
+                                "currentState was not set to CameraUiState.FontsReceived " +
+                                        "in onPhotoCaptured (actual value = $currentState)."
+                            )
+                        }
                     } else {
-                        Timber.w("currentState was not set to CameraUiState.FontsReceived " +
-                                "in onPhotoCaptured (actual value = $currentState).")
-                    }
-                } else {
-                    var errorMessage = result.exceptionOrNull()?.message
-                    if (errorMessage == null) {
-                        errorMessage = ("No response from server. " +
-                                "\nPlease make sure that you're connected to the internet.")
-                        onError(message = errorMessage)
-                    } else {
+                        val errorMessage = result.exceptionOrNull()?.message
+                            ?: "No response from server. Please make sure that you're connected to the internet."
                         onError(message = errorMessage)
                     }
+                } catch (e: CancellationException) {
+                    handleCancellationException(uri, cameraController.lensFacing) {
+                        Timber.d("IMAGE OPERATIONS WERE CANCELED BY USER. " +
+                                "Processing has been stopped.")
+                    }
+                } catch (e: Exception) {
+                    val errorMessage = e.message ?: "Unknown error occurred during processing."
+                    onError(message = errorMessage)
+                    Timber.e(e, "Error occurred in onImageReady.")
                 }
             }
         } else {
@@ -220,8 +268,12 @@ class CameraViewModel(
      * then updating the UI state.
      */
     fun onGalleryImageSelected(context: Context, uri: Uri) {
+
+        processingJob.cancelChildren()
+
         viewModelScope.launch {
             try {
+                // Copy the selected image to the pictures directory
                 val copiedUri = storageController.copyImageToDirectory(context, uri, storageController.picturesDir)
                 Timber.d("Gallery image copied to pictures directory: $copiedUri")
 
@@ -241,32 +293,12 @@ class CameraViewModel(
                     return@launch
                 }
 
+                // Set the processed image URI and trigger onImageReady
                 val processedFile = bwConversionResult.getOrThrow()
-                val processedUri = Uri.fromFile(processedFile)
+                _imageUri.value = Uri.fromFile(processedFile)
 
-                _imageUri.value = processedUri
-                _isImageInUse.value = true
-                _uiState.value = CameraUiState.ImageReady(processedUri)
-
-                Timber.d("Gallery image selected and processed to black and white: $processedUri, ready for display.")
-
-                val result = sendImageForProcessing(processedUri)
-
-                if (result.isSuccess) {
-                    val fonts = result.getOrDefault(emptyList())
-                    if (fonts.isNotEmpty()) {
-                        _uiState.value = CameraUiState.FontsReceived(fonts)
-                        processReceivedFonts(fonts)
-                    } else {
-                        Timber.d("No fonts detected. Returning to CameraReady state.")
-                        _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
-                    }
-                } else {
-                    val errorMessage = result.exceptionOrNull()?.message ?: ("Unknown error during image processing.")
-                    onError("Failed to process selected image ($errorMessage).")
-                    Timber.e("Error processing selected image: $errorMessage")
-                }
-
+                Timber.d("Gallery image processed to black and white: ${_imageUri.value}, triggering onImageReady.")
+                onImageReady()
             } catch (e: Exception) {
                 onError("Failed to handle the selected image: ${e.message}.")
                 Timber.e(e, "Error handling selected gallery image.")
@@ -302,14 +334,13 @@ class CameraViewModel(
             _uiState.value = CameraUiState.Processing
             Timber.d("Processing image: $uri")
 
-            // Process the image
-            val result = withContext(Dispatchers.IO) {
+            // Process the image within the processingScope
+            val result = withContext(processingScope.coroutineContext) {
                 fontRecognitionApiController.processImage(uri)
             }
 
-            // Update the UI state based on the result
             if (result.isFailure) {
-                onError("An error was encountered in image processing " +
+                onError("An error was encountered in image processing " +
                         "(${result.exceptionOrNull()?.message}).")
             } else {
                 val fonts = result.getOrDefault(emptyList())
@@ -322,10 +353,13 @@ class CameraViewModel(
                 }
             }
 
-            result // Return the result
+            result
+
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Error processing image.")
-            onError("Fatal error was encountered in image processing (${e.message}).")
+            onError("Fatal error was encountered in image processing (${e.message}).")
             Result.failure(e)
         } finally {
             isProcessingImage = false
@@ -396,6 +430,35 @@ class CameraViewModel(
         viewModelScope.launch {
             delay(1000) // Optional delay to ensure UI updates complete
             storageController.clearDirectory(storageController.picturesDir)
+        }
+    }
+
+    /**
+     * Clears the thumbnails directory and releases bitmaps.
+     */
+    private val thumbnailMutex = Mutex()
+
+    private fun markThumbnailsAsNotInUse() {
+        viewModelScope.launch {
+            thumbnailMutex.withLock {
+                try {
+                    val currentState = _uiState.value
+                    when (currentState) {
+                        is CameraUiState.OpeningFontsDialog -> currentState.downloadedFonts
+                        is CameraUiState.SavingFavoriteFonts -> currentState.downloadedFonts
+                        else -> null
+                    }?.forEach { font ->
+                        font.bitmaps.forEach { bitmap ->
+                            BitmapToolkit.cleanUpBitmap(bitmap)
+                        }
+                    }
+
+                    storageController.clearDirectory(storageController.thumbnailsDir)
+                    Timber.d("Thumbnails directory cleared.")
+                } catch (e: Exception) {
+                    Timber.e(e, "Error during thumbnail cleanup.")
+                }
+            }
         }
     }
 
@@ -526,35 +589,6 @@ class CameraViewModel(
             } finally {
                 markThumbnailsAsNotInUse()
                 _uiState.value = CameraUiState.CameraReady(cameraController.lensFacing)
-            }
-        }
-    }
-
-    /**
-     * Clears the thumbnails directory and releases bitmaps.
-     */
-    private val thumbnailMutex = Mutex()
-
-    private fun markThumbnailsAsNotInUse() {
-        viewModelScope.launch {
-            thumbnailMutex.withLock {
-                try {
-                    val currentState = _uiState.value
-                    when (currentState) {
-                        is CameraUiState.OpeningFontsDialog -> currentState.downloadedFonts
-                        is CameraUiState.SavingFavoriteFonts -> currentState.downloadedFonts
-                        else -> null
-                    }?.forEach { font ->
-                        font.bitmaps.forEach { bitmap ->
-                            BitmapToolkit.cleanUpBitmap(bitmap)
-                        }
-                    }
-
-                    storageController.clearDirectory(storageController.thumbnailsDir)
-                    Timber.d("Thumbnails directory cleared.")
-                } catch (e: Exception) {
-                    Timber.e(e, "Error during thumbnail cleanup.")
-                }
             }
         }
     }

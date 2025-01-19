@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import java.util.Base64
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class FontRecognitionApiController(
@@ -56,6 +57,8 @@ class FontRecognitionApiController(
 
             Timber.d("Font recognition successful. Fonts found: ${fontResults.size}")
             Result.success(fontResults)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: HttpRequestTimeoutException) {
             // Handle timeout error gracefully
             Timber.e("Request timed out. the database " +

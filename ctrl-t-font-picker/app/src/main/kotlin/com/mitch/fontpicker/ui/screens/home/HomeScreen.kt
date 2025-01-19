@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ fun HomeRoute(
     )
 }
 
+
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
@@ -74,7 +76,8 @@ fun HomeScreen(
     val cameraController = remember { CameraController() }
     val storageController = remember { StorageController(dependenciesProvider) }
     val fontRecognitionApiController = remember {
-        FontRecognitionApiController(dependenciesProvider, context) }
+        FontRecognitionApiController(dependenciesProvider, context)
+    }
     val fontsDatabaseRepository = remember { dependenciesProvider.databaseRepository }
     val bitmapToolkit = remember { BitmapToolkit(dependenciesProvider) }
 
@@ -93,17 +96,13 @@ fun HomeScreen(
 
     val favoritesViewModel: FavoritesViewModel = viewModel(
         factory = viewModelProviderFactory {
-            FavoritesViewModel(
-                fontsDatabaseRepository
-            )
+            FavoritesViewModel(fontsDatabaseRepository)
         }
     )
 
     val recycleBinViewModel: RecycleBinViewModel = viewModel(
         factory = viewModelProviderFactory {
-            RecycleBinViewModel(
-                fontsDatabaseRepository
-            )
+            RecycleBinViewModel(fontsDatabaseRepository)
         }
     )
 
@@ -112,6 +111,14 @@ fun HomeScreen(
 
     val currentPage by remember {
         derivedStateOf { pagerState.currentPage }
+    }
+
+    DisposableEffect(currentPage) {
+        if (currentPage != 0) {
+            Timber.d("User is swiping away from CameraScreen. Cancelling processing.")
+            cameraViewModel.cancelProcessing()
+        }
+        onDispose {}
     }
 
     val horizontalPager: @Composable () -> Unit = if (isPreview) {
@@ -136,6 +143,7 @@ fun HomeScreen(
         currentPage = currentPage
     )
 }
+
 
 @Composable
 fun HomeScreenContent(

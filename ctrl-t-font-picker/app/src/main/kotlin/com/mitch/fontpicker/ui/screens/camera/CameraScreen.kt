@@ -74,7 +74,7 @@ fun CameraScreen(
                 else -> true
             }
             if (resetScreen) {
-                viewModel.onBackHandler()
+                viewModel.cancelProcessing()
                 Timber.d("Back button pressed. Resetting image state.")
             }
         }

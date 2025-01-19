@@ -53,16 +53,20 @@ class FavoritesViewModel(
                 fontsDatabaseRepository.getFavoritesWithAssets()
                     .map { fontWithAssets: List<FontsDatabaseRepository.Companion.FontWithAssets> ->
                         Timber.d("Mapping ${fontWithAssets.size} FontWithAssets to FontDownloaded.")
-                        fontWithAssets.map { asset ->
+                        fontWithAssets.mapIndexed { index, asset ->
+                            val paddedIndex = "[${index.toString().padStart(4, ' ')}]"
                             val bitmaps = asset.bitmapData.firstOrNull()?.map { bitmapData ->
                                 BitmapToolkit.decodeBinary(bitmapData.bitmap)
-                            } ?: emptyList<Bitmap>().also { Timber.d("No binaries to be decoded.") }
+                            } ?: emptyList<Bitmap>().also { Timber.d("$paddedIndex No binaries to be decoded.") }
 
                             val imageUrls = asset.imageUrls.firstOrNull()?.map { it.url } ?: emptyList()
 
                             Timber.d(
-                                "Mapped FontWithAssets for font: ${asset.font.title}, ID=${asset.font.id}, " +
-                                        "ImageUrls=${imageUrls.size}, Bitmaps=${bitmaps.size}"
+                                "$paddedIndex ${asset.font.title}, " +
+                                        "ID=${asset.font.id}, " +
+                                        "ImageUrls=${imageUrls.size}, " +
+                                        "Bitmaps=${bitmaps.size} - " +
+                                        "Font successfully mapped."
                             )
 
                             FontDownloaded(
@@ -73,7 +77,7 @@ class FavoritesViewModel(
                                 bitmaps = bitmaps,
                                 isLiked = mutableStateOf(asset.font.categoryId == fontsDatabaseRepository.favoritesCategoryId)
                             )
-                        }
+                        }.sortedByDescending { it.id } // Sort the list by ID
                     }
                     .collect { fontPreviews ->
                         Timber.d("Collected ${fontPreviews.size} FontDownloaded instances.")

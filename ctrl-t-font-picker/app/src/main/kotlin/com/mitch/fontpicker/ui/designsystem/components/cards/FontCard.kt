@@ -116,7 +116,6 @@ fun FontCard(
     val processedImages = remember(isThemeDark) {
         font.bitmaps.map { bitmap ->
             if (isThemeDark) {
-                Timber.d("Inverting image due to dark theme")
                 BitmapToolkit.invertImage(bitmap)
             } else {
                 bitmap
