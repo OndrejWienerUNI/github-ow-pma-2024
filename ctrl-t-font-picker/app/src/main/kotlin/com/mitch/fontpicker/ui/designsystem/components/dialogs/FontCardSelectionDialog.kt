@@ -36,7 +36,7 @@ import com.mitch.fontpicker.ui.designsystem.components.cards.FontCard
 import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
 private val DIALOG_WIDTH_MAX = 400.dp
-private val GRADIENT_HEIGHT = 8.dp
+private val GRADIENT_HEIGHT = 12.dp
 private val TITLE_OFFSET_Y = (-2).dp
 
 @Composable

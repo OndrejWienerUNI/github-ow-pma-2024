@@ -1,9 +1,11 @@
 package com.mitch.fontpicker.ui.designsystem.components.dialogs
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -12,6 +14,7 @@ import com.mitch.fontpicker.ui.designsystem.FontPickerDesignSystem
 import com.mitch.fontpicker.ui.designsystem.FontPickerIcons
 import com.mitch.fontpicker.ui.designsystem.FontPickerTheme
 import com.mitch.fontpicker.ui.designsystem.theme.custom.extendedColorScheme
+import com.mitch.fontpicker.ui.designsystem.theme.custom.padding
 
 @Composable
 fun WipeRecycleBinDialog(
@@ -24,7 +27,13 @@ fun WipeRecycleBinDialog(
             Icon(
                 imageVector = FontPickerIcons.Outlined.Trash,
                 contentDescription = null,
-                tint = FontPickerDesignSystem.extendedColorScheme.redAccent
+                tint = FontPickerDesignSystem.extendedColorScheme.redAccent,
+                modifier = Modifier.padding(
+                    top = padding.small,
+                    bottom = padding.zero,
+                    start = padding.zero,
+                    end = padding.zero,
+                )
             )
         },
         title = {
