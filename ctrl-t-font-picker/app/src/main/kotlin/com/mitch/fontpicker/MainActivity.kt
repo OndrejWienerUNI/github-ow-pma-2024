@@ -7,7 +7,6 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,7 +33,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
@@ -118,7 +117,27 @@ class MainActivity : AppCompatActivity() {
         // Set up the content
         setContent {
             Timber.d("Setting content.")
-            EnforceTheme(uiState)
+
+            val themeInfo = themeInfo(uiState)
+
+            DisposableEffect(themeInfo.isThemeDark, themeInfo.shouldFollowSystem) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(
+                        Color.TRANSPARENT,
+                        Color.TRANSPARENT
+                    ) { themeInfo.isThemeDark },
+                    navigationBarStyle = SystemBarStyle.auto(
+                        LightScrim,
+                        DarkScrim
+                    ) { themeInfo.isThemeDark }
+                )
+                setAppTheme(
+                    uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
+                    isThemeDark = themeInfo.isThemeDark,
+                    shouldFollowSystem = themeInfo.shouldFollowSystem
+                )
+                onDispose { }
+            }
 
             MainContent(
                 uiState = uiState,
@@ -215,38 +234,6 @@ private fun themeInfo(uiState: MainActivityUiState): ThemeInfo {
             ThemeInfo(
                 isThemeDark = isThemeDark || (shouldFollowSystem && isSystemInDarkTheme()),
                 shouldFollowSystem = shouldFollowSystem
-            )
-        }
-    }
-}
-
-@Composable
-fun EnforceTheme(uiState: MainActivityUiState) {
-    val activity = LocalContext.current as? ComponentActivity
-    val themeInfo = themeInfo(uiState)
-
-    LaunchedEffect(themeInfo) {
-        Timber.d("Applying theme: isThemeDark=${themeInfo.isThemeDark}, " +
-                "shouldFollowSystem=${themeInfo.shouldFollowSystem}")
-
-        activity?.let {
-            // Apply edge-to-edge styles
-            it.enableEdgeToEdge(
-                statusBarStyle = SystemBarStyle.auto(
-                    Color.TRANSPARENT,
-                    Color.TRANSPARENT
-                ) { themeInfo.isThemeDark },
-                navigationBarStyle = SystemBarStyle.auto(
-                    LightScrim,
-                    DarkScrim
-                ) { themeInfo.isThemeDark }
-            )
-
-            // Apply app theme
-            setAppTheme(
-                uiModeManager = it.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager,
-                isThemeDark = themeInfo.isThemeDark,
-                shouldFollowSystem = themeInfo.shouldFollowSystem
             )
         }
     }
