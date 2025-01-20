@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * if (BuildConfig.DEBUG) {
  *     Timber.plant(Timber.DebugTree())
  *     StrictModeManager.addWhitelistEntries(
- *         listOf(
+ *         setOf(
  *             "com.mediatek.scnmodule.ScnModule.isGameApp",
  *             "androidx.core.content.FileProvider.parsePathStrategy"
  *         )
@@ -40,7 +40,7 @@ object StrictModeManager {
 
     private val executor = Executors.newSingleThreadExecutor()
     private val violationIdCounter = AtomicInteger(0)
-    private val stackTraceWhiteList = mutableListOf<String>()
+    private val stackTraceWhiteList = mutableSetOf<String>()
     private var isStrictModeInitialized: Boolean = false
 
     private const val WL_ADD_CLARIFICATION_MESSAGE: String
@@ -73,7 +73,7 @@ object StrictModeManager {
 
     @JvmStatic
     @Synchronized
-    fun addWhitelistEntries(entries: List<String>) {
+    fun addWhitelistEntries(entries: Set<String>) {
         stackTraceWhiteList.addAll(entries)
         Timber.i("$TAG: Adding entries to " +
                 "stack trace white list: $entries\n" +
@@ -83,7 +83,7 @@ object StrictModeManager {
 
     @JvmStatic
     @Synchronized
-    fun removeWhitelistEntries(entries: List<String>) {
+    fun removeWhitelistEntries(entries: Set<String>) {
         stackTraceWhiteList.removeAll(entries)
         Timber.i("$TAG: Removing entries from " +
                 "stack trace white list (if present): $entries\n" +

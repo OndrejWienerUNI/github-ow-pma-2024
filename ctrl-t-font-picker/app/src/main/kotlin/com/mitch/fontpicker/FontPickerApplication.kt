@@ -25,7 +25,7 @@ class FontPickerApplication : Application() {
             Timber.plant(Timber.DebugTree())
             // Initialize StrictModeManager
             StrictModeManager.addWhitelistEntries(
-                listOf(
+                setOf(
                     "com.mediatek.scnmodule.ScnModule.isGameApp",
                     "androidx.core.content.FileProvider.parsePathStrategy"
                 )
